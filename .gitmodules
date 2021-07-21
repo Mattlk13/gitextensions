@@ -1,6 +1,3 @@
-[submodule "GitExtensionsDoc"]
-	path = GitExtensionsDoc
-	url = ../../gitextensions/GitExtensionsDoc.git
 [submodule "Externals/Git.hub"]
 	path = Externals/Git.hub
 	url = ../../gitextensions/Git.hub.git
@@ -10,3 +7,6 @@
 [submodule "Externals/ICSharpCode.TextEditor"]
 	path = Externals/ICSharpCode.TextEditor
 	url = ../../gitextensions/ICSharpCode.TextEditor.git
+[submodule "Externals/EasyHook"]
+	path = Externals/EasyHook
+	url = ../../gitextensions/EasyHook.git

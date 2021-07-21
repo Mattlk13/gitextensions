@@ -16,7 +16,7 @@ namespace GitCommands
         /// <returns>
         /// <paramref name="path"/> if <paramref name="path"/> is rooted; otherwise resolved path from <see cref="IGitModule.WorkingDir"/>.
         /// </returns>
-        string Resolve(string path);
+        string? Resolve(string? path);
     }
 
     public sealed class FullPathResolver : IFullPathResolver
@@ -37,11 +37,11 @@ namespace GitCommands
         /// <paramref name="path" /> if <paramref name="path" /> is rooted; otherwise resolved path from working directory of the current repository.
         /// </returns>
         /// <exception cref="PathTooLongException">The resolved path is too long (greater than 248 characters).</exception>
-        public string Resolve(string path)
+        public string? Resolve(string? path)
         {
             if (string.IsNullOrWhiteSpace(path))
             {
-                throw new ArgumentNullException(nameof(path));
+                return null;
             }
 
             if (Path.IsPathRooted(path))
@@ -49,15 +49,20 @@ namespace GitCommands
                 return path;
             }
 
-            var basePath = Path.GetFullPath(_getWorkingDir() ?? Environment.CurrentDirectory);
+            var workingDir = _getWorkingDir();
+            if (string.IsNullOrWhiteSpace(workingDir))
+            {
+                workingDir = Environment.CurrentDirectory;
+            }
+
+            var basePath = Path.GetFullPath(workingDir);
             if (!basePath.EndsWith(Path.DirectorySeparatorChar.ToString())
                 && !basePath.EndsWith(Path.AltDirectorySeparatorChar.ToString()))
             {
                 basePath += Path.DirectorySeparatorChar;
             }
 
-            var uri = new Uri(new Uri(basePath), path);
-            return uri.LocalPath;
+            return PathUtil.Resolve(basePath, path);
         }
     }
 }

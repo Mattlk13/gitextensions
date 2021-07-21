@@ -2,25 +2,25 @@
 using System.Windows.Forms;
 using GitCommands;
 using GitCommands.Git;
+using GitExtUtils.GitUI.Theming;
 using GitUI.Properties;
-using JetBrains.Annotations;
 using ResourceManager;
 
 namespace GitUI.CommandsDialogs
 {
     public class ToolStripPushButton : ToolStripButton
     {
-        private readonly TranslationString _push = new TranslationString("Push");
+        private readonly TranslationString _push = new("Push");
 
         private readonly TranslationString _aheadCommitsToPush =
-            new TranslationString("{0} new commit(s) will be pushed");
+            new("{0} new commit(s) will be pushed");
 
         private readonly TranslationString _behindCommitsTointegrateOrForcePush =
-            new TranslationString("{0} commit(s) should be integrated (or will be lost if force pushed)");
+            new("{0} commit(s) should be integrated (or will be lost if force pushed)");
 
-        [CanBeNull] private IAheadBehindDataProvider _aheadBehindDataProvider;
+        private IAheadBehindDataProvider? _aheadBehindDataProvider;
 
-        public void Initialize([CanBeNull]IAheadBehindDataProvider aheadBehindDataProvider)
+        public void Initialize(IAheadBehindDataProvider? aheadBehindDataProvider)
         {
             _aheadBehindDataProvider = aheadBehindDataProvider;
             ResetToDefaultState();
@@ -31,7 +31,7 @@ namespace GitUI.CommandsDialogs
             ResetToDefaultState();
 
             var aheadBehindData = _aheadBehindDataProvider?.GetData(branchName);
-            if (aheadBehindData == null || aheadBehindData.Count < 1 || !aheadBehindData.ContainsKey(branchName))
+            if (aheadBehindData is null || aheadBehindData.Count < 1 || !aheadBehindData.ContainsKey(branchName))
             {
                 return;
             }
@@ -48,20 +48,20 @@ namespace GitUI.CommandsDialogs
 
             if (!string.IsNullOrEmpty(data.BehindCount))
             {
-                Image = Images.Unstage;
+                Image = Images.Unstage.AdaptLightness();
             }
         }
 
         private void ResetToDefaultState()
         {
             DisplayStyle = ToolStripItemDisplayStyle.Image;
-            Image = Images.Push;
+            Image = Images.Push.AdaptLightness();
             ToolTipText = _push.Text;
         }
 
-        private string GetToolTipText(AheadBehindData data)
+        private string? GetToolTipText(AheadBehindData data)
         {
-            string tooltip = null;
+            string? tooltip = null;
             if (!string.IsNullOrEmpty(data.AheadCount))
             {
                 tooltip = string.Format(_aheadCommitsToPush.Text, data.AheadCount);
@@ -81,9 +81,9 @@ namespace GitUI.CommandsDialogs
         }
 
         internal TestAccessor GetTestAccessor()
-            => new TestAccessor(this);
+            => new(this);
 
-        public readonly struct TestAccessor
+        internal readonly struct TestAccessor
         {
             private readonly ToolStripPushButton _button;
 
@@ -92,7 +92,7 @@ namespace GitUI.CommandsDialogs
                 _button = button;
             }
 
-            public string GetToolTipText(AheadBehindData data) => _button.GetToolTipText(data);
+            public string? GetToolTipText(AheadBehindData data) => _button.GetToolTipText(data);
         }
     }
 }

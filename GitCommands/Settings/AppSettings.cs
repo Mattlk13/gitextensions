@@ -1,18 +1,21 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Diagnostics.CodeAnalysis;
 using System.Drawing;
 using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Text;
+using System.Text.RegularExpressions;
 using System.Windows.Forms;
 using GitCommands.Settings;
+using GitExtUtils;
+using GitExtUtils.GitUI.Theming;
 using GitUIPluginInterfaces;
-using JetBrains.Annotations;
+using Microsoft;
 using Microsoft.Win32;
-using StringSetting = GitCommands.Settings.StringSetting;
 
 namespace GitCommands
 {
@@ -54,12 +57,15 @@ namespace GitCommands
         // semi-constants
         public static Version AppVersion => Assembly.GetCallingAssembly().GetName().Version;
         public static string ProductVersion => Application.ProductVersion;
-        public static readonly string SettingsFileName = "GitExtensions.settings";
+        public static readonly string ApplicationName = "Git Extensions";
+        public static readonly string ApplicationId = ApplicationName.Replace(" ", "");
+        public static readonly string SettingsFileName = ApplicationId + ".settings";
         public static readonly string UserPluginsDirectoryName = "UserPlugins";
-        private static readonly ISshPathLocator SshPathLocatorInstance = new SshPathLocator();
+        private static string _applicationExecutablePath = Application.ExecutablePath;
+        private static string? _documentationBaseUrl;
 
-        public static readonly Lazy<string> ApplicationDataPath;
-        public static readonly Lazy<string> LocalApplicationDataPath;
+        public static Lazy<string?> ApplicationDataPath { get; private set; }
+        public static readonly Lazy<string?> LocalApplicationDataPath;
         public static string SettingsFilePath => Path.Combine(ApplicationDataPath.Value, SettingsFileName);
         public static string UserPluginsPath => Path.Combine(LocalApplicationDataPath.Value, UserPluginsDirectoryName);
 
@@ -70,9 +76,11 @@ namespace GitCommands
         public static readonly int BranchDropDownMinWidth = 300;
         public static readonly int BranchDropDownMaxWidth = 600;
 
+        public static event Action? Saved;
+
         static AppSettings()
         {
-            ApplicationDataPath = new Lazy<string>(() =>
+            ApplicationDataPath = new Lazy<string?>(() =>
             {
                 if (IsPortable())
                 {
@@ -81,17 +89,17 @@ namespace GitCommands
 
                 // Make ApplicationDataPath version independent
                 return Application.UserAppDataPath.Replace(Application.ProductVersion, string.Empty)
-                                                  .Replace("Git Extensions", "GitExtensions"); // 'GitExtensions' has been changed to 'Git Extensions' in v3.0
+                                                  .Replace(ApplicationName, ApplicationId); // 'GitExtensions' has been changed to 'Git Extensions' in v3.0
             });
 
-            LocalApplicationDataPath = new Lazy<string>(() =>
+            LocalApplicationDataPath = new Lazy<string?>(() =>
             {
                 if (IsPortable())
                 {
                     return GetGitExtensionsDirectory();
                 }
 
-                string path = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "GitExtensions");
+                string path = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), ApplicationId);
                 if (!Directory.Exists(path))
                 {
                     Directory.CreateDirectory(path);
@@ -100,12 +108,74 @@ namespace GitCommands
                 return path;
             });
 
+            bool newFile = CreateEmptySettingsFileIfMissing();
+
             SettingsContainer = new RepoDistSettings(null, GitExtSettingsCache.FromCache(SettingsFilePath), SettingLevel.Unknown);
 
-            if (!File.Exists(SettingsFilePath))
+            if (newFile || !File.Exists(SettingsFilePath))
             {
                 ImportFromRegistry();
             }
+
+            MigrateAvatarSettings();
+            MigrateSshSettings();
+
+            return;
+
+            static bool CreateEmptySettingsFileIfMissing()
+            {
+                try
+                {
+                    string dir = Path.GetDirectoryName(SettingsFilePath);
+                    if (!Directory.Exists(dir) || File.Exists(SettingsFilePath))
+                    {
+                        return false;
+                    }
+                }
+                catch (ArgumentException)
+                {
+                    // Illegal characters in the filename
+                    return false;
+                }
+
+                File.WriteAllText(SettingsFilePath, "<?xml version=\"1.0\" encoding=\"utf-8\"?><dictionary />", Encoding.UTF8);
+                return true;
+            }
+        }
+
+        /// <summary>
+        /// Gets the base part of the documentation link for the current application version,
+        /// which looks something like "https://git-extensions-documentation.readthedocs.org/en/main/"
+        /// for the master branch, and "https://git-extensions-documentation.readthedocs.org/en/release-X.Y/"
+        /// for a release/X.Y branch.
+        ///
+        /// TODO: We currently use only EN language, but should maybe consider using the user's preferred language.
+        /// </summary>
+        public static string DocumentationBaseUrl
+        {
+            get => _documentationBaseUrl ?? throw new InvalidOperationException($"Call {nameof(SetDocumentationBaseUrl)} first to set the documentation base URL.");
+        }
+
+        internal static void SetDocumentationBaseUrl(string currentGitBranch)
+        {
+            if (_documentationBaseUrl is not null)
+            {
+                throw new InvalidOperationException("Documentation base URL can only be set once");
+            }
+
+            string? docVersion = "en/main/";
+
+            if (!string.IsNullOrWhiteSpace(currentGitBranch))
+            {
+                // We expect current branch to be something line "release/X.Y"
+                Match match = Regex.Match(currentGitBranch, "release/\\d*\\.\\d*");
+                if (match.Success)
+                {
+                    docVersion = $"en/{currentGitBranch.Replace("/", "-")}/";
+                }
+            }
+
+            _documentationBaseUrl = $"https://git-extensions-documentation.readthedocs.org/{docVersion}";
         }
 
         public static bool? TelemetryEnabled
@@ -165,8 +235,7 @@ namespace GitCommands
                 });
         }
 
-        [CanBeNull]
-        public static string GetInstallDir()
+        public static string? GetInstallDir()
         {
             if (IsPortable())
             {
@@ -182,11 +251,10 @@ namespace GitCommands
             return dir;
         }
 
-        [CanBeNull]
-        public static string GetResourceDir()
+        public static string? GetResourceDir()
         {
 #if DEBUG
-            string gitExtDir = GetGitExtensionsDirectory().TrimEnd('\\').TrimEnd('/');
+            string gitExtDir = GetGitExtensionsDirectory()!.TrimEnd('\\').TrimEnd('/');
             const string debugPath = @"GitExtensions\bin\Debug";
             int len = debugPath.Length;
             if (gitExtDir.Length > len)
@@ -213,13 +281,13 @@ namespace GitCommands
 
         private static bool ReadBoolRegKey(string key, bool defaultValue)
         {
-            object obj = VersionIndependentRegKey.GetValue(key);
-            if (!(obj is string))
+            object? obj = VersionIndependentRegKey.GetValue(key);
+            if (obj is not string)
             {
                 obj = null;
             }
 
-            if (obj == null)
+            if (obj is null)
             {
                 return defaultValue;
             }
@@ -232,9 +300,10 @@ namespace GitCommands
             VersionIndependentRegKey.SetValue(key, value ? "true" : "false");
         }
 
-        private static string ReadStringRegValue(string key, string defaultValue)
+        [return: NotNullIfNotNull("defaultValue")]
+        private static string? ReadStringRegValue(string key, string? defaultValue)
         {
-            return (string)VersionIndependentRegKey.GetValue(key, defaultValue);
+            return (string?)VersionIndependentRegKey.GetValue(key, defaultValue);
         }
 
         private static void WriteStringRegValue(string key, string value)
@@ -250,17 +319,15 @@ namespace GitCommands
             set => WriteBoolRegKey("CheckSettings", value);
         }
 
-        [NotNull]
         public static string CascadeShellMenuItems
         {
             get => ReadStringRegValue("CascadeShellMenuItems", "110111000111111111");
             set => WriteStringRegValue("CascadeShellMenuItems", value);
         }
 
-        [CanBeNull]
         public static string SshPath
         {
-            get => ReadStringRegValue("gitssh", null);
+            get => ReadStringRegValue("gitssh", "");
             set => WriteStringRegValue("gitssh", value);
         }
 
@@ -278,7 +345,6 @@ namespace GitCommands
             set => WriteBoolRegKey("ShowCurrentBranchInVS", value);
         }
 
-        [NotNull]
         public static string GitCommandValue
         {
             get
@@ -294,6 +360,7 @@ namespace GitCommands
             }
             set
             {
+                GitVersion.ResetVersion();
                 if (IsPortable())
                 {
                     SetString("gitcommand", value);
@@ -305,7 +372,6 @@ namespace GitCommands
             }
         }
 
-        [NotNull]
         public static string GitCommand
         {
             get
@@ -325,10 +391,12 @@ namespace GitCommands
             set => SetBool("stashkeepindex", value);
         }
 
-        public static bool StashConfirmDropShow
+        public static bool DontConfirmStashDrop
         {
-            get => GetBool("stashconfirmdropshow", true);
-            set => SetBool("stashconfirmdropshow", value);
+            // The settings was originally was called 'StashConfirmDropShow', and then it was inverted.
+            // To maintain the compat with the existing user settings negate the retrieved value.
+            get => !GetBool("stashconfirmdropshow", true);
+            set => SetBool("stashconfirmdropshow", !value);
         }
 
         public static bool ApplyPatchIgnoreWhitespace
@@ -337,8 +405,15 @@ namespace GitCommands
             set => SetBool("applypatchignorewhitespace", value);
         }
 
-        public static bool UsePatienceDiffAlgorithm
+        public static bool ApplyPatchSignOff
         {
+            get => GetBool("applypatchsignoff", true);
+            set => SetBool("applypatchsignoff", value);
+        }
+
+        public static bool UseHistogramDiffAlgorithm
+        {
+            // The settings key has patience in the name for historical reasons
             get => GetBool("usepatiencediffalgorithm", false);
             set => SetBool("usepatiencediffalgorithm", value);
         }
@@ -367,6 +442,12 @@ namespace GitCommands
             set => SetInt("commitDialogNumberOfPreviousMessages", value);
         }
 
+        public static bool CommitDialogShowOnlyMyMessages
+        {
+            get => GetBool("commitDialogShowOnlyMyMessages", false);
+            set => SetBool("commitDialogShowOnlyMyMessages", value);
+        }
+
         public static bool ShowCommitAndPush
         {
             get => GetBool("showcommitandpush", true);
@@ -385,11 +466,10 @@ namespace GitCommands
             set => SetBool("showresetallchanges", value);
         }
 
-        public static readonly BoolNullableSetting ShowConEmuTab = new BoolNullableSetting("ShowConEmuTab", DetailedSettingsPath, true);
-        public static readonly StringSetting ConEmuStyle = new StringSetting("ConEmuStyle", DetailedSettingsPath, "<Solarized Light>");
-        public static readonly StringSetting ConEmuTerminal = new StringSetting("ConEmuTerminal", DetailedSettingsPath, "bash");
-        public static readonly StringSetting ConEmuFontSize = new StringSetting("ConEmuFontSize", DetailedSettingsPath, "12");
-        public static readonly BoolNullableSetting ShowGpgInformation = new BoolNullableSetting("ShowGpgInformation", DetailedSettingsPath, true);
+        public static ISetting<bool> ShowConEmuTab => Setting.Create(DetailedSettingsPath, nameof(ShowConEmuTab), true);
+        public static ISetting<string> ConEmuStyle => Setting.Create(DetailedSettingsPath, nameof(ConEmuStyle), "<Solarized Light>");
+        public static ISetting<string> ConEmuTerminal => Setting.Create(DetailedSettingsPath, nameof(ConEmuTerminal), "bash");
+        public static ISetting<bool> ShowGpgInformation => Setting.Create(DetailedSettingsPath, nameof(ShowGpgInformation), true);
 
         public static CommitInfoPosition CommitInfoPosition
         {
@@ -490,15 +570,18 @@ namespace GitCommands
 
         #region Avatars
 
-        [NotNull]
         public static string AvatarImageCachePath => Path.Combine(ApplicationDataPath.Value, "Images\\");
 
-        public static GravatarFallbackAvatarType GravatarFallbackAvatarType
+        public static AvatarFallbackType AvatarFallbackType
         {
-            get => Enum.TryParse(GetString("GravatarDefaultImageType", "Identicon"), out GravatarFallbackAvatarType type)
-                ? type
-                : GravatarFallbackAvatarType.Identicon;
+            get => GetEnumViaString("GravatarDefaultImageType", AvatarFallbackType.AuthorInitials);
             set => SetString("GravatarDefaultImageType", value.ToString());
+        }
+
+        public static string CustomAvatarTemplate
+        {
+            get => GetString("CustomAvatarTemplate", string.Empty);
+            set => SetString("CustomAvatarTemplate", value);
         }
 
         /// <summary>
@@ -521,22 +604,114 @@ namespace GitCommands
 
         public static AvatarProvider AvatarProvider
         {
-            get => GetEnum("Appearance.AvatarProvider", AvatarProvider.Gravatar);
-            set => SetEnum("Appearance.AvatarProvider", value);
+            get => GetEnumViaString("Appearance.AvatarProvider", AvatarProvider.Default);
+            set => SetString("Appearance.AvatarProvider", value.ToString());
+        }
+
+        /// <summary>
+        /// Loads a setting with GetString and parses it to an enum
+        /// </summary>
+        /// <remarks>
+        /// It's currently a limitation by <see cref="SettingsCache"/> that a given setting can
+        /// only ever use GetString/SetString or GetEnum/SetEnum but not both. This is the case
+        /// because <see cref="SettingsCache"/> caches a typed/parsed value of the setting and
+        /// crashes at <see cref="SettingsCache.TryGetValue{T}(string, T, Func{string, T}, out T)"/>
+        /// if the type that is requested doesn't match the cached type.
+        /// </remarks>
+        private static TEnum GetEnumViaString<TEnum>(string settingName, TEnum defaultValue)
+            where TEnum : struct
+        {
+            var settingStringValue = GetString(settingName, defaultValue.ToString());
+
+            if (Enum.TryParse(settingStringValue, out TEnum settingEnumValue))
+            {
+                return settingEnumValue;
+            }
+
+            return defaultValue;
+        }
+
+        private static void MigrateAvatarSettings()
+        {
+            // Load settings as strings to support obsolete settings that are no longer
+            // part of the enums AvatarProvider or AvatarFallbackType.
+
+            string provider = GetString("Appearance.AvatarProvider", "Default");
+
+            // if the provider turns out to be the obsolete "author initials" we can skip loading
+            // the fallback image, because it will be overwritten anyways, so loading it is postponed.
+            string fallbackImage;
+
+            bool providerChanged = false;
+            bool fallbackImageChanged = false;
+
+            if (provider == "AuthorInitials")
+            {
+                provider = AvatarProvider.None.ToString();
+                fallbackImage = AvatarFallbackType.AuthorInitials.ToString();
+
+                providerChanged = true;
+                fallbackImageChanged = true;
+            }
+            else
+            {
+                if (provider == "Gravatar")
+                {
+                    provider = AvatarProvider.Default.ToString();
+                    providerChanged = true;
+                }
+
+                // if provider was not "AuthorInitials" the fallback image
+                // is loaded to check if it has to be migrated.
+                fallbackImage = GetString("GravatarDefaultImageType", "AuthorInitials");
+
+                if (fallbackImage == "None")
+                {
+                    fallbackImage = AvatarFallbackType.AuthorInitials.ToString();
+                    fallbackImageChanged = true;
+                }
+            }
+
+            if (providerChanged)
+            {
+                SetString("Appearance.AvatarProvider", provider);
+            }
+
+            if (fallbackImageChanged)
+            {
+                SetString("GravatarDefaultImageType", fallbackImage);
+            }
+
+            if (providerChanged || fallbackImageChanged)
+            {
+                SaveSettings();
+            }
+        }
+
+        private static void MigrateSshSettings()
+        {
+            string ssh = AppSettings.SshPath;
+            if (!string.IsNullOrEmpty(ssh))
+            {
+                // OpenSSH uses empty path, compatibility with path set in 3.4
+                string path = new SshPathLocator().GetSshFromGitDir(GitBinDir);
+                if (path == ssh)
+                {
+                    AppSettings.SshPath = "";
+                }
+            }
         }
 
         #endregion
 
-        [NotNull]
         public static string Translation
         {
             get => GetString("translation", "");
             set => SetString("translation", value);
         }
 
-        private static string _currentTranslation;
+        private static string? _currentTranslation;
 
-        [NotNull]
         public static string CurrentTranslation
         {
             get => _currentTranslation ?? Translation;
@@ -544,7 +719,7 @@ namespace GitCommands
         }
 
         private static readonly Dictionary<string, string> _languageCodes =
-            new Dictionary<string, string>(StringComparer.InvariantCultureIgnoreCase)
+            new(StringComparer.InvariantCultureIgnoreCase)
             {
                 { "Czech", "cs" },
                 { "Dutch", "nl" },
@@ -624,7 +799,7 @@ namespace GitCommands
             set => SetBool("closecommitdialogafterlastcommit", value);
         }
 
-        public static bool RefreshCommitDialogOnFormFocus
+        public static bool RefreshArtificialCommitOnApplicationActivated
         {
             get => GetBool("refreshcommitdialogonformfocus", false);
             set => SetBool("refreshcommitdialogonformfocus", value);
@@ -720,7 +895,7 @@ namespace GitCommands
             set => SetBool("revisiongraphdrawnonrelativestextgray", value);
         }
 
-        public static readonly Dictionary<string, Encoding> AvailableEncodings = new Dictionary<string, Encoding>();
+        public static readonly Dictionary<string, Encoding> AvailableEncodings = new();
 
         public enum PullAction
         {
@@ -753,20 +928,20 @@ namespace GitCommands
 
         public static string SmtpServer
         {
-            get => GetString("SmtpServer", "smtp.gmail.com");
-            set => SetString("SmtpServer", value);
+            get => SettingsContainer.Detailed().SmtpServer;
+            set => SettingsContainer.Detailed().SmtpServer = value;
         }
 
         public static int SmtpPort
         {
-            get => GetInt("SmtpPort", 465);
-            set => SetInt("SmtpPort", value);
+            get => SettingsContainer.Detailed().SmtpPort;
+            set => SettingsContainer.Detailed().SmtpPort = value;
         }
 
         public static bool SmtpUseSsl
         {
-            get => GetBool("SmtpUseSsl", true);
-            set => SetBool("SmtpUseSsl", value);
+            get => SettingsContainer.Detailed().SmtpUseSsl;
+            set => SettingsContainer.Detailed().SmtpUseSsl = value;
         }
 
         public static bool AutoStash
@@ -883,6 +1058,12 @@ namespace GitCommands
             set => SetBool("DontConfirmFetchAndPruneAll", value);
         }
 
+        public static bool DontConfirmSwitchWorktree
+        {
+            get => GetBool("DontConfirmSwitchWorktree", false);
+            set => SetBool("DontConfirmSwitchWorktree", value);
+        }
+
         public static bool IncludeUntrackedFilesInAutoStash
         {
             get => GetBool("includeUntrackedFilesInAutoStash", false);
@@ -931,10 +1112,16 @@ namespace GitCommands
             set => SetBool("updateSubmodulesOnCheckout", value);
         }
 
+        public static bool? DontConfirmUpdateSubmodulesOnCheckout
+        {
+            get => GetBool("dontConfirmUpdateSubmodulesOnCheckout");
+            set => SetBool("dontConfirmUpdateSubmodulesOnCheckout", value);
+        }
+
         public static string Dictionary
         {
-            get => SettingsContainer.Dictionary;
-            set => SettingsContainer.Dictionary = value;
+            get => SettingsContainer.Detached().Dictionary;
+            set => SettingsContainer.Detached().Dictionary = value;
         }
 
         public static bool ShowGitCommandLine
@@ -1097,6 +1284,12 @@ namespace GitCommands
             set => SetInt("revisiongridquicksearchtimeout", value);
         }
 
+        public static bool ShowCommitBodyInRevisionGrid
+        {
+            get => GetBool("ShowCommitBodyInRevisionGrid", true);
+            set => SetBool("ShowCommitBodyInRevisionGrid", value);
+        }
+
         /// <summary>Gets or sets the path to the git application executable.</summary>
         public static string GitBinDir
         {
@@ -1128,12 +1321,19 @@ namespace GitCommands
             set => SetBool("showdiffforallparents", value);
         }
 
+        public static bool ShowAvailableDiffTools
+        {
+            get => GetBool("difftools.showavailable", true);
+            set => SetBool("difftools.showavailable", value);
+        }
+
         public static int DiffVerticalRulerPosition
         {
             get => GetInt("diffverticalrulerposition", 0);
             set => SetInt("diffverticalrulerposition", value);
         }
 
+        [MaybeNull]
         public static string RecentWorkingDir
         {
             get => GetString("RecentWorkingDir", null);
@@ -1195,75 +1395,38 @@ namespace GitCommands
             set => SetBool("markillformedlinesincommitmsg", value);
         }
 
-        #region Colors
-
-        public static Color OtherTagColor
+        public static bool UseSystemVisualStyle
         {
-            get => GetColor("othertagcolor", Color.Gray);
-            set => SetColor("othertagcolor", value);
+            get => GetBool("systemvisualstyle", true);
+            set => SetBool("systemvisualstyle", value);
         }
 
-        public static Color AuthoredRevisionsHighlightColor
+        public static ThemeId ThemeId
         {
-            get => GetColor("authoredhighlightcolor", Color.LightYellow);
-            set => SetColor("authoredhighlightcolor", value);
+            get
+            {
+                return new ThemeId(
+                    GetString("uitheme", ThemeId.Default.Name),
+                    GetBool("uithemeisbuiltin", ThemeId.Default.IsBuiltin));
+            }
+            set
+            {
+                SetString("uitheme", value.Name ?? string.Empty);
+                SetBool("uithemeisbuiltin", value.IsBuiltin);
+            }
         }
 
-        public static Color TagColor
+        public static string[] ThemeVariations
         {
-            get => GetColor("tagcolor", Color.DarkBlue);
-            set => SetColor("tagcolor", value);
+            get
+            {
+                return GetString("uithemevariations", string.Empty).Split(Delimiters.Comma, StringSplitOptions.RemoveEmptyEntries);
+            }
+            set
+            {
+                SetString("uithemevariations", string.Join(",", value ?? Array.Empty<string>()));
+            }
         }
-
-        public static Color GraphColor
-        {
-            get => GetColor("graphcolor", Color.DarkRed);
-            set => SetColor("graphcolor", value);
-        }
-
-        public static Color BranchColor
-        {
-            get => GetColor("branchcolor", Color.DarkRed);
-            set => SetColor("branchcolor", value);
-        }
-
-        public static Color RemoteBranchColor
-        {
-            get => GetColor("remotebranchcolor", Color.Green);
-            set => SetColor("remotebranchcolor", value);
-        }
-
-        public static Color DiffSectionColor
-        {
-            get => GetColor("diffsectioncolor", Color.FromArgb(230, 230, 230));
-            set => SetColor("diffsectioncolor", value);
-        }
-
-        public static Color DiffRemovedColor
-        {
-            get => GetColor("diffremovedcolor", Color.FromArgb(255, 200, 200));
-            set => SetColor("diffremovedcolor", value);
-        }
-
-        public static Color DiffRemovedExtraColor
-        {
-            get => GetColor("diffremovedextracolor", Color.FromArgb(255, 150, 150));
-            set => SetColor("diffremovedextracolor", value);
-        }
-
-        public static Color DiffAddedColor
-        {
-            get => GetColor("diffaddedcolor", Color.FromArgb(200, 255, 200));
-            set => SetColor("diffaddedcolor", value);
-        }
-
-        public static Color DiffAddedExtraColor
-        {
-            get => GetColor("diffaddedextracolor", Color.FromArgb(135, 255, 135));
-            set => SetColor("diffaddedextracolor", value);
-        }
-
-        #endregion
 
         #region Fonts
 
@@ -1289,6 +1452,12 @@ namespace GitCommands
         {
             get => GetFont("font", SystemFonts.MessageBoxFont);
             set => SetFont("font", value);
+        }
+
+        public static Font ConEmuConsoleFont
+        {
+            get => GetFont("conemuconsolefont", new Font("Consolas", 12));
+            set => SetFont("conemuconsolefont", value);
         }
 
         #endregion
@@ -1381,6 +1550,24 @@ namespace GitCommands
             set => SetBool("RememberNumberOfContextLines", value);
         }
 
+        public static bool ShowSyntaxHighlightingInDiff
+        {
+            get => RememberShowSyntaxHighlightingInDiff && GetBool("ShowSyntaxHighlightingInDiff", true);
+            set
+            {
+                if (RememberShowSyntaxHighlightingInDiff)
+                {
+                    SetBool("ShowSyntaxHighlightingInDiff", value);
+                }
+            }
+        }
+
+        public static bool RememberShowSyntaxHighlightingInDiff
+        {
+            get => GetBool("RememberShowSyntaxHighlightingInDiff", true);
+            set => SetBool("RememberShowSyntaxHighlightingInDiff", value);
+        }
+
         public static string GetDictionaryDir()
         {
             return Path.Combine(GetResourceDir(), "Dictionaries");
@@ -1393,9 +1580,10 @@ namespace GitCommands
             {
                 SettingsContainer.LockedAction(() =>
                 {
-                    SshPath = SshPathLocatorInstance.Find(GitBinDir);
                     SettingsContainer.Save();
                 });
+
+                Saved?.Invoke();
             }
             catch
             {
@@ -1408,23 +1596,24 @@ namespace GitCommands
 
             try
             {
-                GitCommandHelpers.SetSsh(SshPath);
+                // Set environment variable
+                GitSshHelpers.SetSsh(SshPath);
             }
             catch
             {
             }
         }
 
-        public static bool DashboardShowCurrentBranch
+        public static bool ShowRepoCurrentBranch
         {
             get => GetBool("dashboardshowcurrentbranch", true);
             set => SetBool("dashboardshowcurrentbranch", value);
         }
 
-        public static string OwnScripts
+        public static string? OwnScripts
         {
             get => GetString("ownScripts", "");
-            set => SetString("ownScripts", value);
+            set => SetString("ownScripts", value ?? "");
         }
 
         public static int RecursiveSubmodules
@@ -1457,6 +1646,7 @@ namespace GitCommands
             set => SetInt("RecentReposComboMinWidth", value);
         }
 
+        [MaybeNull]
         public static string SerializedHotkeys
         {
             get => GetString("SerializedHotkeys", null);
@@ -1577,6 +1767,18 @@ namespace GitCommands
             set => SetBool("UseConsoleEmulatorForCommands", value);
         }
 
+        public static GitRefsSortBy RefsSortBy
+        {
+            get => GetEnum("RefsSortBy", GitRefsSortBy.Default);
+            set => SetEnum("RefsSortBy", value);
+        }
+
+        public static GitRefsSortOrder RefsSortOrder
+        {
+            get => GetEnum("RefsSortOrder", GitRefsSortOrder.Descending);
+            set => SetEnum("RefsSortOrder", value);
+        }
+
         public static DiffListSortType DiffListSorting
         {
             get => GetEnum("DiffListSortType", DiffListSortType.FilePath);
@@ -1585,25 +1787,24 @@ namespace GitCommands
 
         public static string GetGitExtensionsFullPath()
         {
-            return Application.ExecutablePath;
+            return _applicationExecutablePath;
         }
 
-        [CanBeNull]
-        public static string GetGitExtensionsDirectory()
+        public static string? GetGitExtensionsDirectory()
         {
             return Path.GetDirectoryName(GetGitExtensionsFullPath());
         }
 
-        private static RegistryKey _versionIndependentRegKey;
+        private static RegistryKey? _versionIndependentRegKey;
 
-        [CanBeNull]
         private static RegistryKey VersionIndependentRegKey
         {
             get
             {
-                if (_versionIndependentRegKey == null)
+                if (_versionIndependentRegKey is null)
                 {
                     _versionIndependentRegKey = Registry.CurrentUser.CreateSubKey("Software\\GitExtensions", RegistryKeyPermissionCheck.ReadWriteSubTree);
+                    Validates.NotNull(_versionIndependentRegKey);
                 }
 
                 return _versionIndependentRegKey;
@@ -1694,16 +1895,45 @@ namespace GitCommands
             set => SetBool("Blame.ShowOriginalFilePath", value);
         }
 
-        public static bool IsPortable()
+        public static bool BlameShowAuthorAvatar
         {
-            return Properties.Settings.Default.IsPortable;
+            get => GetBool("Blame.ShowAuthorAvatar", true);
+            set => SetBool("Blame.ShowAuthorAvatar", value);
+        }
+
+        public static bool AutomaticContinuousScroll
+        {
+            get => GetBool("DiffViewer.AutomaticContinuousScroll", false);
+            set => SetBool("DiffViewer.AutomaticContinuousScroll", value);
+        }
+
+        public static int AutomaticContinuousScrollDelay
+        {
+            get => GetInt("DiffViewer.AutomaticContinuousScrollDelay", 600);
+            set => SetInt("DiffViewer.AutomaticContinuousScrollDelay", value);
+        }
+
+        public static bool LogCaptureCallStacks
+        {
+            get => GetBool("Log.CaptureCallStacks", false);
+            set => SetBool("Log.CaptureCallStacks", value);
+        }
+
+        // There is a bug in .NET/.NET Designer that fails to execute Properties.Settings.Default call.
+        // Return false whilst we're in the designer.
+        public static bool IsPortable() => !IsDesignMode && Properties.Settings.Default.IsPortable;
+
+        public static bool WriteErrorLog
+        {
+            get => GetBool("WriteErrorLog", false);
+            set => SetBool("WriteErrorLog", value);
         }
 
         private static IEnumerable<(string name, string value)> GetSettingsFromRegistry()
         {
             RegistryKey oldSettings = VersionIndependentRegKey.OpenSubKey("GitExtensions");
 
-            if (oldSettings == null)
+            if (oldSettings is null)
             {
                 yield break;
             }
@@ -1712,7 +1942,7 @@ namespace GitCommands
             {
                 object value = oldSettings.GetValue(name, null);
 
-                if (value != null)
+                if (value is not null)
                 {
                     yield return (name, value.ToString());
                 }
@@ -1779,22 +2009,13 @@ namespace GitCommands
             return SettingsContainer.GetFont(name, defaultValue);
         }
 
-        public static void SetColor(string name, Color? value)
+        [Obsolete("AppSettings is no longer responsible for colors, ThemeModule is")]
+        public static Color GetColor(AppColor name)
         {
-            SettingsContainer.SetColor(name, value);
+            return SettingsContainer.GetColor(name.ToString().ToLowerInvariant() + "color", AppColorDefaults.GetBy(name));
         }
 
-        public static Color? GetColor(string name)
-        {
-            return SettingsContainer.GetColor(name);
-        }
-
-        public static Color GetColor(string name, Color defaultValue)
-        {
-            return SettingsContainer.GetColor(name, defaultValue);
-        }
-
-        public static void SetEnum<T>(string name, T value)
+        public static void SetEnum<T>(string name, T value) where T : Enum
         {
             SettingsContainer.SetEnum(name, value);
         }
@@ -1819,7 +2040,8 @@ namespace GitCommands
             SettingsContainer.SetString(name, value);
         }
 
-        public static string GetString(string name, string defaultValue)
+        [return: NotNullIfNotNull("defaultValue")]
+        public static string? GetString(string name, string? defaultValue)
         {
             return SettingsContainer.GetString(name, defaultValue);
         }
@@ -1849,8 +2071,12 @@ namespace GitCommands
                 AddEncoding(Encoding.Default);
                 AddEncoding(new ASCIIEncoding());
                 AddEncoding(new UnicodeEncoding());
-                AddEncoding(new UTF7Encoding());
+
+                // UTF-7 is no longer supported, see: https://github.com/dotnet/docs/issues/19274
+                // AddEncoding(new UTF7Encoding());
+
                 AddEncoding(new UTF8Encoding(false));
+
                 try
                 {
                     AddEncoding(Encoding.GetEncoding(CultureInfo.CurrentCulture.TextInfo.OEMCodePage));
@@ -1862,9 +2088,17 @@ namespace GitCommands
             }
             else
             {
-                var utf8 = new UTF8Encoding(false);
-                foreach (var encodingName in availableEncodings.Split(';'))
+                UTF8Encoding utf8 = new(false);
+                foreach (var encodingName in availableEncodings.LazySplit(';'))
                 {
+#pragma warning disable SYSLIB0001 // Type or member is obsolete
+                    if (encodingName == Encoding.UTF7.HeaderName)
+#pragma warning restore SYSLIB0001 // Type or member is obsolete
+                    {
+                        // UTF-7 is no longer supported, see: https://github.com/dotnet/docs/issues/19274
+                        continue;
+                    }
+
                     // create utf-8 without BOM
                     if (encodingName == utf8.HeaderName)
                     {
@@ -1892,11 +2126,46 @@ namespace GitCommands
             availableEncodings = availableEncodings.Replace(Encoding.Default.HeaderName, "Default");
             SetString("AvailableEncodings", availableEncodings);
         }
+
+        private static bool? _isDesignMode;
+
+        private static bool IsDesignMode
+        {
+            get
+            {
+                if (_isDesignMode is null)
+                {
+                    string processName = Process.GetCurrentProcess().ProcessName.ToLowerInvariant();
+                    _isDesignMode = processName.Contains("devenv") || processName.Contains("designtoolsserver");
+                }
+
+                return _isDesignMode.Value;
+            }
+        }
+
+        internal static TestAccessor GetTestAccessor() => new();
+
+        internal struct TestAccessor
+        {
+            public string ApplicationExecutablePath
+            {
+                get => _applicationExecutablePath;
+                set => _applicationExecutablePath = value;
+            }
+
+            public Lazy<string?> ApplicationDataPath
+            {
+                get => AppSettings.ApplicationDataPath;
+                set => AppSettings.ApplicationDataPath = value;
+            }
+
+            public void ResetDocumentationBaseUrl() => AppSettings._documentationBaseUrl = null;
+        }
     }
 
     public class AppSettingsPath : SettingsPath
     {
-        public AppSettingsPath([NotNull] string pathName) : base(null, pathName)
+        public AppSettingsPath(string pathName) : base(null, pathName)
         {
         }
 
@@ -1905,7 +2174,7 @@ namespace GitCommands
             return AppSettings.SettingsContainer.GetValue(PathFor(name), defaultValue, decode);
         }
 
-        public override void SetValue<T>(string name, T value, Func<T, string> encode)
+        public override void SetValue<T>(string name, T value, Func<T, string?> encode)
         {
             AppSettings.SettingsContainer.SetValue(PathFor(name), value, encode);
         }

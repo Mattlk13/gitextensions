@@ -1,9 +1,10 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
+using System.Diagnostics.Contracts;
 using System.IO;
 using System.Text.RegularExpressions;
 using GitCommands.Utils;
-using JetBrains.Annotations;
 
 namespace GitCommands
 {
@@ -16,25 +17,24 @@ namespace GitCommands
         public static readonly char NativeDirectorySeparatorChar = Path.DirectorySeparatorChar;
 
         /// <summary>Replaces native path separator with posix path separator.</summary>
-        [NotNull]
-        public static string ToPosixPath([NotNull] this string path)
+        [return: NotNullIfNotNull("path")]
+        public static string? ToPosixPath(this string? path)
         {
-            return path.Replace(NativeDirectorySeparatorChar, PosixDirectorySeparatorChar);
+            return path?.Replace(NativeDirectorySeparatorChar, PosixDirectorySeparatorChar);
         }
 
         /// <summary>Replaces '\' with '/'.</summary>
-        [NotNull]
-        public static string ToNativePath([NotNull] this string path)
+        [return: NotNullIfNotNull("path")]
+        public static string? ToNativePath(this string? path)
         {
-            return path.Replace(PosixDirectorySeparatorChar, NativeDirectorySeparatorChar);
+            return path?.Replace(PosixDirectorySeparatorChar, NativeDirectorySeparatorChar);
         }
 
         /// <summary>
         /// Removes any trailing path separator character from the end of <paramref name="dirPath"/>.
         /// </summary>
-        [ContractAnnotation("dirPath:null=>null")]
-        [ContractAnnotation("dirPath:notnull=>notnull")]
-        public static string RemoveTrailingPathSeparator([CanBeNull] this string dirPath)
+        [return: NotNullIfNotNull("dirPath")]
+        public static string? RemoveTrailingPathSeparator(this string? dirPath)
         {
             if (dirPath?.Length > 0 &&
                 (dirPath[dirPath.Length - 1] == NativeDirectorySeparatorChar ||
@@ -52,11 +52,10 @@ namespace GitCommands
         ///
         /// This method can be used to add (or keep) a trailing path separator character to a directory path.
         /// </summary>
-        [ContractAnnotation("dirPath:null=>null")]
-        [ContractAnnotation("dirPath:notnull=>notnull")]
-        public static string EnsureTrailingPathSeparator([CanBeNull] this string dirPath)
+        [return: NotNullIfNotNull("dirPath")]
+        public static string? EnsureTrailingPathSeparator(this string? dirPath)
         {
-            if (!dirPath.IsNullOrEmpty() &&
+            if (!string.IsNullOrEmpty(dirPath) &&
                 dirPath[dirPath.Length - 1] != NativeDirectorySeparatorChar &&
                 dirPath[dirPath.Length - 1] != PosixDirectorySeparatorChar)
             {
@@ -66,29 +65,24 @@ namespace GitCommands
             return dirPath;
         }
 
-        public static bool IsLocalFile([NotNull] string fileName)
+        public static bool IsLocalFile(string fileName)
         {
             return !Regex.IsMatch(fileName, @"^(\w+):\/\/([\S]+)");
         }
 
-        /// <summary>
-        /// A naive way to check whether the given path is a URL by checking
-        /// whether it starts with either 'http', 'ssh' or 'git'.
-        /// </summary>
-        /// <param name="path">A path to check.</param>
-        /// <returns><see langword="true"/> if the given path starts with 'http', 'ssh' or 'git'; otherwise <see langword="false"/>.</returns>
-        [ContractAnnotation("path:null=>false")]
-        [Pure]
-        public static bool IsUrl(string path)
+        public static bool CanBeGitURL(string? url)
         {
-            return !string.IsNullOrEmpty(path) &&
-                   (path.StartsWith("http", StringComparison.CurrentCultureIgnoreCase) ||
-                    path.StartsWith("git", StringComparison.CurrentCultureIgnoreCase) ||
-                    path.StartsWith("ssh", StringComparison.CurrentCultureIgnoreCase));
+            if (string.IsNullOrWhiteSpace(url))
+            {
+                return false;
+            }
+
+            return Uri.IsWellFormedUriString(url, UriKind.Absolute)
+                   || url.EndsWith(".git", StringComparison.CurrentCultureIgnoreCase)
+                   || GitModule.IsValidGitWorkingDir(url);
         }
 
-        [NotNull]
-        public static string GetFileName([NotNull] string fileName)
+        public static string GetFileName(string fileName)
         {
             var pathSeparators = new[] { NativeDirectorySeparatorChar, PosixDirectorySeparatorChar };
             var pos = fileName.LastIndexOfAny(pathSeparators);
@@ -100,31 +94,7 @@ namespace GitCommands
             return fileName;
         }
 
-        [NotNull]
-        public static string GetDirectoryName([NotNull] string fileName)
-        {
-            var pathSeparators = new[] { NativeDirectorySeparatorChar, PosixDirectorySeparatorChar };
-            var pos = fileName.LastIndexOfAny(pathSeparators);
-            if (pos != -1)
-            {
-                if (pos == 0 && fileName[0] == PosixDirectorySeparatorChar)
-                {
-                    return fileName.Length == 1 ? "" : PosixDirectorySeparatorChar.ToString();
-                }
-
-                fileName = fileName.Substring(0, pos);
-            }
-
-            if (fileName.Length == 2 && char.IsLetter(fileName[0]) && fileName[1] == Path.VolumeSeparatorChar)
-            {
-                return "";
-            }
-
-            return fileName;
-        }
-
-        [NotNull]
-        public static string NormalizePath([NotNull] this string path)
+        public static string NormalizePath(this string path)
         {
             if (string.IsNullOrWhiteSpace(path))
             {
@@ -133,7 +103,7 @@ namespace GitCommands
 
             try
             {
-                return Path.GetFullPath(new Uri(path).LocalPath);
+                return Path.GetFullPath(Resolve(path));
             }
             catch (UriFormatException)
             {
@@ -141,28 +111,62 @@ namespace GitCommands
             }
         }
 
-        [ContractAnnotation("=>false,posixPath:null")]
-        [ContractAnnotation("=>true,posixPath:notnull")]
-        public static bool TryConvertWindowsPathToPosix([NotNull] string path, out string posixPath)
+        public static string Resolve(string path, string relativePath = "")
         {
-            var directoryInfo = new DirectoryInfo(path);
-
-            if (!directoryInfo.Exists)
+            if (string.IsNullOrWhiteSpace(path))
             {
-                posixPath = null;
-                return false;
+                throw new ArgumentException(nameof(path));
             }
 
-            posixPath = "/" + directoryInfo.FullName.ToPosixPath().Remove(1, 1);
-            return true;
+            return IsWslPath(path) ? ResolveWsl(path, relativePath) : ResolveRelativePath(path, relativePath);
         }
 
-        [NotNull]
-        public static string GetRepositoryName([CanBeNull] string repositoryUrl)
+        /// <summary>
+        /// Special handling of on purpose invalid WSL machine name in Windows 10.
+        /// </summary>
+        internal static string ResolveWsl(string path, string relativePath = "")
+        {
+            if (string.IsNullOrWhiteSpace(path) || !IsWslPath(path))
+            {
+                throw new ArgumentException(nameof(path));
+            }
+
+            // Temporarily replace machine name with a valid name (remove $ sign from \\wsl$\)
+            path = path.Remove(5, 1);
+
+            path = ResolveRelativePath(path, relativePath);
+
+            // Revert temporary replacement of WSL machine name (add $ sign back)
+            return path.Insert(5, "$");
+        }
+
+        private static string ResolveRelativePath(string path, string relativePath)
+        {
+            if (string.IsNullOrWhiteSpace(path))
+            {
+                throw new ArgumentException(nameof(path));
+            }
+
+            Uri tempPath = new(path);
+            if (!string.IsNullOrEmpty(relativePath))
+            {
+                tempPath = new Uri(tempPath, Uri.EscapeUriString(relativePath));
+                return Uri.UnescapeDataString(tempPath.LocalPath);
+            }
+
+            return tempPath.LocalPath;
+        }
+
+        internal static bool IsWslPath(string path)
+        {
+            return path.ToLower().StartsWith(@"\\wsl$\");
+        }
+
+        public static string GetRepositoryName(string? repositoryUrl)
         {
             string name = "";
 
-            if (repositoryUrl != null)
+            if (repositoryUrl is not null)
             {
                 const string standardRepositorySuffix = ".git";
                 string path = repositoryUrl.TrimEnd('\\', '/');
@@ -181,9 +185,7 @@ namespace GitCommands
             return name;
         }
 
-        [ContractAnnotation("=>false,fullPath:null")]
-        [ContractAnnotation("=>true,fullPath:notnull")]
-        public static bool TryFindFullPath([NotNull] string fileName, out string fullPath)
+        public static bool TryFindFullPath(string fileName, [NotNullWhen(returnValue: true)] out string? fullPath)
         {
             try
             {
@@ -211,9 +213,7 @@ namespace GitCommands
             return false;
         }
 
-        [ContractAnnotation("=>false,shellPath:null")]
-        [ContractAnnotation("=>true,shellPath:notnull")]
-        public static bool TryFindShellPath([NotNull] string shell, out string shellPath)
+        public static bool TryFindShellPath(string shell, [NotNullWhen(returnValue: true)] out string? shellPath)
         {
             try
             {
@@ -243,8 +243,7 @@ namespace GitCommands
             return false;
         }
 
-        [NotNull]
-        public static string GetDisplayPath([NotNull] string path)
+        public static string GetDisplayPath(string path)
         {
             // TODO verify whether the user profile contains forwards/backwards slashes on other platforms
             var userProfile = Environment.GetFolderPath(Environment.SpecialFolder.UserProfile);
@@ -265,21 +264,7 @@ namespace GitCommands
             return path;
         }
 
-        [CanBeNull]
-        public static string GetFileExtension(string fileName)
-        {
-            var index = fileName.LastIndexOf('.');
-
-            if (index != -1)
-            {
-                return fileName.Substring(index + 1);
-            }
-
-            return null;
-        }
-
-        [NotNull, ItemNotNull]
-        public static IEnumerable<string> FindAncestors([NotNull] string path)
+        public static IEnumerable<string> FindAncestors(string path)
         {
             path = path.RemoveTrailingPathSeparator();
 
@@ -299,6 +284,107 @@ namespace GitCommands
 
                 yield return path.EnsureTrailingPathSeparator();
             }
+        }
+
+        public static string FindInFolders(this string fileName, IEnumerable<string?> folders)
+        {
+            foreach (string? location in folders)
+            {
+                if (string.IsNullOrWhiteSpace(location))
+                {
+                    continue;
+                }
+
+                string? fullName;
+                if (Path.IsPathRooted(location))
+                {
+                    fullName = FindFile(location, fileName);
+                    if (fullName is not null)
+                    {
+                        return fullName;
+                    }
+
+                    continue;
+                }
+
+                fullName = FindFileInEnvVarFolder("ProgramFiles", location, fileName);
+                if (fullName is not null)
+                {
+                    return fullName;
+                }
+
+                fullName = FindFileInEnvVarFolder("ProgramW6432", location, fileName);
+                if (fullName is not null)
+                {
+                    return fullName;
+                }
+
+                if (IntPtr.Size == 8 || (!string.IsNullOrEmpty(Environment.GetEnvironmentVariable("PROCESSOR_ARCHITEW6432"))))
+                {
+                    fullName = FindFileInEnvVarFolder("ProgramFiles(x86)", location, fileName);
+                    if (fullName is not null)
+                    {
+                        return fullName;
+                    }
+                }
+            }
+
+            return string.Empty;
+
+            string? FindFileInEnvVarFolder(string environmentVariable, string location, string fileName1)
+            {
+                var envVarFolder = Environment.GetEnvironmentVariable(environmentVariable);
+                if (string.IsNullOrEmpty(envVarFolder))
+                {
+                    return null;
+                }
+
+                var path = Path.Combine(envVarFolder, location);
+                if (!Directory.Exists(path))
+                {
+                    return null;
+                }
+
+                return FindFile(path!, fileName1);
+            }
+
+            static string? FindFile(string location, string fileName1)
+            {
+                string fullName = Path.Combine(location, fileName1);
+                if (File.Exists(fullName))
+                {
+                    return fullName;
+                }
+
+                return null;
+            }
+        }
+
+        /// <summary>
+        ///  Deletes the requested folder recursively.
+        /// </summary>
+        /// <returns>
+        ///  <see langword="true" /> if the folder is absent or successfully removed; otherwise <see langword="false" />.
+        /// </returns>
+        public static bool TryDeleteDirectory(this string? path, [NotNullWhen(returnValue: false)] out string? errorMessage)
+        {
+            errorMessage = null;
+            if (string.IsNullOrWhiteSpace(path) || !Directory.Exists(path))
+            {
+                return true;
+            }
+
+            try
+            {
+                Directory.Delete(path, recursive: true);
+            }
+            catch (Exception ex)
+            {
+                errorMessage = ex.Message;
+                return false;
+            }
+
+            return true;
         }
     }
 }

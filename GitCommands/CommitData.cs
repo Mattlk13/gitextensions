@@ -1,7 +1,6 @@
 using System;
 using System.Collections.Generic;
 using GitUIPluginInterfaces;
-using JetBrains.Annotations;
 
 namespace GitCommands
 {
@@ -9,8 +8,8 @@ namespace GitCommands
     {
         public CommitData(
             ObjectId objectId,
-            ObjectId treeGuid,
-            IReadOnlyList<ObjectId> parentGuids,
+            ObjectId? treeGuid,
+            IReadOnlyList<ObjectId> parentIds,
             string author,
             DateTime authorDate,
             string committer,
@@ -19,7 +18,7 @@ namespace GitCommands
         {
             ObjectId = objectId;
             TreeGuid = treeGuid;
-            ParentGuids = parentGuids;
+            ParentIds = parentIds;
             Author = author;
             AuthorDate = authorDate.ToDateTimeOffset();
             Committer = committer;
@@ -28,8 +27,8 @@ namespace GitCommands
         }
 
         public ObjectId ObjectId { get; }
-        public ObjectId TreeGuid { get; }
-        public IReadOnlyList<ObjectId> ParentGuids { get; }
+        public ObjectId? TreeGuid { get; } // TODO nothing seems to be using this value
+        public IReadOnlyList<ObjectId> ParentIds { get; }
         public string Author { get; }
         public DateTimeOffset AuthorDate { get; }
         public string Committer { get; }
@@ -37,8 +36,7 @@ namespace GitCommands
 
         // TODO mutable properties need review
 
-        [CanBeNull, ItemNotNull]
-        public IReadOnlyList<ObjectId> ChildIds { get; set; }
+        public IReadOnlyList<ObjectId>? ChildIds { get; set; }
 
         /// <summary>
         /// Gets and sets the commit message.

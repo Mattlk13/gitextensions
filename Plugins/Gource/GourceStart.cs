@@ -6,11 +6,12 @@ using System.Linq;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 using GitCommands;
+using GitExtUtils;
 using GitUI;
 using GitUI.Avatars;
 using GitUIPluginInterfaces;
 
-namespace Gource
+namespace GitExtensions.Plugins.Gource
 {
     public partial class GourceStart : ResourceManager.GitExtensionsFormBase
     {
@@ -20,7 +21,7 @@ namespace Gource
             InitializeComplete();
             PathToGource = pathToGource;
             GitUIArgs = gitUIArgs;
-            GitWorkingDir = gitUIArgs?.GitModule.WorkingDir;
+            GitWorkingDir = gitUIArgs.GitModule.WorkingDir;
             GourceArguments = gourceArguments;
 
             WorkingDir.Text = GitWorkingDir;
@@ -32,7 +33,7 @@ namespace Gource
 
         public string PathToGource { get; set; }
 
-        public string GitWorkingDir { get; set; }
+        public string? GitWorkingDir { get; set; }
 
         public string GourceArguments { get; set; }
 
@@ -49,7 +50,7 @@ namespace Gource
             }
             catch (Exception e)
             {
-                MessageBox.Show(this, e.Message);
+                MessageBox.Show(this, e.Message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
         }
 
@@ -57,7 +58,7 @@ namespace Gource
         {
             if (!File.Exists(GourcePath.Text))
             {
-                MessageBox.Show(this, "Cannot find Gource.\nPlease download Gource and set the correct path.");
+                MessageBox.Show(this, "Cannot find Gource.\nPlease download Gource and set the correct path.", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
                 return;
             }
 
@@ -91,7 +92,7 @@ namespace Gource
                 File.Delete(file);
             }
 
-            var args = new GitArgumentBuilder("log") { "--pretty=format:\"%aE|%aN\"" };
+            GitArgumentBuilder args = new("log") { "--pretty=format:\"%aE|%aN\"" };
             var lines = GitUIArgs.GitModule.GitExecutable.GetOutput(args).Split('\n');
 
             var authors = lines.Select(
@@ -112,8 +113,15 @@ namespace Gource
             {
                 try
                 {
-                    var image = await AvatarService.Default.GetAvatarAsync(author.email, author.name, imageSize: 90);
-                    var filePath = Path.Combine(gourceAvatarsDir, author + ".png");
+                    var image = await AvatarService.DefaultProvider.GetAvatarAsync(author.email, author.name, imageSize: 90);
+                    var filename = author.name + ".png";
+
+                    if (image is null || filename.IndexOfAny(Path.GetInvalidFileNameChars()) >= 0)
+                    {
+                        return;
+                    }
+
+                    var filePath = Path.Combine(gourceAvatarsDir, filename);
                     image.Save(filePath, ImageFormat.Png);
                 }
                 catch
@@ -125,26 +133,22 @@ namespace Gource
 
         private void GourceBrowseClick(object sender, EventArgs e)
         {
-            using (var fileDialog =
-                new OpenFileDialog
+            using OpenFileDialog fileDialog =
+                new()
                 {
                     Filter = "Gource (gource.exe)|gource.exe",
                     FileName = GourcePath.Text
-                })
-            {
-                fileDialog.ShowDialog(this);
+                };
+            fileDialog.ShowDialog(this);
 
-                GourcePath.Text = fileDialog.FileName;
-            }
+            GourcePath.Text = fileDialog.FileName;
         }
 
         private void WorkingDirBrowseClick(object sender, EventArgs e)
         {
-            using (var folderDialog = new FolderBrowserDialog { SelectedPath = WorkingDir.Text })
-            {
-                folderDialog.ShowDialog(this);
-                WorkingDir.Text = folderDialog.SelectedPath;
-            }
+            using FolderBrowserDialog folderDialog = new() { SelectedPath = WorkingDir.Text };
+            folderDialog.ShowDialog(this);
+            WorkingDir.Text = folderDialog.SelectedPath;
         }
 
         private void linkLabel1_LinkClicked(object sender, LinkLabelLinkClickedEventArgs e)

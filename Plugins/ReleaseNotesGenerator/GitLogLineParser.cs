@@ -1,21 +1,19 @@
 using System.Collections.Generic;
 using System.Text.RegularExpressions;
-using JetBrains.Annotations;
 
-namespace ReleaseNotesGenerator
+namespace GitExtensions.Plugins.ReleaseNotesGenerator
 {
     public interface IGitLogLineParser
     {
-        LogLine Parse(string line);
-        IEnumerable<LogLine> Parse(IEnumerable<string> lines);
+        LogLine? Parse(string line);
+        IEnumerable<LogLine> Parse(IEnumerable<string>? lines);
     }
 
     public sealed class GitLogLineParser : IGitLogLineParser
     {
-        private static readonly Regex LogLineRegex = new Regex("^([a-zA-Z0-9]{1,})@(.*)", RegexOptions.Compiled);
+        private static readonly Regex LogLineRegex = new("^([a-zA-Z0-9]{1,})@(.*)", RegexOptions.Compiled);
 
-        [CanBeNull]
-        public LogLine Parse(string line)
+        public LogLine? Parse(string line)
         {
             if (string.IsNullOrWhiteSpace(line))
             {
@@ -28,25 +26,25 @@ namespace ReleaseNotesGenerator
                 return null;
             }
 
-            var logLine = new LogLine(m.Groups[1].Value, m.Groups[2].Value);
+            LogLine logLine = new(m.Groups[1].Value, m.Groups[2].Value);
             return logLine;
         }
 
-        public IEnumerable<LogLine> Parse(IEnumerable<string> lines)
+        public IEnumerable<LogLine> Parse(IEnumerable<string>? lines)
         {
-            var resultList = new List<LogLine>();
-            if (lines == null)
+            List<LogLine> resultList = new();
+            if (lines is null)
             {
                 return resultList;
             }
 
-            LogLine logLineCurrent = null;
+            LogLine? logLineCurrent = null;
             foreach (string line in lines)
             {
                 var logLine1 = Parse(line);
-                if (logLine1 != null)
+                if (logLine1 is not null)
                 {
-                    if (logLineCurrent != null)
+                    if (logLineCurrent is not null)
                     {
                         resultList.Add(logLineCurrent);
                     }
@@ -59,7 +57,7 @@ namespace ReleaseNotesGenerator
                 }
             }
 
-            if (logLineCurrent != null)
+            if (logLineCurrent is not null)
             {
                 resultList.Add(logLineCurrent);
             }

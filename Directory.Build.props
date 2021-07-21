@@ -1,26 +1,54 @@
 <Project>
+  <Import Project="scripts\RepoLayout.props" />
+  <Import Project="scripts\Tests.props" />
 
   <PropertyGroup>
-    <LangVersion>7.3</LangVersion>
+    <LangVersion>9</LangVersion>
     <NoWarn>$(NoWarn);1573;1591;1712</NoWarn>
     <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+    <Nullable>enable</Nullable>
+
+    <UseWindowsForms>true</UseWindowsForms>
+    <TargetFramework>net5.0-windows</TargetFramework>
+    <Prefer32Bit>false</Prefer32Bit>
+    <GenerateDocumentationFile>true</GenerateDocumentationFile>
+    <CodeAnalysisRuleSet>$(MSBuildThisFileDirectory)GitExtensions.ruleset</CodeAnalysisRuleSet>
+
+    <!-- TODO once all project migrated to SDK-style, remove this and move properties to Directory.Build.props -->
+    <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
+
+    <ProduceReferenceAssembly>false</ProduceReferenceAssembly>
+
+    <IsPublishable>false</IsPublishable>
   </PropertyGroup>
 
   <PropertyGroup>
     <RestoreProjectStyle>PackageReference</RestoreProjectStyle>
+    <!-- Coverlet's PDB check cannot handle deterministic source paths https://github.com/tonerdo/coverlet/issues/363 -->
+    <DeterministicSourcePaths>false</DeterministicSourcePaths>
+  </PropertyGroup>
+
+  <!-- For the purposes of generating code coverage as part of the build -->
+  <PropertyGroup Condition="'$(Coverage)' == 'true'">
+    <!-- Coverlet assumes PDB files exist on disk https://github.com/tonerdo/coverlet/issues/362 -->
+    <DebugType Condition="'$(DebugType)' == 'embedded'">portable</DebugType>
   </PropertyGroup>
 
   <ItemGroup>
-    <AdditionalFiles Include="$(MSBuildThisFileDirectory)Build\stylecop.json">
+    <Compile Include="$(RepoRoot)\CommonAssemblyInfo.cs" Link="Properties\CommonAssemblyInfo.cs" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <AdditionalFiles Include="$(MSBuildThisFileDirectory)scripts\stylecop.json">
       <Link>stylecop.json</Link>
     </AdditionalFiles>
-    <AdditionalFiles Include="$(MSBuildThisFileDirectory)Build\vs-threading.MainThreadAssertingMethods.txt">
+    <AdditionalFiles Include="$(MSBuildThisFileDirectory)scripts\vs-threading.MainThreadAssertingMethods.txt">
       <Visible>False</Visible>
     </AdditionalFiles>
-    <AdditionalFiles Include="$(MSBuildThisFileDirectory)Build\vs-threading.MainThreadSwitchingMethods.txt">
+    <AdditionalFiles Include="$(MSBuildThisFileDirectory)scripts\vs-threading.MainThreadSwitchingMethods.txt">
       <Visible>False</Visible>
     </AdditionalFiles>
-    <AdditionalFiles Include="$(MSBuildThisFileDirectory)Build\vs-threading.TypesRequiringMainThread.txt">
+    <AdditionalFiles Include="$(MSBuildThisFileDirectory)scripts\vs-threading.TypesRequiringMainThread.txt">
       <Visible>False</Visible>
     </AdditionalFiles>
   </ItemGroup>

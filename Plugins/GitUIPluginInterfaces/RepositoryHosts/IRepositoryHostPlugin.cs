@@ -1,5 +1,6 @@
 ﻿using System.Collections.Generic;
 using System.Threading.Tasks;
+using System.Windows.Forms;
 
 namespace GitUIPluginInterfaces.RepositoryHosts
 {
@@ -11,12 +12,14 @@ namespace GitUIPluginInterfaces.RepositoryHosts
 
         IReadOnlyList<IHostedRepository> GetMyRepos();
 
+        void ConfigureContextMenu(ContextMenuStrip contextMenu);
+
         bool ConfigurationOk { get; }
 
         bool GitModuleIsRelevantToMe();
         IReadOnlyList<IHostedRemote> GetHostedRemotesForModule();
-        string OwnerLogin { get; }
+        string? OwnerLogin { get; }
 
-        Task<string> AddUpstreamRemoteAsync();
+        Task<string?> AddUpstreamRemoteAsync();
     }
 }

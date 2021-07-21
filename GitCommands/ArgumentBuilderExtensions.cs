@@ -1,9 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.ComponentModel;
+using System.Linq;
 using GitCommands.Git;
+using GitExtUtils;
 using GitUIPluginInterfaces;
-using JetBrains.Annotations;
 
 namespace GitCommands
 {
@@ -23,7 +24,7 @@ namespace GitCommands
         /// <param name="builder">The <see cref="ArgumentBuilder"/> to add arguments to.</param>
         /// <param name="condition">Whether or not to add <paramref name="ifConditionTrue"/> to the argument list.</param>
         /// <param name="ifConditionTrue">The string to add if <paramref name="condition"/> is <c>true</c>.</param>
-        public static void Add(this ArgumentBuilder builder, bool condition, [CanBeNull] string ifConditionTrue)
+        public static void Add(this ArgumentBuilder builder, bool condition, string? ifConditionTrue)
         {
             if (condition)
             {
@@ -43,7 +44,7 @@ namespace GitCommands
         /// <param name="condition">Whether or not to add <paramref name="ifConditionTrue"/> to the argument list.</param>
         /// <param name="ifConditionTrue">The string to add if <paramref name="condition"/> is <c>true</c>.</param>
         /// <param name="ifConditionFalse">The string to add if <paramref name="condition"/> is <c>false</c>.</param>
-        public static void Add(this ArgumentBuilder builder, bool condition, [CanBeNull] string ifConditionTrue, [CanBeNull] string ifConditionFalse)
+        public static void Add(this ArgumentBuilder builder, bool condition, string? ifConditionTrue, string? ifConditionFalse)
         {
             builder.Add(condition ? ifConditionTrue : ifConditionFalse);
         }
@@ -58,9 +59,9 @@ namespace GitCommands
         /// </remarks>
         /// <param name="builder">The <see cref="ArgumentBuilder"/> to add arguments to.</param>
         /// <param name="values">A sequence of strings to add.</param>
-        public static void Add(this ArgumentBuilder builder, [CanBeNull, ItemCanBeNull] IEnumerable<string> values)
+        public static void Add(this ArgumentBuilder builder, IEnumerable<string?>? values)
         {
-            if (values == null)
+            if (values is null)
             {
                 return;
             }
@@ -84,9 +85,9 @@ namespace GitCommands
         /// <param name="builder">The <see cref="ArgumentBuilder"/> to add arguments to.</param>
         /// <param name="condition">Whether or not to add <paramref name="ifConditionTrue"/> to the argument list.</param>
         /// <param name="ifConditionTrue">A sequence of strings to add if <paramref name="condition"/> is <c>true</c>.</param>
-        public static void Add(this ArgumentBuilder builder, bool condition, [CanBeNull, ItemCanBeNull] IEnumerable<string> ifConditionTrue)
+        public static void Add(this ArgumentBuilder builder, bool condition, IEnumerable<string?>? ifConditionTrue)
         {
-            if (!condition || ifConditionTrue == null)
+            if (!condition || ifConditionTrue is null)
             {
                 return;
             }
@@ -106,19 +107,15 @@ namespace GitCommands
         {
             builder.Add(GetArgument());
 
-            string GetArgument()
+            string? GetArgument()
             {
-                switch (option)
+                return option switch
                 {
-                    case ForcePushOptions.Force:
-                        return "-f";
-                    case ForcePushOptions.ForceWithLease:
-                        return "--force-with-lease";
-                    case ForcePushOptions.DoNotForce:
-                        return null;
-                    default:
-                        throw new InvalidEnumArgumentException(nameof(option), (int)option, typeof(ForcePushOptions));
-                }
+                    ForcePushOptions.Force => "-f",
+                    ForcePushOptions.ForceWithLease => "--force-with-lease",
+                    ForcePushOptions.DoNotForce => null,
+                    _ => throw new InvalidEnumArgumentException(nameof(option), (int)option, typeof(ForcePushOptions))
+                };
             }
         }
 
@@ -133,19 +130,14 @@ namespace GitCommands
 
             string GetArgument()
             {
-                switch (mode)
+                return mode switch
                 {
-                    case UntrackedFilesMode.Default:
-                        return "--untracked-files";
-                    case UntrackedFilesMode.No:
-                        return "--untracked-files=no";
-                    case UntrackedFilesMode.Normal:
-                        return "--untracked-files=normal";
-                    case UntrackedFilesMode.All:
-                        return "--untracked-files=all";
-                    default:
-                        throw new InvalidEnumArgumentException(nameof(mode), (int)mode, typeof(UntrackedFilesMode));
-                }
+                    UntrackedFilesMode.Default => "--untracked-files",
+                    UntrackedFilesMode.No => "--untracked-files=no",
+                    UntrackedFilesMode.Normal => "--untracked-files=normal",
+                    UntrackedFilesMode.All => "--untracked-files=all",
+                    _ => throw new InvalidEnumArgumentException(nameof(mode), (int)mode, typeof(UntrackedFilesMode))
+                };
             }
         }
 
@@ -160,21 +152,15 @@ namespace GitCommands
 
             string GetArgument()
             {
-                switch (mode)
+                return mode switch
                 {
-                    case IgnoreSubmodulesMode.Default:
-                        return "--ignore-submodules";
-                    case IgnoreSubmodulesMode.None:
-                        return "--ignore-submodules=none";
-                    case IgnoreSubmodulesMode.Untracked:
-                        return "--ignore-submodules=untracked";
-                    case IgnoreSubmodulesMode.Dirty:
-                        return "--ignore-submodules=dirty";
-                    case IgnoreSubmodulesMode.All:
-                        return "--ignore-submodules=all";
-                    default:
-                        throw new InvalidEnumArgumentException(nameof(mode), (int)mode, typeof(IgnoreSubmodulesMode));
-                }
+                    IgnoreSubmodulesMode.Default => "--ignore-submodules",
+                    IgnoreSubmodulesMode.None => "--ignore-submodules=none",
+                    IgnoreSubmodulesMode.Untracked => "--ignore-submodules=untracked",
+                    IgnoreSubmodulesMode.Dirty => "--ignore-submodules=dirty",
+                    IgnoreSubmodulesMode.All => "--ignore-submodules=all",
+                    _ => throw new InvalidEnumArgumentException(nameof(mode), (int)mode, typeof(IgnoreSubmodulesMode))
+                };
             }
         }
 
@@ -189,17 +175,13 @@ namespace GitCommands
 
             string GetArgument()
             {
-                switch (mode)
+                return mode switch
                 {
-                    case CleanMode.OnlyNonIgnored:
-                        return "";
-                    case CleanMode.OnlyIgnored:
-                        return "-X";
-                    case CleanMode.All:
-                        return "-x";
-                    default:
-                        throw new InvalidEnumArgumentException(nameof(mode), (int)mode, typeof(CleanMode));
-                }
+                    CleanMode.OnlyNonIgnored => "",
+                    CleanMode.OnlyIgnored => "-X",
+                    CleanMode.All => "-x",
+                    _ => throw new InvalidEnumArgumentException(nameof(mode), (int)mode, typeof(CleanMode))
+                };
             }
         }
 
@@ -214,19 +196,16 @@ namespace GitCommands
 
             string GetArgument()
             {
-                switch (mode)
+                return mode switch
                 {
-                    case ResetMode.ResetIndex:
-                        return "";
-                    case ResetMode.Soft:
-                        return "--soft";
-                    case ResetMode.Mixed:
-                        return "--mixed";
-                    case ResetMode.Hard:
-                        return "--hard";
-                    default:
-                        throw new InvalidEnumArgumentException(nameof(mode), (int)mode, typeof(ResetMode));
-                }
+                    ResetMode.ResetIndex => "",
+                    ResetMode.Soft => "--soft",
+                    ResetMode.Mixed => "--mixed",
+                    ResetMode.Keep => "--keep",
+                    ResetMode.Merge => "--merge",
+                    ResetMode.Hard => "--hard",
+                    _ => throw new InvalidEnumArgumentException(nameof(mode), (int)mode, typeof(ResetMode))
+                };
             }
         }
 
@@ -241,17 +220,13 @@ namespace GitCommands
 
             string GetArgument()
             {
-                switch (option)
+                return option switch
                 {
-                    case GitBisectOption.Good:
-                        return "good";
-                    case GitBisectOption.Bad:
-                        return "bad";
-                    case GitBisectOption.Skip:
-                        return "skip";
-                    default:
-                        throw new InvalidEnumArgumentException(nameof(option), (int)option, typeof(GitBisectOption));
-                }
+                    GitBisectOption.Good => "good",
+                    GitBisectOption.Bad => "bad",
+                    GitBisectOption.Skip => "skip",
+                    _ => throw new InvalidEnumArgumentException(nameof(option), (int)option, typeof(GitBisectOption))
+                };
             }
         }
 
@@ -264,9 +239,9 @@ namespace GitCommands
         /// <param name="builder">The <see cref="ArgumentBuilder"/> to add arguments to.</param>
         /// <param name="objectId">The SHA-1 object ID to add to the builder, or <c>null</c>.</param>
         /// <exception cref="ArgumentException"><paramref name="objectId"/> represents an artificial commit.</exception>
-        public static void Add(this ArgumentBuilder builder, [CanBeNull] ObjectId objectId)
+        public static void Add(this ArgumentBuilder builder, ObjectId? objectId)
         {
-            if (objectId == null)
+            if (objectId is null)
             {
                 return;
             }
@@ -288,9 +263,9 @@ namespace GitCommands
         /// <param name="builder">The <see cref="ArgumentBuilder"/> to add arguments to.</param>
         /// <param name="objectIds">A sequence of SHA-1 object IDs to add to the builder, or <c>null</c>.</param>
         /// <exception cref="ArgumentException"><paramref name="objectIds"/> contains an artificial commit.</exception>
-        public static void Add(this ArgumentBuilder builder, [CanBeNull, ItemCanBeNull] IEnumerable<ObjectId> objectIds)
+        public static void Add(this ArgumentBuilder builder, IEnumerable<ObjectId?>? objectIds)
         {
-            if (objectIds == null)
+            if (objectIds is null)
             {
                 return;
             }
@@ -300,5 +275,78 @@ namespace GitCommands
                 builder.Add(objectId);
             }
         }
+
+        /// <summary>
+        /// Split arguments exceeding max length into multiple batches.
+        /// Windows by default limit arguments length less than 32767 <see cref="short.MaxValue"/>.
+        /// Implementation by <see cref="System.Diagnostics.Process"/> will have file path included in command line arguments,
+        /// as well as added quotation and space characters, so we need base length to account for all these added characters
+        /// <see href="https://referencesource.microsoft.com/#system/services/monitoring/system/diagnosticts/Process.cs,1944"/>
+        /// </summary>
+        /// <param name="builder">Argument builder instance.</param>
+        /// <param name="arguments">Arguments.</param>
+        /// <param name="baseLength">Base executable file and command line length.</param>
+        /// <param name="maxLength">Command line max length. Default is 32767 - 1 on Windows.</param>
+        /// <returns>Array of batch arguments split by max length.</returns>
+        public static List<BatchArgumentItem> BuildBatchArguments(this ArgumentBuilder builder, IEnumerable<string> arguments, int? baseLength = null, int maxLength = short.MaxValue)
+        {
+            // 3: double quotes + ' '
+            // '"git.exe" ' is always included in final command line arguments
+            baseLength ??= AppSettings.GitCommand.Length + 3;
+
+            var baseArgument = builder.ToString();
+            if (baseLength + baseArgument.Length >= maxLength)
+            {
+                throw new ArgumentException($"Git base command \"{baseArgument}\" always reached max length of {maxLength} characters.", nameof(baseArgument));
+            }
+
+            // Clone command as argument builder
+            List<BatchArgumentItem> batches = new();
+            var currentBatchItemCount = 0;
+            var currentArgumentLength = baseArgument.Length;
+            var lastBatchBuilder = arguments.Aggregate(builder, (currentBatchBuilder, argument) =>
+            {
+                // 1: ' ' space character length will be added
+                // When enumeration is finished, no need to add ' ' to length calculation
+                if (baseLength + currentArgumentLength + 1 + argument.Length >= maxLength)
+                {
+                    // Handle abnormal case when base command and a single argument exceed max length
+                    if (currentBatchItemCount == 0)
+                    {
+                        throw new ArgumentException($"Git command \"{currentBatchBuilder}\" always exceeded max length of {maxLength} characters.", nameof(arguments));
+                    }
+
+                    // Finish current command line
+                    batches.Add(new BatchArgumentItem(currentBatchBuilder, currentBatchItemCount));
+
+                    // Return new argument builder
+                    currentBatchItemCount = 1;
+                    currentArgumentLength = baseArgument.Length + 1 + argument.Length;
+                    return new ArgumentBuilder() { baseArgument, argument };
+                }
+
+                currentBatchBuilder.Add(argument);
+                currentArgumentLength += argument.Length + 1;
+                currentBatchItemCount++;
+                return currentBatchBuilder;
+            });
+
+            // Handle rare case when last argument length exceed max length
+            if (baseLength + currentArgumentLength >= maxLength)
+            {
+                throw new ArgumentException($"Git command \"{lastBatchBuilder}\" always exceeded max length of {maxLength} characters.", nameof(arguments));
+            }
+
+            // Add last commandline batch
+            if (!lastBatchBuilder.IsEmpty)
+            {
+                batches.Add(new BatchArgumentItem(lastBatchBuilder, currentBatchItemCount));
+            }
+
+            return batches;
+        }
+
+        public static List<BatchArgumentItem> BuildBatchArgumentsForFiles(this ArgumentBuilder builder, IEnumerable<string> files)
+            => builder.BuildBatchArguments(files.Select(f => f.ToPosixPath().QuoteNE()));
     }
 }

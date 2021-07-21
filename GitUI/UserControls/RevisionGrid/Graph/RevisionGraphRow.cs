@@ -1,5 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
+using Microsoft;
 
 namespace GitUI.UserControls.RevisionGrid.Graph
 {
@@ -11,12 +13,13 @@ namespace GitUI.UserControls.RevisionGrid.Graph
         int GetLaneCount();
         IEnumerable<RevisionGraphSegment> GetSegmentsForIndex(int index);
         int GetLaneIndexForSegment(RevisionGraphSegment revisionGraphRevision);
+        void MoveLanesRight(int fromLane);
     }
 
     // The RevisionGraphRow contains an ordered list of Segments that crosses the row or connects to the revision in the row.
     // The segments can be returned in the order how it is stored.
     // Segments are not the same as lanes.A crossing segment is a lane, but multiple segments can connect to the revision.
-    // Therefor, a single lane can have multiple segments.
+    // Therefore, a single lane can have multiple segments.
     public class RevisionGraphRow : IRevisionGraphRow
     {
         public RevisionGraphRow(RevisionGraphRevision revision, IReadOnlyList<RevisionGraphSegment> segments)
@@ -25,16 +28,28 @@ namespace GitUI.UserControls.RevisionGrid.Graph
             Segments = segments;
         }
 
-        public RevisionGraphRevision Revision { get; private set; }
-        public IReadOnlyList<RevisionGraphSegment> Segments { get; private set; }
+        public RevisionGraphRevision Revision { get; }
 
-        // This dictonary contains a cached list of all segments and the lane index the segment is in for this row.
-        private IReadOnlyDictionary<RevisionGraphSegment, int> _segmentLanes;
+        public IReadOnlyList<RevisionGraphSegment> Segments { get; }
 
-        // The cached lanecount
+        /// <summary>
+        /// This dictionary contains a cached list of all segments and the lane index the segment is in for this row.
+        /// </summary>
+        private IDictionary<RevisionGraphSegment, int>? _segmentLanes;
+
+        /// <summary>
+        /// Contains the gaps created by. <cref>MoveLanesRight</cref>
+        /// </summary>
+        private HashSet<int>? _gaps;
+
+        /// <summary>
+        /// The cached lanecount.
+        /// </summary>
         private int _laneCount;
 
-        // The cached revisionlane
+        /// <summary>
+        /// The cached revisionlane.
+        /// </summary>
         private int _revisionLane;
 
         // The row contains ordered segments. This method sorts the segments per lane.
@@ -44,21 +59,21 @@ namespace GitUI.UserControls.RevisionGrid.Graph
         // we cache on demand.
         private void BuildSegmentLanes()
         {
-            if (_segmentLanes != null)
+            if (_segmentLanes is not null)
             {
                 return;
             }
 
-            // We do not want SegementLanes to be build multiple times. Lock it.
+            // We do not want SegmentLanes to be build multiple times. Lock it.
             lock (Revision)
             {
-                // Another thread could be waiting for the lock, while the segmentlanes where being build. Check again if segmentslanes is null.
-                if (_segmentLanes != null)
+                // Another thread could be waiting for the lock, while the segmentlanes were being built. Check again if segmentslanes is null.
+                if (_segmentLanes is not null)
                 {
                     return;
                 }
 
-                Dictionary<RevisionGraphSegment, int> newSegmentLanes = new Dictionary<RevisionGraphSegment, int>();
+                Dictionary<RevisionGraphSegment, int> newSegmentLanes = new();
 
                 int currentRevisionLane = -1;
                 int laneIndex = 0;
@@ -148,11 +163,11 @@ namespace GitUI.UserControls.RevisionGrid.Graph
         public IEnumerable<RevisionGraphSegment> GetSegmentsForIndex(int index)
         {
             BuildSegmentLanes();
-            foreach (var keyValye in _segmentLanes)
+            foreach (var keyValue in _segmentLanes!)
             {
-                if (keyValye.Value == index)
+                if (keyValue.Value == index)
                 {
-                    yield return keyValye.Key;
+                    yield return keyValue.Key;
                 }
             }
         }
@@ -160,12 +175,47 @@ namespace GitUI.UserControls.RevisionGrid.Graph
         public int GetLaneIndexForSegment(RevisionGraphSegment revisionGraphRevision)
         {
             BuildSegmentLanes();
-            if (_segmentLanes.TryGetValue(revisionGraphRevision, out int index))
+            if (_segmentLanes!.TryGetValue(revisionGraphRevision, out int index))
             {
                 return index;
             }
 
             return -1;
+        }
+
+        public void MoveLanesRight(int fromLane)
+        {
+            int nextGap = _gaps?.Min(lane => lane > fromLane ? lane : null) ?? int.MaxValue;
+
+            if (_revisionLane >= fromLane && _revisionLane < nextGap)
+            {
+                ++_revisionLane;
+            }
+
+            Validates.NotNull(_segmentLanes);
+            RevisionGraphSegment[] segmentsToBeMoved = _segmentLanes.Where(keyValue => keyValue.Value >= fromLane && keyValue.Value < nextGap)
+                                                                    .Select(keyValue => keyValue.Key)
+                                                                    .ToArray();
+            if (!segmentsToBeMoved.Any())
+            {
+                return;
+            }
+
+            _gaps ??= new();
+            _gaps.Add(fromLane);
+            if (nextGap < int.MaxValue)
+            {
+                _gaps.Remove(nextGap);
+            }
+            else
+            {
+                ++_laneCount;
+            }
+
+            foreach (RevisionGraphSegment segment in segmentsToBeMoved)
+            {
+                ++_segmentLanes[segment];
+            }
         }
     }
 }

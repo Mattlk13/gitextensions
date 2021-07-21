@@ -1,27 +1,26 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Linq;
+using System.Threading.Tasks;
 using System.Windows.Forms;
 using GitCommands;
 using GitUIPluginInterfaces;
-using JetBrains.Annotations;
 
 namespace GitUI.CommandsDialogs.BrowseDialog
 {
     public sealed partial class FormGoToCommit : GitModuleForm
     {
         /// <summary>
-        /// this will be used when Go() is called
+        /// this will be used when Go() is called.
         /// </summary>
-        private string _selectedRevision;
+        private string? _selectedRevision;
 
         // these two are used to prepare for _selectedRevision
-        private IGitRef _selectedTag;
-        private IGitRef _selectedBranch;
+        private IGitRef? _selectedTag;
+        private IGitRef? _selectedBranch;
 
-        private readonly AsyncLoader _tagsLoader = new AsyncLoader();
-        private readonly AsyncLoader _branchesLoader = new AsyncLoader();
+        private readonly AsyncLoader _tagsLoader = new();
+        private readonly AsyncLoader _branchesLoader = new();
 
         [Obsolete("For VS designer and translation test only. Do not remove.")]
         private FormGoToCommit()
@@ -38,16 +37,15 @@ namespace GitUI.CommandsDialogs.BrowseDialog
 
         private void FormGoToCommit_Load(object sender, EventArgs e)
         {
-            LoadTagsAsync();
-            LoadBranchesAsync();
+            LoadTagsAsync().FileAndForget();
+            LoadBranchesAsync().FileAndForget();
             SetCommitExpressionFromClipboard();
         }
 
         /// <summary>
-        /// returns null if revision does not exist (could not be revparsed)
+        /// returns null if revision does not exist (could not be revparsed).
         /// </summary>
-        [CanBeNull]
-        public ObjectId ValidateAndGetSelectedRevision()
+        public ObjectId? ValidateAndGetSelectedRevision()
         {
             return Module.RevParse(_selectedRevision);
         }
@@ -70,41 +68,35 @@ namespace GitUI.CommandsDialogs.BrowseDialog
 
         private void linkGitRevParse_LinkClicked(object sender, LinkLabelLinkClickedEventArgs e)
         {
-            Process.Start(@"https://git-scm.com/docs/git-rev-parse#_specifying_revisions");
+            OsShellUtil.OpenUrlInDefaultBrowser(@"https://git-scm.com/docs/git-rev-parse#_specifying_revisions");
         }
 
-        private void LoadTagsAsync()
+        private Task LoadTagsAsync()
         {
-            comboBoxTags.Text = Strings.LoadingData;
-            ThreadHelper.JoinableTaskFactory.RunAsync(() =>
-            {
-                return _tagsLoader.LoadAsync(
-                    () => Module.GetTagRefs(GitModule.GetTagRefsSortOrder.ByCommitDateDescending).ToList(),
-                    list =>
-                    {
-                        comboBoxTags.Text = string.Empty;
-                        comboBoxTags.DataSource = list;
-                        comboBoxTags.DisplayMember = nameof(IGitRef.LocalName);
-                        SetSelectedRevisionByFocusedControl();
-                    });
-            });
+            comboBoxTags.Text = TranslatedStrings.LoadingData;
+            return _tagsLoader.LoadAsync(
+                () => Module.GetRefs(RefsFilter.Tags).ToList(),
+                list =>
+                {
+                    comboBoxTags.Text = string.Empty;
+                    comboBoxTags.DataSource = list;
+                    comboBoxTags.DisplayMember = nameof(IGitRef.LocalName);
+                    SetSelectedRevisionByFocusedControl();
+                });
         }
 
-        private void LoadBranchesAsync()
+        private Task LoadBranchesAsync()
         {
-            comboBoxBranches.Text = Strings.LoadingData;
-            ThreadHelper.JoinableTaskFactory.RunAsync(() =>
-            {
-                return _branchesLoader.LoadAsync(
-                    () => Module.GetRefs(false).ToList(),
-                    list =>
-                    {
-                        comboBoxBranches.Text = string.Empty;
-                        comboBoxBranches.DataSource = list;
-                        comboBoxBranches.DisplayMember = nameof(IGitRef.LocalName);
-                        SetSelectedRevisionByFocusedControl();
-                    });
-            });
+            comboBoxBranches.Text = TranslatedStrings.LoadingData;
+            return _branchesLoader.LoadAsync(
+                () => Module.GetRefs(RefsFilter.Heads).ToList(),
+                list =>
+                {
+                    comboBoxBranches.Text = string.Empty;
+                    comboBoxBranches.DataSource = list;
+                    comboBoxBranches.DisplayMember = nameof(IGitRef.LocalName);
+                    SetSelectedRevisionByFocusedControl();
+                });
         }
 
         private static IReadOnlyList<IGitRef> DataSourceToGitRefs(ComboBox cb)
@@ -130,17 +122,21 @@ namespace GitUI.CommandsDialogs.BrowseDialog
             }
             else if (comboBoxTags.Focused)
             {
-                _selectedRevision = _selectedTag != null ? _selectedTag.Guid : "";
+                _selectedRevision = _selectedTag is not null ? _selectedTag.Guid : "";
             }
             else if (comboBoxBranches.Focused)
             {
-                _selectedRevision = _selectedBranch != null ? _selectedBranch.Guid : "";
+                _selectedRevision = _selectedBranch is not null ? _selectedBranch.Guid : "";
+            }
+            else
+            {
+                textboxCommitExpression.Focus();
             }
         }
 
         private void comboBoxTags_TextChanged(object sender, EventArgs e)
         {
-            if (comboBoxTags.DataSource == null)
+            if (comboBoxTags.DataSource is null)
             {
                 return;
             }
@@ -151,7 +147,7 @@ namespace GitUI.CommandsDialogs.BrowseDialog
 
         private void comboBoxBranches_TextChanged(object sender, EventArgs e)
         {
-            if (comboBoxBranches.DataSource == null)
+            if (comboBoxBranches.DataSource is null)
             {
                 return;
             }
@@ -162,7 +158,7 @@ namespace GitUI.CommandsDialogs.BrowseDialog
 
         private void comboBoxTags_SelectionChangeCommitted(object sender, EventArgs e)
         {
-            if (comboBoxTags.SelectedValue == null)
+            if (comboBoxTags.SelectedValue is null)
             {
                 return;
             }
@@ -174,7 +170,7 @@ namespace GitUI.CommandsDialogs.BrowseDialog
 
         private void comboBoxBranches_SelectionChangeCommitted(object sender, EventArgs e)
         {
-            if (comboBoxBranches.SelectedValue == null)
+            if (comboBoxBranches.SelectedValue is null)
             {
                 return;
             }
@@ -205,13 +201,13 @@ namespace GitUI.CommandsDialogs.BrowseDialog
         private void SetCommitExpressionFromClipboard()
         {
             string text = Clipboard.GetText().Trim();
-            if (text.IsNullOrEmpty())
+            if (string.IsNullOrEmpty(text))
             {
                 return;
             }
 
             var guid = Module.RevParse(text);
-            if (guid != null)
+            if (guid is not null)
             {
                 textboxCommitExpression.Text = text;
                 textboxCommitExpression.SelectAll();

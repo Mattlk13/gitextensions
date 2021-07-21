@@ -1,28 +1,31 @@
 ﻿using GitCommands.Settings;
 using GitUIPluginInterfaces;
+using Microsoft;
 
 namespace GitUI.CommandsDialogs.SettingsDialog
 {
     public class RepoDistSettingsPage : SettingsPageWithHeader, IRepoDistSettingsPage
     {
-        protected RepoDistSettingsSet RepoDistSettingsSet => CommonLogic.RepoDistSettingsSet;
-        protected RepoDistSettings CurrentSettings { get; private set; }
+        protected RepoDistSettingsSet? RepoDistSettingsSet => CommonLogic.RepoDistSettingsSet;
+        protected RepoDistSettings? CurrentSettings { get; private set; }
 
         protected override void Init(ISettingsPageHost pageHost)
         {
             base.Init(pageHost);
 
-            CurrentSettings = RepoDistSettingsSet.EffectiveSettings;
+            CurrentSettings = RepoDistSettingsSet?.EffectiveSettings;
         }
 
         protected override ISettingsSource GetCurrentSettings()
         {
+            Validates.NotNull(CurrentSettings);
+
             return CurrentSettings;
         }
 
         public void SetEffectiveSettings()
         {
-            if (RepoDistSettingsSet != null)
+            if (RepoDistSettingsSet is not null)
             {
                 SetCurrentSettings(RepoDistSettingsSet.EffectiveSettings);
             }
@@ -30,7 +33,7 @@ namespace GitUI.CommandsDialogs.SettingsDialog
 
         public void SetLocalSettings()
         {
-            if (RepoDistSettingsSet != null)
+            if (RepoDistSettingsSet is not null)
             {
                 SetCurrentSettings(RepoDistSettingsSet.LocalSettings);
             }
@@ -38,7 +41,7 @@ namespace GitUI.CommandsDialogs.SettingsDialog
 
         public override void SetGlobalSettings()
         {
-            if (RepoDistSettingsSet != null)
+            if (RepoDistSettingsSet is not null)
             {
                 SetCurrentSettings(RepoDistSettingsSet.GlobalSettings);
             }
@@ -46,7 +49,7 @@ namespace GitUI.CommandsDialogs.SettingsDialog
 
         public void SetRepoDistSettings()
         {
-            if (RepoDistSettingsSet != null)
+            if (RepoDistSettingsSet is not null)
             {
                 SetCurrentSettings(RepoDistSettingsSet.RepoDistSettings);
             }
@@ -54,7 +57,7 @@ namespace GitUI.CommandsDialogs.SettingsDialog
 
         private void SetCurrentSettings(RepoDistSettings settings)
         {
-            if (CurrentSettings != null)
+            if (CurrentSettings is not null)
             {
                 SaveSettings();
             }

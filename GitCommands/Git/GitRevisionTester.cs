@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.IO.Abstractions;
 using System.Linq;
+using GitUIPluginInterfaces;
 
 namespace GitCommands.Git
 {
@@ -15,7 +16,7 @@ namespace GitCommands.Git
         /// <returns>
         /// True if one of the first selected is parent
         /// </returns>
-        bool AllFirstAreParentsToSelected(IEnumerable<GitRevision> firstSelected, GitRevision selectedRevision);
+        bool AllFirstAreParentsToSelected(IEnumerable<ObjectId>? firstSelected, GitRevision? selectedRevision);
 
         /// <summary>
         /// Finds if any of the git items exists as a file.
@@ -24,9 +25,9 @@ namespace GitCommands.Git
         /// <returns>
         /// True if at least one file exists.
         /// </returns>
-        bool AnyLocalFileExists(IEnumerable<GitItemStatus> selectedItemsWithParent);
+        bool AnyLocalFileExists(IEnumerable<GitItemStatus>? selectedItemsWithParent);
 
-        bool Matches(GitRevision revision, string criteria);
+        bool Matches(GitRevision? revision, string criteria);
     }
 
     public class GitRevisionTester : IGitRevisionTester
@@ -34,21 +35,21 @@ namespace GitCommands.Git
         private readonly IFullPathResolver _fullPathResolver;
         private readonly IFileSystem _fileSystem;
 
-        public GitRevisionTester(IFullPathResolver fullPathResolver, IFileSystem fileSystem = null)
+        public GitRevisionTester(IFullPathResolver fullPathResolver, IFileSystem? fileSystem = null)
         {
             _fullPathResolver = fullPathResolver;
             _fileSystem = fileSystem ?? new FileSystem();
         }
 
         /// <inheritdoc />
-        public bool AllFirstAreParentsToSelected(IEnumerable<GitRevision> firstSelected, GitRevision selectedRevision)
+        public bool AllFirstAreParentsToSelected(IEnumerable<ObjectId>? firstSelected, GitRevision? selectedRevision)
         {
-            if (selectedRevision?.ParentIds == null || firstSelected == null)
+            if (selectedRevision?.ParentIds is null || firstSelected is null)
             {
                 return false;
             }
 
-            foreach (var item in firstSelected.Select(r => r.ObjectId))
+            foreach (var item in firstSelected)
             {
                 if (!selectedRevision.ParentIds.Contains(item))
                 {
@@ -60,9 +61,9 @@ namespace GitCommands.Git
         }
 
         /// <inheritdoc />
-        public bool AnyLocalFileExists(IEnumerable<GitItemStatus> selectedItemsWithParent)
+        public bool AnyLocalFileExists(IEnumerable<GitItemStatus>? selectedItemsWithParent)
         {
-            if (selectedItemsWithParent == null)
+            if (selectedItemsWithParent is null)
             {
                 return false;
             }
@@ -76,7 +77,7 @@ namespace GitCommands.Git
 
             foreach (var item in items)
             {
-                string filePath = _fullPathResolver.Resolve(item.Name);
+                string? filePath = _fullPathResolver.Resolve(item.Name);
                 if (_fileSystem.File.Exists(filePath))
                 {
                     return true;
@@ -87,9 +88,9 @@ namespace GitCommands.Git
         }
 
         /// <inheritdoc />
-        public bool Matches(GitRevision revision, string criteria)
+        public bool Matches(GitRevision? revision, string criteria)
         {
-            if (revision == null || string.IsNullOrWhiteSpace(criteria))
+            if (revision is null || string.IsNullOrWhiteSpace(criteria))
             {
                 // don't throw exception for performance reasons
                 return false;
@@ -101,13 +102,13 @@ namespace GitCommands.Git
                 return true;
             }
 
-            if (criteria.Length > 2 && revision.Guid.StartsWith(criteria, StringComparison.CurrentCultureIgnoreCase))
+            if (criteria.Length > 2 && revision.Guid?.StartsWith(criteria, StringComparison.CurrentCultureIgnoreCase) == true)
             {
                 return true;
             }
 
             return revision.Author?.IndexOf(criteria, StringComparison.CurrentCultureIgnoreCase) >= 0 ||
-                   revision.Subject?.IndexOf(criteria, StringComparison.OrdinalIgnoreCase) >= 0;
+                   (revision.Body ?? revision.Subject)?.IndexOf(criteria, StringComparison.OrdinalIgnoreCase) >= 0;
         }
     }
 }

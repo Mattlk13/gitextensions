@@ -13,7 +13,7 @@
         /// <param name="disposing">true if managed resources should be disposed; otherwise, false.</param>
         protected override void Dispose(bool disposing)
         {
-            if (disposing && (components != null))
+            if (disposing && (components is not null))
             {
                 components.Dispose();
             }
@@ -30,7 +30,7 @@
         {
             this.splitContainer1 = new System.Windows.Forms.SplitContainer();
             this.tableLayoutPanel1 = new System.Windows.Forms.TableLayoutPanel();
-            this.toolStripManageCategories = new System.Windows.Forms.ToolStrip();
+            this.toolStripManageCategories = new GitUI.ToolStripEx();
             this.Add = new System.Windows.Forms.ToolStripSplitButton();
             this.toolStripSeparator1 = new System.Windows.Forms.ToolStripSeparator();
             this.Remove = new System.Windows.Forms.ToolStripButton();
@@ -134,17 +134,17 @@
             // toolStripManageCategories
             // 
             this.toolStripManageCategories.AllowMerge = false;
+            this.toolStripManageCategories.GripMargin = new System.Windows.Forms.Padding(0);
             this.toolStripManageCategories.GripStyle = System.Windows.Forms.ToolStripGripStyle.Hidden;
             this.toolStripManageCategories.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
             this.Add,
             this.toolStripSeparator1,
             this.Remove});
-            this.toolStripManageCategories.Location = new System.Drawing.Point(5, 0);
-            this.toolStripManageCategories.Margin = new System.Windows.Forms.Padding(5, 0, 5, 0);
+            this.toolStripManageCategories.Location = new System.Drawing.Point(0, 1);
+            this.toolStripManageCategories.Margin = new System.Windows.Forms.Padding(0, 1, 0, 0);
             this.toolStripManageCategories.Name = "toolStripManageCategories";
             this.toolStripManageCategories.Size = new System.Drawing.Size(182, 25);
             this.toolStripManageCategories.TabIndex = 5;
-            this.toolStripManageCategories.Text = "toolStrip1";
             // 
             // Add
             // 
@@ -721,7 +721,7 @@
         private System.Windows.Forms.FlowLayoutPanel flowLayoutPanel4;
         private System.Windows.Forms.TextBox _NO_TRANSLATE_UseRemotes;
         private System.Windows.Forms.CheckBox chkOnlyFirstRemote;
-        private System.Windows.Forms.ToolStrip toolStripManageCategories;
+        private GitUI.ToolStripEx toolStripManageCategories;
         private System.Windows.Forms.ToolStripSplitButton Add;
         private System.Windows.Forms.ToolStripButton Remove;
         private System.Windows.Forms.ToolStripSeparator toolStripSeparator1;

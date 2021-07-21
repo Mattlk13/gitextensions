@@ -1,9 +1,14 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Drawing;
 using System.IO;
 using System.Linq;
 using System.Windows.Forms;
 using GitCommands;
+using GitCommands.Git.Commands;
+using GitCommands.Patches;
+using GitExtUtils.GitUI.Theming;
+using GitUI.HelperDialogs;
 using ResourceManager;
 
 namespace GitUI.CommandsDialogs
@@ -13,22 +18,24 @@ namespace GitUI.CommandsDialogs
         #region Translation
 
         private readonly TranslationString _conflictResolvedText =
-            new TranslationString("Conflicts resolved");
+            new("Conflicts resolved");
         private readonly TranslationString _conflictMergetoolText =
-            new TranslationString("Solve conflicts");
+            new("Solve conflicts");
 
         private readonly TranslationString _selectPatchFileFilter =
-            new TranslationString("Patch file (*.Patch)");
+            new("Patch file (*.Patch)");
         private readonly TranslationString _selectPatchFileCaption =
-            new TranslationString("Select patch file");
+            new("Select patch file");
 
         private readonly TranslationString _noFileSelectedText =
-            new TranslationString("Please select a patch to apply");
+            new("Please select a patch to apply");
 
         private readonly TranslationString _applyPatchMsgBox =
-            new TranslationString("Apply patch");
+            new("Apply patch");
 
         #endregion
+
+        private static readonly List<PatchFile> Skipped = new();
 
         [Obsolete("For VS designer and translation test only. Do not remove.")]
         private FormApplyPatch()
@@ -41,6 +48,15 @@ namespace GitUI.CommandsDialogs
         {
             InitializeComponent();
             InitializeComplete();
+
+            patchGrid1.SetSkipped(Skipped);
+
+            SolveMergeConflicts.BackColor = OtherColors.MergeConflictsColor;
+            SolveMergeConflicts.SetForeColorForBackColor();
+        }
+
+        private void FormApplyPatchLoad(object sender, EventArgs e)
+        {
             EnableButtons();
         }
 
@@ -62,6 +78,7 @@ namespace GitUI.CommandsDialogs
             {
                 Apply.Enabled = false;
                 IgnoreWhitespace.Enabled = false;
+                SignOff.Enabled = false;
                 PatchFileMode.Enabled = false;
                 PatchDirMode.Enabled = false;
                 AddFiles.Enabled = true;
@@ -88,6 +105,7 @@ namespace GitUI.CommandsDialogs
 
                 Apply.Enabled = true;
                 IgnoreWhitespace.Enabled = true;
+                SignOff.Enabled = true;
                 PatchFileMode.Enabled = true;
                 PatchDirMode.Enabled = true;
                 AddFiles.Enabled = false;
@@ -97,7 +115,7 @@ namespace GitUI.CommandsDialogs
                 Abort.Enabled = false;
             }
 
-            if (patchGrid1.PatchFiles == null || patchGrid1.PatchFiles.Count == 0)
+            if (patchGrid1.PatchFiles is null || patchGrid1.PatchFiles.Count == 0)
             {
                 patchGrid1.Initialize();
             }
@@ -118,28 +136,26 @@ namespace GitUI.CommandsDialogs
                 Mergetool.Text = ">" + _conflictMergetoolText.Text + "<";
                 Mergetool.Focus();
                 AcceptButton = Mergetool;
-                MergeToolPanel.BackColor = Color.Black;
+                MergeToolPanel.BackColor = SystemColors.ControlText;
             }
             else if (Module.InTheMiddleOfPatch())
             {
                 Resolved.Text = ">" + _conflictResolvedText.Text + "<";
                 Resolved.Focus();
                 AcceptButton = Resolved;
-                ContinuePanel.BackColor = Color.Black;
+                ContinuePanel.BackColor = SystemColors.ControlText;
             }
         }
 
         private string SelectPatchFile(string initialDirectory)
         {
-            using (var dialog = new OpenFileDialog
+            using OpenFileDialog dialog = new()
             {
                 Filter = _selectPatchFileFilter.Text + "|*.patch",
                 InitialDirectory = initialDirectory,
                 Title = _selectPatchFileCaption.Text
-            })
-            {
-                return (dialog.ShowDialog(this) == DialogResult.OK) ? dialog.FileName : PatchFile.Text;
-            }
+            };
+            return (dialog.ShowDialog(this) == DialogResult.OK) ? dialog.FileName : PatchFile.Text;
         }
 
         private void BrowsePatch_Click(object sender, EventArgs e)
@@ -152,26 +168,29 @@ namespace GitUI.CommandsDialogs
             var patchFile = PatchFile.Text;
             var dirText = PatchDir.Text;
             var ignoreWhiteSpace = IgnoreWhitespace.Checked;
+            var signOff = SignOff.Checked;
 
             if (string.IsNullOrEmpty(patchFile) && string.IsNullOrEmpty(dirText))
             {
-                MessageBox.Show(this, _noFileSelectedText.Text);
+                MessageBox.Show(this, _noFileSelectedText.Text, TranslatedStrings.Error, MessageBoxButtons.OK,  MessageBoxIcon.Error);
                 return;
             }
 
             using (WaitCursorScope.Enter())
             {
+                Skipped.Clear();
+
                 if (PatchFileMode.Checked)
                 {
                     var arguments = IsDiffFile(patchFile)
                         ? GitCommandHelpers.ApplyDiffPatchCmd(ignoreWhiteSpace, patchFile)
-                        : GitCommandHelpers.ApplyMailboxPatchCmd(ignoreWhiteSpace, patchFile);
+                        : GitCommandHelpers.ApplyMailboxPatchCmd(signOff, ignoreWhiteSpace, patchFile);
 
-                    FormProcess.ShowDialog(this, arguments);
+                    FormProcess.ShowDialog(this, process: null, arguments, Module.WorkingDir, input: null, useDialogSettings: true);
                 }
                 else
                 {
-                    var arguments = GitCommandHelpers.ApplyMailboxPatchCmd(ignoreWhiteSpace);
+                    var arguments = GitCommandHelpers.ApplyMailboxPatchCmd(signOff, ignoreWhiteSpace);
 
                     Module.ApplyPatch(dirText, arguments);
                 }
@@ -194,12 +213,10 @@ namespace GitUI.CommandsDialogs
         {
             try
             {
-                using (var sr = new StreamReader(path))
-                {
-                    string line = sr.ReadLine();
+                using StreamReader sr = new(path);
+                string line = sr.ReadLine();
 
-                    return line != null && (line.StartsWith("diff ") || line.StartsWith("Index: "));
-                }
+                return line is not null && (line.StartsWith("diff ") || line.StartsWith("Index: "));
             }
             catch
             {
@@ -218,12 +235,13 @@ namespace GitUI.CommandsDialogs
             using (WaitCursorScope.Enter())
             {
                 var applyingPatch = patchGrid1.PatchFiles.FirstOrDefault(p => p.IsNext);
-                if (applyingPatch != null)
+                if (applyingPatch is not null)
                 {
                     applyingPatch.IsSkipped = true;
+                    Skipped.Add(applyingPatch);
                 }
 
-                FormProcess.ShowDialog(this, GitCommandHelpers.SkipCmd());
+                FormProcess.ShowDialog(this, process: null, arguments: GitCommandHelpers.SkipCmd(), Module.WorkingDir, input: null, useDialogSettings: true);
                 EnableButtons();
             }
         }
@@ -232,7 +250,7 @@ namespace GitUI.CommandsDialogs
         {
             using (WaitCursorScope.Enter())
             {
-                FormProcess.ShowDialog(this, GitCommandHelpers.ResolvedCmd());
+                FormProcess.ShowDialog(this, process: null, arguments: GitCommandHelpers.ResolvedCmd(), Module.WorkingDir, input: null, useDialogSettings: true);
                 EnableButtons();
             }
         }
@@ -241,7 +259,8 @@ namespace GitUI.CommandsDialogs
         {
             using (WaitCursorScope.Enter())
             {
-                FormProcess.ShowDialog(this, GitCommandHelpers.AbortCmd());
+                FormProcess.ShowDialog(this, process: null, arguments: GitCommandHelpers.AbortCmd(), Module.WorkingDir, input: null, useDialogSettings: true);
+                Skipped.Clear();
                 EnableButtons();
             }
         }
@@ -257,13 +276,14 @@ namespace GitUI.CommandsDialogs
 
             Text = _applyPatchMsgBox.Text + " (" + Module.WorkingDir + ")";
             IgnoreWhitespace.Checked = AppSettings.ApplyPatchIgnoreWhitespace;
+            SignOff.Checked = AppSettings.ApplyPatchSignOff;
         }
 
         private void BrowseDir_Click(object sender, EventArgs e)
         {
             var userSelectedPath = OsShellUtil.PickFolder(this);
 
-            if (userSelectedPath != null)
+            if (userSelectedPath is not null)
             {
                 PatchDir.Text = userSelectedPath;
             }
@@ -282,6 +302,11 @@ namespace GitUI.CommandsDialogs
         private void IgnoreWhitespace_CheckedChanged(object sender, EventArgs e)
         {
             AppSettings.ApplyPatchIgnoreWhitespace = IgnoreWhitespace.Checked;
+        }
+
+        private void SignOff_CheckedChanged(object sender, EventArgs e)
+        {
+            AppSettings.ApplyPatchSignOff = SignOff.Checked;
         }
     }
 }

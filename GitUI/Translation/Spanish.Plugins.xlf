@@ -1,4 +1,4 @@
-<?xml version="1.0" ?><xliff GitExVersion="3.1.0" version="1.0" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+<?xml version="1.0" ?><xliff GitExVersion="" version="1.0" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
   <file datatype="plaintext" original="AppVeyorSettingsUserControl" source-language="en" target-language="es">
     <body>
       <trans-unit id="cbLoadTestResults.Text">
@@ -10,7 +10,7 @@
   </file>
   <file datatype="plaintext" original="AutoCompileSubModulesPlugin" source-language="en" target-language="es">
     <body>
-      <trans-unit id="Description.Text">
+      <trans-unit id="Name.Text">
         <source>Auto compile SubModules</source>
         <target>Autocompilar submódulos</target>
         
@@ -19,7 +19,7 @@
         <source>Do you want to build {0}?
 
 {1}</source>
-        <target>¿Querés compilar {0}?
+        <target>¿Quieres compilar {0}?
 
 {1}</target>
         
@@ -48,7 +48,7 @@
   </file>
   <file datatype="plaintext" original="BackgroundFetchPlugin" source-language="en" target-language="es">
     <body>
-      <trans-unit id="Description.Text">
+      <trans-unit id="Name.Text">
         <source>Periodic background fetch</source>
         <target>Ejecuta fetch periódicamente en segundo plano</target>
         
@@ -97,7 +97,7 @@
         <target>Nombre de usuario de Bitbucket</target>
         
       </trans-unit>
-      <trans-unit id="Description.Text">
+      <trans-unit id="Name.Text">
         <source>Bitbucket Server</source>
         <target>Servidor Bitbucket</target>
         
@@ -296,7 +296,7 @@
   </file>
   <file datatype="plaintext" original="CreateLocalBranchesPlugin" source-language="en" target-language="es">
     <body>
-      <trans-unit id="Description.Text">
+      <trans-unit id="Name.Text">
         <source>Create local tracking branches</source>
         <target>Crear ramas locales de tracking</target>
         
@@ -336,8 +336,8 @@
         
       </trans-unit>
       <trans-unit id="RefreshBtn.Text">
-        <source>Cancel</source>
-        <target>Cancelar</target>
+        <source>Search branches</source>
+        <target>Buscar ramas</target>
         
       </trans-unit>
       <trans-unit id="_areYouSureToDelete.Text">
@@ -428,11 +428,6 @@ Las ramas serán eliminadas en el servidor remoto '{0}'. Esta acción no puede d
         <target>Eliminar ramas completamente fusionadas con la rama</target>
         
       </trans-unit>
-      <trans-unit id="lblStatus.Text">
-        <source>Loading...</source>
-        <target>Cargando...</target>
-        
-      </trans-unit>
       <trans-unit id="nameDataGridViewTextBoxColumn.HeaderText">
         <source>Name</source>
         <target>Nombre</target>
@@ -445,6 +440,7 @@ Las ramas serán eliminadas en el servidor remoto '{0}'. Esta acción no puede d
       </trans-unit>
       <trans-unit id="regexFilter.Text">
         <source>/(feature|develop)/</source>
+        <target>/(feature|develop)/</target>
         
       </trans-unit>
       <trans-unit id="useRegexCaseInsensitive.Text">
@@ -461,7 +457,7 @@ Las ramas serán eliminadas en el servidor remoto '{0}'. Esta acción no puede d
   </file>
   <file datatype="plaintext" original="DeleteUnusedBranchesPlugin" source-language="en" target-language="es">
     <body>
-      <trans-unit id="Description.Text">
+      <trans-unit id="Name.Text">
         <source>Delete obsolete branches</source>
         <target>Eliminar ramas obsoletas</target>
         
@@ -584,7 +580,7 @@ Las ramas serán eliminadas en el servidor remoto '{0}'. Esta acción no puede d
   </file>
   <file datatype="plaintext" original="FindLargeFilesPlugin" source-language="en" target-language="es">
     <body>
-      <trans-unit id="Description.Text">
+      <trans-unit id="Name.Text">
         <source>Find large files</source>
         <target>Encontrar archivos grandes</target>
         
@@ -696,11 +692,6 @@ Las ramas serán eliminadas en el servidor remoto '{0}'. Esta acción no puede d
         <target>&amp;Publicar</target>
         
       </trans-unit>
-      <trans-unit id="PublishDraft.Text">
-        <source>Submit review as draft</source>
-        <target>Enviar revisión como borrador</target>
-        
-      </trans-unit>
       <trans-unit id="_publishCaption.Text">
         <source>Publish change</source>
         <target>Publicar cambio</target>
@@ -726,6 +717,21 @@ Las ramas serán eliminadas en el servidor remoto '{0}'. Esta acción no puede d
         <target>Rama:</target>
         
       </trans-unit>
+      <trans-unit id="labelCc.Text">
+        <source>CC:</source>
+        <target>CC:</target>
+        
+      </trans-unit>
+      <trans-unit id="labelHashtag.Text">
+        <source>Hashtag:</source>
+        <target>Etiqueta:</target>
+        
+      </trans-unit>
+      <trans-unit id="labelPublishType.Text">
+        <source>Publish Type:</source>
+        <target>Tipo de Publicación:</target>
+        
+      </trans-unit>
       <trans-unit id="labelRemote.Text">
         <source>Remote:</source>
         <target>Remoto:</target>
@@ -733,6 +739,7 @@ Las ramas serán eliminadas en el servidor remoto '{0}'. Esta acción no puede d
       </trans-unit>
       <trans-unit id="labelReviewers.Text">
         <source>Reviewer(s):</source>
+        <target>Revisor(es):</target>
         
       </trans-unit>
       <trans-unit id="labelTopic.Text">
@@ -884,6 +891,7 @@ defaultrebase=0</target>
       </trans-unit>
       <trans-unit id="_commits.Text">
         <source>{0:N0} Commits</source>
+        <target>{0:N0} Commits</target>
         
       </trans-unit>
       <trans-unit id="_commitsBy.Text">
@@ -995,9 +1003,33 @@ Para habilitar Gerrit para un repositorio debe existir el archivo .gitreview, lo
       </trans-unit>
     </body>
   </file>
+  <file datatype="plaintext" original="GerritCapabilities" source-language="en" target-language="es">
+    <body>
+      <trans-unit id="_publishTypeDraft.Text">
+        <source>Draft</source>
+        <target>Borrador</target>
+        
+      </trans-unit>
+      <trans-unit id="_publishTypePrivate.Text">
+        <source>Private</source>
+        <target>Privado</target>
+        
+      </trans-unit>
+      <trans-unit id="_publishTypeReview.Text">
+        <source>For Review</source>
+        <target>Para Revisión</target>
+        
+      </trans-unit>
+      <trans-unit id="_publishTypeWip.Text">
+        <source>Work-in-Progress</source>
+        <target>Trabajo-en-Progreso</target>
+        
+      </trans-unit>
+    </body>
+  </file>
   <file datatype="plaintext" original="GerritPlugin" source-language="en" target-language="es">
     <body>
-      <trans-unit id="Description.Text">
+      <trans-unit id="Name.Text">
         <source>Gerrit Code Review</source>
         <target>Revisión de código Gerrit</target>
         
@@ -1035,6 +1067,11 @@ Para habilitar Gerrit para un repositorio debe existir el archivo .gitreview, lo
       <trans-unit id="_installCommitMsgHookShortText.Text">
         <source>Install commit-msg hook</source>
         <target>Instalar gancho commit-msg</target>
+        
+      </trans-unit>
+      <trans-unit id="_predefinedGerritVersion.Caption">
+        <source>Treat Gerrit as having version</source>
+        <target>Tratar a Gerrit como si tuviera versión</target>
         
       </trans-unit>
       <trans-unit id="_publishGerritChange.Text">
@@ -1140,6 +1177,11 @@ Para habilitar Gerrit para un repositorio debe existir el archivo .gitreview, lo
         <target>Hacer push al terminar</target>
         
       </trans-unit>
+      <trans-unit id="cbSquash.Text">
+        <source>Squash</source>
+        <target>Aplastar</target>
+        
+      </trans-unit>
       <trans-unit id="gbManage.Text">
         <source>Manage existing branches:</source>
         <target>Gestionar ramas existentes:</target>
@@ -1199,7 +1241,7 @@ Para habilitar Gerrit para un repositorio debe existir el archivo .gitreview, lo
   </file>
   <file datatype="plaintext" original="GitFlowPlugin" source-language="en" target-language="es">
     <body>
-      <trans-unit id="Description.Text">
+      <trans-unit id="Name.Text">
         <source>GitFlow</source>
         <target>GitFlow</target>
         
@@ -1208,9 +1250,14 @@ Para habilitar Gerrit para un repositorio debe existir el archivo .gitreview, lo
   </file>
   <file datatype="plaintext" original="GitHub3Plugin" source-language="en" target-language="es">
     <body>
-      <trans-unit id="Description.Text">
+      <trans-unit id="Name.Text">
         <source>GitHub</source>
         <target>GitHub</target>
+        
+      </trans-unit>
+      <trans-unit id="GitHubHost.Caption">
+        <source>GitHub (Enterprise) hostname</source>
+        <target>GitHub (Enterprise) hostname</target>
         
       </trans-unit>
       <trans-unit id="OAuthToken.Caption">
@@ -1218,11 +1265,21 @@ Para habilitar Gerrit para un repositorio debe existir el archivo .gitreview, lo
         <target>Token OAuth</target>
         
       </trans-unit>
+      <trans-unit id="_tokenAlreadyExist.Text">
+        <source>You already have an OAuth token. To get a new one, delete your old one in Plugins &gt; Settings first.</source>
+        <target>Ya tiene un token de OAuth. Para obtener uno nuevo, elimine primero el antiguo en Extensiones &gt; Configuraciones.</target>
+        
+      </trans-unit>
+      <trans-unit id="_viewInWebSite.Text">
+        <source>View in {0}</source>
+        <target>Ver en {0}</target>
+        
+      </trans-unit>
     </body>
   </file>
   <file datatype="plaintext" original="GitImpactPlugin" source-language="en" target-language="es">
     <body>
-      <trans-unit id="Description.Text">
+      <trans-unit id="Name.Text">
         <source>Impact Graph</source>
         <target>Gráfico de Impacto</target>
         
@@ -1231,7 +1288,7 @@ Para habilitar Gerrit para un repositorio debe existir el archivo .gitreview, lo
   </file>
   <file datatype="plaintext" original="GitStatisticsPlugin" source-language="en" target-language="es">
     <body>
-      <trans-unit id="Description.Text">
+      <trans-unit id="Name.Text">
         <source>Statistics</source>
         <target>Estadísticas</target>
         
@@ -1255,7 +1312,7 @@ Para habilitar Gerrit para un repositorio debe existir el archivo .gitreview, lo
   </file>
   <file datatype="plaintext" original="GourcePlugin" source-language="en" target-language="es">
     <body>
-      <trans-unit id="Description.Text">
+      <trans-unit id="Name.Text">
         <source>Gource</source>
         <target>Gource</target>
         
@@ -1268,7 +1325,7 @@ Para habilitar Gerrit para un repositorio debe existir el archivo .gitreview, lo
       <trans-unit id="_cannotFindGource.Text">
         <source>Cannot find Gource.
 Please download Gource and set the path in the plugins settings dialog.</source>
-        <target>No se ha encontrado Gourge. Por favor, descargue Gourge e incluye la dirección de instalación en el diálogo de configuración de plugins.</target>
+        <target>No se encuentra Gource. Por favor, descargue Gource y configure la ruta en el diálogo de configuración de extensiones.</target>
         
       </trans-unit>
       <trans-unit id="_currentDirectoryIsNotValidGit.Text">
@@ -1298,7 +1355,7 @@ Do you want to automatically download Gource?</source>
         <source>Downloading failed.
 Please download Gource and set the path in the plugins settings dialog.</source>
         <target>Descarga fallida.
-Por favor, descargue Gourge y configure la dirección de instalación en el diálogo de configuración de plugins.</target>
+Por favor, descargue Gource y configure la ruta en el diálogo de configuración de extensiones.</target>
         
       </trans-unit>
       <trans-unit id="_gource.Text">
@@ -1402,8 +1459,49 @@ Do you want to reset the configured path?</source>
   </file>
   <file datatype="plaintext" original="JiraCommitHintPlugin" source-language="en" target-language="es">
     <body>
-      <trans-unit id="Description.Text">
+      <trans-unit id="Name.Text">
         <source>Jira Commit Hint</source>
+        <target>Pista del commit de Jira</target>
+        
+      </trans-unit>
+      <trans-unit id="EmptyQueryResultCaption.Text">
+        <source>First Task Preview</source>
+        <target>Vista preliminar de la primera tarea</target>
+        
+      </trans-unit>
+      <trans-unit id="EmptyQueryResultMessage.Text">
+        <source>[Empty Jira Query Result]</source>
+        <target>[Resultado de la Consulta de Jira vacío]</target>
+        
+      </trans-unit>
+      <trans-unit id="InvalidUrlCaption.Text">
+        <source>Invalid Jira url</source>
+        <target>Url de Jira no válida</target>
+        
+      </trans-unit>
+      <trans-unit id="InvalidUrlMessage.Text">
+        <source>A valid url is required to launch the Jira query helper</source>
+        <target>Se requiere una url válida para lanzar el ayudante de consultas de Jira</target>
+        
+      </trans-unit>
+      <trans-unit id="JiraFieldsLabel.Text">
+        <source>Jira fields</source>
+        <target>Campos de Jira</target>
+        
+      </trans-unit>
+      <trans-unit id="PreviewButtonText.Text">
+        <source>Preview</source>
+        <target>Previsualización</target>
+        
+      </trans-unit>
+      <trans-unit id="QueryHelperLinkText.Text">
+        <source>Open the query helper inside Jira</source>
+        <target>Abrir el ayudante de consultas en Jira</target>
+        
+      </trans-unit>
+      <trans-unit id="QueryHelperOpenErrorText.Text">
+        <source>Unable to open Jira query helper</source>
+        <target>Incapaz de abrir el ayudante de consultas</target>
         
       </trans-unit>
       <trans-unit id="_credentialsSettings.Caption">
@@ -1414,11 +1512,6 @@ Do you want to reset the configured path?</source>
       <trans-unit id="_enabledSettings.Caption">
         <source>Jira hint plugin enabled</source>
         <target>El plugin Jira Hint está habilitado</target>
-        
-      </trans-unit>
-      <trans-unit id="_jiraFields.Caption">
-        <source>Jira fields</source>
-        <target>Campos de Jira</target>
         
       </trans-unit>
       <trans-unit id="_jqlQuerySettings.Caption">
@@ -1484,7 +1577,7 @@ Do you want to reset the configured path?</source>
   </file>
   <file datatype="plaintext" original="ProxySwitcherPlugin" source-language="en" target-language="es">
     <body>
-      <trans-unit id="Description.Text">
+      <trans-unit id="Name.Text">
         <source>Proxy Switcher</source>
         <target>Cambiador de proxy</target>
         
@@ -1640,7 +1733,7 @@ nombres de ramas, ó nombres de tags)</target>
   </file>
   <file datatype="plaintext" original="ReleaseNotesGeneratorPlugin" source-language="en" target-language="es">
     <body>
-      <trans-unit id="Description.Text">
+      <trans-unit id="Name.Text">
         <source>Release Notes Generator</source>
         <target>Generador de Notas de Versión.</target>
         
@@ -1720,7 +1813,7 @@ Asegurate de que la URL sea válida y de que el token de la API tenga acceso al 
     <body>
       <trans-unit id="CheckBoxLogAsGuest.Text">
         <source>Log as guest to display the build report</source>
-        <target>Logueese como invitado para visualizar el informe de Builds</target>
+        <target>Inicia sesión como invitado para visualizar el informe de Builds</target>
         
       </trans-unit>
       <trans-unit id="_failToExtractDataFromClipboardCaption.Text">

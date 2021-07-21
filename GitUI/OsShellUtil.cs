@@ -1,39 +1,54 @@
-﻿using System.Diagnostics;
+﻿using System;
 using System.Windows.Forms;
-using Microsoft.WindowsAPICodePack.Dialogs;
+using GitCommands;
 namespace GitUI
 {
     public static class OsShellUtil
     {
-        public static void OpenAs(string file)
+        /// <summary>
+        /// Open a file with its associated default application.
+        /// </summary>
+        /// <param name="filePath">Pathname of the file to open.</param>
+        public static void Open(string filePath)
         {
-            Process.Start(new ProcessStartInfo
+            try
             {
-                UseShellExecute = false,
-                RedirectStandardOutput = true,
-                FileName = "rundll32.exe",
-                Arguments = "shell32.dll,OpenAs_RunDLL " + file
-            });
+                new Executable(filePath).Start(useShellExecute: true);
+            }
+            catch (Exception)
+            {
+                OpenAs(filePath);
+            }
+        }
+
+        /// <summary>
+        /// Let the user chose an application to open a file.
+        /// </summary>
+        /// <param name="filePath">Pathname of the file to open.</param>
+        public static void OpenAs(string filePath)
+        {
+            // filePath must not be quoted
+            new Executable("rundll32.exe").Start("shell32.dll,OpenAs_RunDLL " + filePath, redirectOutput: true, outputEncoding: System.Text.Encoding.UTF8);
         }
 
         public static void SelectPathInFileExplorer(string filePath)
         {
-            Process.Start("explorer.exe", "/select, " + filePath);
+            OpenWithFileExplorer($"/select, {filePath.Quote()}", quote: false);
         }
 
-        public static void OpenWithFileExplorer(string filePath)
+        public static void OpenWithFileExplorer(string arguments, bool quote = true)
         {
-            Process.Start("explorer.exe", filePath);
+            new Executable("explorer.exe").Start(quote ? arguments.Quote() : arguments);
         }
 
         /// <summary>
-        /// opens urls even with anchor
+        /// opens urls even with anchor.
         /// </summary>
-        public static void OpenUrlInDefaultBrowser(string url)
+        public static void OpenUrlInDefaultBrowser(string? url)
         {
             if (!string.IsNullOrWhiteSpace(url))
             {
-                Process.Start(url);
+                new Executable(url).Start(useShellExecute: true);
             }
         }
 
@@ -43,44 +58,19 @@ namespace GitUI
         /// <param name="ownerWindow">The owner window.</param>
         /// <param name="selectedPath">The initially selected path.</param>
         /// <returns>The path selected by the user, or null if the user cancels the dialog.</returns>
-        public static string PickFolder(IWin32Window ownerWindow, string selectedPath = null)
+        public static string? PickFolder(IWin32Window ownerWindow, string? selectedPath = null)
         {
-            if (GitCommands.Utils.EnvUtils.IsWindowsVistaOrGreater())
+            using (var dialog = new FolderBrowserDialog())
             {
-                // use Vista+ dialog
-                using (var dialog = new CommonOpenFileDialog())
+                if (selectedPath is not null)
                 {
-                    dialog.IsFolderPicker = true;
-
-                    if (selectedPath != null)
-                    {
-                        dialog.InitialDirectory = selectedPath;
-                    }
-
-                    var result = dialog.ShowDialog(ownerWindow.Handle);
-
-                    if (result == CommonFileDialogResult.Ok)
-                    {
-                        return dialog.FileName;
-                    }
+                    dialog.SelectedPath = selectedPath;
                 }
-            }
-            else
-            {
-                // use XP-era dialog
-                using (var dialog = new FolderBrowserDialog())
+
+                var result = dialog.ShowDialog(ownerWindow);
+                if (result == DialogResult.OK)
                 {
-                    if (selectedPath != null)
-                    {
-                        dialog.SelectedPath = selectedPath;
-                    }
-
-                    var result = dialog.ShowDialog(ownerWindow);
-
-                    if (result == DialogResult.OK)
-                    {
-                        return dialog.SelectedPath;
-                    }
+                    return dialog.SelectedPath;
                 }
             }
 

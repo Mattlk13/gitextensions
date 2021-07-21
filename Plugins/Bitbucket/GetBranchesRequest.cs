@@ -1,7 +1,7 @@
 ﻿using Newtonsoft.Json.Linq;
 using RestSharp;
 
-namespace Bitbucket
+namespace GitExtensions.Plugins.Bitbucket
 {
     internal class GetBranchesRequest : BitbucketRequestBase<JObject>
     {
@@ -13,7 +13,7 @@ namespace Bitbucket
             _repo = repo;
         }
 
-        protected override object RequestBody => null;
+        protected override object? RequestBody => null;
 
         protected override Method RequestMethod => Method.GET;
 

@@ -1,18 +1,19 @@
 using System.Collections.Generic;
+using Microsoft;
 using Newtonsoft.Json.Linq;
 using RestSharp;
 
-namespace Bitbucket
+namespace GitExtensions.Plugins.Bitbucket
 {
     internal class PullRequestInfo
     {
-        public string Title { get; set; }
-        public string Description { get; set; }
-        public Repository SourceRepo { get; set; }
-        public Repository TargetRepo { get; set; }
-        public string SourceBranch { get; set; }
-        public string TargetBranch { get; set; }
-        public IEnumerable<BitbucketUser> Reviewers { get; set; }
+        public string? Title { get; set; }
+        public string? Description { get; set; }
+        public Repository? SourceRepo { get; set; }
+        public Repository? TargetRepo { get; set; }
+        public string? SourceBranch { get; set; }
+        public string? TargetBranch { get; set; }
+        public IEnumerable<BitbucketUser>? Reviewers { get; set; }
     }
 
     internal class CreatePullRequestRequest : BitbucketRequestBase<JObject>
@@ -29,8 +30,16 @@ namespace Bitbucket
 
         protected override Method RequestMethod => Method.POST;
 
-        protected override string ApiUrl => string.Format("/projects/{0}/repos/{1}/pull-requests",
-            _info.TargetRepo.ProjectKey, _info.TargetRepo.RepoName);
+        protected override string ApiUrl
+        {
+            get
+            {
+                Validates.NotNull(_info.TargetRepo);
+                return string.Format(
+                    "/projects/{0}/repos/{1}/pull-requests",
+                    _info.TargetRepo.ProjectKey, _info.TargetRepo.RepoName);
+            }
+        }
 
         protected override JObject ParseResponse(JObject json)
         {
@@ -39,7 +48,17 @@ namespace Bitbucket
 
         private string GetPullRequestBody()
         {
-            var resource = new JObject();
+            Validates.NotNull(_info.SourceRepo);
+            Validates.NotNull(_info.SourceRepo.ProjectKey);
+            Validates.NotNull(_info.SourceRepo.RepoName);
+            Validates.NotNull(_info.SourceBranch);
+            Validates.NotNull(_info.TargetRepo);
+            Validates.NotNull(_info.TargetRepo.ProjectKey);
+            Validates.NotNull(_info.TargetRepo.RepoName);
+            Validates.NotNull(_info.TargetBranch);
+            Validates.NotNull(_info.Reviewers);
+
+            JObject resource = new();
             resource["title"] = _info.Title;
             resource["description"] = _info.Description;
 
@@ -51,10 +70,10 @@ namespace Bitbucket
                 _info.TargetRepo.ProjectKey,
                 _info.TargetRepo.RepoName, _info.TargetBranch);
 
-            var reviewers = new JArray();
+            JArray reviewers = new();
             foreach (var reviewer in _info.Reviewers)
             {
-                var r = new JObject();
+                JObject r = new();
                 r["user"] = new JObject();
                 r["user"]["name"] = reviewer.Slug;
 
@@ -68,7 +87,7 @@ namespace Bitbucket
 
         private static JObject CreatePullRequestRef(string projectKey, string repoName, string branchName)
         {
-            var reference = new JObject();
+            JObject reference = new();
             reference["id"] = branchName;
             reference["repository"] = new JObject();
             reference["repository"]["slug"] = repoName;

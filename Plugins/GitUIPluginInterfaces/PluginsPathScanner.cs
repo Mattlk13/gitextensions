@@ -1,9 +1,6 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace GitUIPluginInterfaces
 {
@@ -32,15 +29,15 @@ namespace GitUIPluginInterfaces
         /// </example>
         /// <param name="pluginsPaths">An array of filesystem paths to search for plugins in.</param>
         /// <returns>An enumeration of found dll files.</returns>
-        public static IEnumerable<FileInfo> GetFiles(params string[] pluginsPaths)
+        public static IEnumerable<FileInfo> GetFiles(params string?[] pluginsPaths)
         {
             var result = Enumerable.Empty<FileInfo>();
 
-            foreach (string pluginsPath in pluginsPaths)
+            foreach (string? pluginsPath in pluginsPaths)
             {
                 if (!string.IsNullOrEmpty(pluginsPath) && Directory.Exists(pluginsPath))
                 {
-                    DirectoryInfo directory = new DirectoryInfo(pluginsPath);
+                    DirectoryInfo directory = new(pluginsPath);
 
                     result = Enumerable.Concat(result, directory.GetFiles("*.dll"));
 

@@ -20,7 +20,9 @@ namespace GitUI.Editor
             this.components = new System.ComponentModel.Container();
             this.contextMenu = new System.Windows.Forms.ContextMenuStrip(this.components);
             this.copyToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-            this.cherrypickSelectedLinesToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.stageSelectedLinesToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.unstageSelectedLinesToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.resetSelectedLinesToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.copyPatchToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.copyNewVersionToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.copyOldVersionToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
@@ -34,6 +36,7 @@ namespace GitUI.Editor
             this.showEntireFileToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.toolStripSeparator2 = new System.Windows.Forms.ToolStripSeparator();
             this.treatAllFilesAsTextToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.automaticContinuousScrollToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.showNonprintableCharactersToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.goToLineToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.fileviewerToolbar = new GitUI.ToolStripEx();
@@ -51,9 +54,9 @@ namespace GitUI.Editor
             this.encodingToolStripComboBox = new System.Windows.Forms.ToolStripComboBox();
             this.ignoreAllWhitespaces = new System.Windows.Forms.ToolStripButton();
             this.PictureBox = new System.Windows.Forms.PictureBox();
-            this.revertSelectedLinesToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this._NO_TRANSLATE_lblShowPreview = new System.Windows.Forms.LinkLabel();
             this.internalFileViewer = new GitUI.Editor.FileViewerInternal();
+            this.showSyntaxHighlighting = new System.Windows.Forms.ToolStripButton();
             this.contextMenu.SuspendLayout();
             this.fileviewerToolbar.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.PictureBox)).BeginInit();
@@ -62,13 +65,13 @@ namespace GitUI.Editor
             // contextMenu
             // 
             this.contextMenu.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
+            this.stageSelectedLinesToolStripMenuItem,
+            this.unstageSelectedLinesToolStripMenuItem,
+            this.resetSelectedLinesToolStripMenuItem,
             this.copyToolStripMenuItem,
-            this.cherrypickSelectedLinesToolStripMenuItem,
-            this.revertSelectedLinesToolStripMenuItem,
             this.copyPatchToolStripMenuItem,
             this.copyNewVersionToolStripMenuItem,
             this.copyOldVersionToolStripMenuItem,
-            this.findToolStripMenuItem,
             this.toolStripSeparator1,
             this.ignoreWhitespaceAtEolToolStripMenuItem,
             this.ignoreWhitespaceChangesToolStripMenuItem,
@@ -78,10 +81,36 @@ namespace GitUI.Editor
             this.showEntireFileToolStripMenuItem,
             this.toolStripSeparator2,
             this.treatAllFilesAsTextToolStripMenuItem,
+            this.automaticContinuousScrollToolStripMenuItem,
             this.showNonprintableCharactersToolStripMenuItem,
+            this.findToolStripMenuItem,
             this.goToLineToolStripMenuItem});
             this.contextMenu.Name = "ContextMenu";
             this.contextMenu.Size = new System.Drawing.Size(244, 346);
+            // 
+            // stageSelectedLinesToolStripMenuItem
+            // 
+            this.stageSelectedLinesToolStripMenuItem.Image = global::GitUI.Properties.Images.Stage;
+            this.stageSelectedLinesToolStripMenuItem.Name = "stageSelectedLinesToolStripMenuItem";
+            this.stageSelectedLinesToolStripMenuItem.Size = new System.Drawing.Size(243, 22);
+            this.stageSelectedLinesToolStripMenuItem.Text = TranslatedStrings.StageSelectedLines;
+            this.stageSelectedLinesToolStripMenuItem.Click += new System.EventHandler(this.stageSelectedLinesToolStripMenuItem_Click);
+            // 
+            // unstageSelectedLinesToolStripMenuItem
+            // 
+            this.unstageSelectedLinesToolStripMenuItem.Image = global::GitUI.Properties.Images.Unstage;
+            this.unstageSelectedLinesToolStripMenuItem.Name = "chunstageSelectedLinesToolStripMenuItemerrypickSelectedLinesToolStripMenuItem";
+            this.unstageSelectedLinesToolStripMenuItem.Size = new System.Drawing.Size(243, 22);
+            this.unstageSelectedLinesToolStripMenuItem.Text = TranslatedStrings.UnstageSelectedLines;
+            this.unstageSelectedLinesToolStripMenuItem.Click += new System.EventHandler(this.unstageSelectedLinesToolStripMenuItem_Click);
+            // 
+            // resetSelectedLinesToolStripMenuItem
+            // 
+            this.resetSelectedLinesToolStripMenuItem.Image = global::GitUI.Properties.Images.ResetWorkingDirChanges;
+            this.resetSelectedLinesToolStripMenuItem.Name = "resetSelectedLinesToolStripMenuItem";
+            this.resetSelectedLinesToolStripMenuItem.Size = new System.Drawing.Size(243, 22);
+            this.resetSelectedLinesToolStripMenuItem.Text = TranslatedStrings.ResetSelectedLines;
+            this.resetSelectedLinesToolStripMenuItem.Click += new System.EventHandler(this.resetSelectedLinesToolStripMenuItem_Click);
             // 
             // copyToolStripMenuItem
             // 
@@ -90,14 +119,6 @@ namespace GitUI.Editor
             this.copyToolStripMenuItem.Size = new System.Drawing.Size(243, 22);
             this.copyToolStripMenuItem.Text = "Copy";
             this.copyToolStripMenuItem.Click += new System.EventHandler(this.CopyToolStripMenuItemClick);
-            // 
-            // cherrypickSelectedLinesToolStripMenuItem
-            // 
-            this.cherrypickSelectedLinesToolStripMenuItem.Image = global::GitUI.Properties.Images.CherryPick;
-            this.cherrypickSelectedLinesToolStripMenuItem.Name = "cherrypickSelectedLinesToolStripMenuItem";
-            this.cherrypickSelectedLinesToolStripMenuItem.Size = new System.Drawing.Size(243, 22);
-            this.cherrypickSelectedLinesToolStripMenuItem.Text = "Cherry pick selected lines";
-            this.cherrypickSelectedLinesToolStripMenuItem.Click += new System.EventHandler(this.cherrypickSelectedLinesToolStripMenuItem_Click);
             // 
             // copyPatchToolStripMenuItem
             // 
@@ -190,6 +211,13 @@ namespace GitUI.Editor
             this.treatAllFilesAsTextToolStripMenuItem.Text = "Treat all files as text";
             this.treatAllFilesAsTextToolStripMenuItem.Click += new System.EventHandler(this.TreatAllFilesAsTextToolStripMenuItemClick);
             // 
+            // automaticContinuousScrollToolStripMenuItem
+            // 
+            this.automaticContinuousScrollToolStripMenuItem.Image = global::GitUI.Properties.Images.UiScrollBar;
+            this.automaticContinuousScrollToolStripMenuItem.Name = "automaticContinuousScrollToolStripMenuItem";
+            this.automaticContinuousScrollToolStripMenuItem.Size = new System.Drawing.Size(243, 22);
+            this.automaticContinuousScrollToolStripMenuItem.Click += new System.EventHandler(this.ContinuousScrollToolStripMenuItemClick);
+            // 
             // showNonprintableCharactersToolStripMenuItem
             // 
             this.showNonprintableCharactersToolStripMenuItem.Image = global::GitUI.Properties.Images.ShowWhitespace;
@@ -211,6 +239,7 @@ namespace GitUI.Editor
             this.fileviewerToolbar.BackColor = System.Drawing.SystemColors.Control;
             this.fileviewerToolbar.ClickThrough = true;
             this.fileviewerToolbar.Dock = System.Windows.Forms.DockStyle.None;
+            this.fileviewerToolbar.DrawBorder = false;
             this.fileviewerToolbar.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
             this.nextChangeButton,
             this.previousChangeButton,
@@ -220,6 +249,7 @@ namespace GitUI.Editor
             this.toolStripSeparator4,
             this.showEntireFileButton,
             this.showNonPrintChars,
+            this.showSyntaxHighlighting,
             this.ignoreWhitespaceAtEol,
             this.ignoreWhiteSpaces,
             this.ignoreAllWhitespaces,
@@ -362,14 +392,6 @@ namespace GitUI.Editor
             this.PictureBox.TabIndex = 7;
             this.PictureBox.TabStop = false;
             this.PictureBox.Visible = false;
-            // 
-            // resetSelectedLinesToolStripMenuItem
-            // 
-            this.revertSelectedLinesToolStripMenuItem.Image = global::GitUI.Properties.Images.ResetFileTo;
-            this.revertSelectedLinesToolStripMenuItem.Name = "revertSelectedLinesToolStripMenuItem";
-            this.revertSelectedLinesToolStripMenuItem.Size = new System.Drawing.Size(243, 22);
-            this.revertSelectedLinesToolStripMenuItem.Text = "Revert selected lines";
-            this.revertSelectedLinesToolStripMenuItem.Click += new System.EventHandler(this.revertSelectedLinesToolStripMenuItem_Click);
             //
             // llShowPreview
             //
@@ -398,6 +420,16 @@ namespace GitUI.Editor
             this.internalFileViewer.ShowTabs = false;
             this.internalFileViewer.Size = new System.Drawing.Size(757, 518);
             this.internalFileViewer.TabIndex = 1;
+            // 
+            // showSyntaxHighlighting
+            // 
+            this.showSyntaxHighlighting.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Image;
+            this.showSyntaxHighlighting.Image = global::GitUI.Properties.Resources.SyntaxHighlighting;
+            this.showSyntaxHighlighting.ImageTransparentColor = System.Drawing.Color.Magenta;
+            this.showSyntaxHighlighting.Name = "showSyntaxHighlighting";
+            this.showSyntaxHighlighting.Size = new System.Drawing.Size(23, 22);
+            this.showSyntaxHighlighting.ToolTipText = "Show syntax highlighting";
+            this.showSyntaxHighlighting.Click += ShowSyntaxHighlighting_Click;
             // 
             // FileViewer
             // 
@@ -443,6 +475,7 @@ namespace GitUI.Editor
         private System.Windows.Forms.ToolStripButton showEntireFileButton;
         private System.Windows.Forms.ToolStripSeparator toolStripSeparator4;
         private System.Windows.Forms.ToolStripButton showNonPrintChars;
+        private System.Windows.Forms.ToolStripMenuItem automaticContinuousScrollToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem showNonprintableCharactersToolStripMenuItem;
         private System.Windows.Forms.ToolStripButton ignoreWhitespaceAtEol;
         private System.Windows.Forms.ToolStripButton ignoreWhiteSpaces;
@@ -452,10 +485,12 @@ namespace GitUI.Editor
         private System.Windows.Forms.ToolStripMenuItem goToLineToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem copyNewVersionToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem copyOldVersionToolStripMenuItem;
-        private System.Windows.Forms.ToolStripMenuItem cherrypickSelectedLinesToolStripMenuItem;
-        private System.Windows.Forms.ToolStripMenuItem revertSelectedLinesToolStripMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem stageSelectedLinesToolStripMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem unstageSelectedLinesToolStripMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem resetSelectedLinesToolStripMenuItem;
         private System.Windows.Forms.ToolStripButton ignoreAllWhitespaces;
         private System.Windows.Forms.ToolStripMenuItem ignoreAllWhitespaceChangesToolStripMenuItem;
         private LinkLabel _NO_TRANSLATE_lblShowPreview;
+        private ToolStripButton showSyntaxHighlighting;
     }
 }

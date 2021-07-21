@@ -2,30 +2,28 @@
 using System.Text.RegularExpressions;
 using GitCommands;
 using GitCommands.Patches;
-using JetBrains.Annotations;
 
 namespace GitUI.Editor.Diff
 {
     public class DiffLineNumAnalyzer
     {
-        private static readonly Regex regex = new Regex(
+        private static readonly Regex regex = new(
             @"\-(?<leftStart>\d{1,})\,{0,}(?<leftCount>\d{0,})\s\+(?<rightStart>\d{1,})\,{0,}(?<rightCount>\d{0,})",
             RegexOptions.Compiled | RegexOptions.IgnoreCase);
 
-        [NotNull]
-        public DiffLinesInfo Analyze([NotNull] string diffContent)
+        public DiffLinesInfo Analyze(string diffContent)
         {
-            var ret = new DiffLinesInfo();
+            DiffLinesInfo ret = new();
             var isCombinedDiff = PatchProcessor.IsCombinedDiff(diffContent);
             var lineNumInDiff = 0;
             var leftLineNum = DiffLineInfo.NotApplicableLineNum;
             var rightLineNum = DiffLineInfo.NotApplicableLineNum;
             var isHeaderLineLocated = false;
-            string[] lines = diffContent.Split('\n');
+            string[] lines = diffContent.Split(Delimiters.LineFeed);
             for (int i = 0; i < lines.Length; i++)
             {
                 string line = lines[i];
-                if (i == lines.Length - 1 && line.IsNullOrEmpty())
+                if (i == lines.Length - 1 && string.IsNullOrEmpty(line))
                 {
                     break;
                 }
@@ -33,7 +31,7 @@ namespace GitUI.Editor.Diff
                 lineNumInDiff++;
                 if (line.StartsWith("@"))
                 {
-                    var meta = new DiffLineInfo
+                    DiffLineInfo meta = new()
                     {
                         LineNumInDiff = lineNumInDiff,
                         LeftLineNumber = DiffLineInfo.NotApplicableLineNum,
@@ -50,7 +48,7 @@ namespace GitUI.Editor.Diff
                 }
                 else if (isHeaderLineLocated && isCombinedDiff)
                 {
-                    var meta = new DiffLineInfo
+                    DiffLineInfo meta = new()
                     {
                         LineNumInDiff = lineNumInDiff,
                         LeftLineNumber = DiffLineInfo.NotApplicableLineNum,
@@ -78,7 +76,7 @@ namespace GitUI.Editor.Diff
                 }
                 else if (isHeaderLineLocated && IsMinusLine(line))
                 {
-                    var meta = new DiffLineInfo
+                    DiffLineInfo meta = new()
                     {
                         LineNumInDiff = lineNumInDiff,
                         LeftLineNumber = leftLineNum,
@@ -91,7 +89,7 @@ namespace GitUI.Editor.Diff
                 }
                 else if (isHeaderLineLocated && IsPlusLine(line))
                 {
-                    var meta = new DiffLineInfo
+                    DiffLineInfo meta = new()
                     {
                         LineNumInDiff = lineNumInDiff,
                         LeftLineNumber = DiffLineInfo.NotApplicableLineNum,
@@ -103,7 +101,7 @@ namespace GitUI.Editor.Diff
                 }
                 else if (line.StartsWith(GitModule.NoNewLineAtTheEnd))
                 {
-                    var meta = new DiffLineInfo
+                    DiffLineInfo meta = new()
                     {
                         LineNumInDiff = lineNumInDiff,
                         LeftLineNumber = DiffLineInfo.NotApplicableLineNum,
@@ -114,7 +112,7 @@ namespace GitUI.Editor.Diff
                 }
                 else if (isHeaderLineLocated)
                 {
-                    var meta = new DiffLineInfo
+                    DiffLineInfo meta = new()
                     {
                         LineNumInDiff = lineNumInDiff,
                         LeftLineNumber = leftLineNum,

@@ -1,12 +1,13 @@
 using System;
-using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 using GitCommands.Remotes;
+using GitCommands.Settings;
 using GitUIPluginInterfaces;
 using GitUIPluginInterfaces.BuildServerIntegration;
-using JetBrains.Annotations;
+using GitUIPluginInterfaces.Settings;
+using Microsoft;
 using Microsoft.VisualStudio.Threading;
 using ResourceManager;
 
@@ -15,9 +16,9 @@ namespace GitUI.CommandsDialogs.SettingsDialog.Pages
     public partial class BuildServerIntegrationSettingsPage : RepoDistSettingsPage
     {
         private readonly TranslationString _noneItem =
-            new TranslationString("None");
-        private IConfigFileRemoteSettingsManager _remotesManager;
-        private JoinableTask<object> _populateBuildServerTypeTask;
+            new("None");
+        private IConfigFileRemoteSettingsManager? _remotesManager;
+        private JoinableTask<object>? _populateBuildServerTypeTask;
 
         public BuildServerIntegrationSettingsPage()
         {
@@ -61,30 +62,38 @@ namespace GitUI.CommandsDialogs.SettingsDialog.Pages
             ThreadHelper.JoinableTaskFactory.RunAsync(
                 async () =>
                 {
+                    Validates.NotNull(_populateBuildServerTypeTask);
+
                     await _populateBuildServerTypeTask.JoinAsync();
 
                     await this.SwitchToMainThreadAsync();
 
-                    checkBoxEnableBuildServerIntegration.SetNullableChecked(CurrentSettings.BuildServer.EnableIntegration.Value);
-                    checkBoxShowBuildResultPage.SetNullableChecked(CurrentSettings.BuildServer.ShowBuildResultPage.Value);
+                    IBuildServerSettings buildServerSettings = GetCurrentSettings()
+                        .BuildServer();
 
-                    BuildServerType.SelectedItem = CurrentSettings.BuildServer.Type.Value ?? _noneItem.Text;
+                    checkBoxEnableBuildServerIntegration.SetNullableChecked(buildServerSettings.EnableIntegration);
+                    checkBoxShowBuildResultPage.SetNullableChecked(buildServerSettings.ShowBuildResultPage);
+
+                    BuildServerType.SelectedItem = buildServerSettings.Type ?? _noneItem.Text;
                 });
         }
 
         protected override void PageToSettings()
         {
-            CurrentSettings.BuildServer.EnableIntegration.Value = checkBoxEnableBuildServerIntegration.GetNullableChecked();
-            CurrentSettings.BuildServer.ShowBuildResultPage.Value = checkBoxShowBuildResultPage.GetNullableChecked();
+            IBuildServerSettings buildServerSettings = GetCurrentSettings()
+                .BuildServer();
+
+            buildServerSettings.EnableIntegration = checkBoxEnableBuildServerIntegration.Checked;
+            buildServerSettings.ShowBuildResultPage = checkBoxShowBuildResultPage.Checked;
 
             var selectedBuildServerType = GetSelectedBuildServerType();
 
-            CurrentSettings.BuildServer.Type.Value = selectedBuildServerType;
+            buildServerSettings.Type = selectedBuildServerType;
 
             var control =
                 buildServerSettingsPanel.Controls.OfType<IBuildServerSettingsUserControl>()
                                         .SingleOrDefault();
-            control?.SaveSettings(CurrentSettings.BuildServer.TypeSettings);
+            control?.SaveSettings(GetCurrentSettings().ByPath(buildServerSettings.Type!));
         }
 
         private void ActivateBuildServerSettingsControl()
@@ -97,30 +106,35 @@ namespace GitUI.CommandsDialogs.SettingsDialog.Pages
 
             buildServerSettingsPanel.Controls.Clear();
 
-            if (control != null)
+            if (control is not null)
             {
-                control.LoadSettings(CurrentSettings.BuildServer.TypeSettings);
+                IBuildServerSettings buildServerSettings = GetCurrentSettings()
+                    .BuildServer();
+
+                control.LoadSettings(GetCurrentSettings().ByPath(buildServerSettings.Type!));
 
                 buildServerSettingsPanel.Controls.Add((Control)control);
                 ((Control)control).Dock = DockStyle.Fill;
             }
         }
 
-        [CanBeNull]
-        private IBuildServerSettingsUserControl CreateBuildServerSettingsUserControl()
+        private IBuildServerSettingsUserControl? CreateBuildServerSettingsUserControl()
         {
+            Validates.NotNull(Module);
+
             if (BuildServerType.SelectedIndex == 0 || string.IsNullOrEmpty(Module.WorkingDir))
             {
                 return null;
             }
 
-            var defaultProjectName = Module.WorkingDir.Split(new[] { Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar }, StringSplitOptions.RemoveEmptyEntries).Last();
+            var defaultProjectName = Module.WorkingDir.Split(Delimiters.PathSeparators, StringSplitOptions.RemoveEmptyEntries).Last();
 
             var exports = ManagedExtensibility.GetExports<IBuildServerSettingsUserControl, IBuildServerTypeMetadata>();
             var selectedExport = exports.SingleOrDefault(export => export.Metadata.BuildServerType == GetSelectedBuildServerType());
-            if (selectedExport != null)
+            if (selectedExport is not null)
             {
                 var buildServerSettingsUserControl = selectedExport.Value;
+                Validates.NotNull(_remotesManager);
                 var remoteUrls = _remotesManager.LoadRemotes(false).Select(r => string.IsNullOrEmpty(r.PushUrl) ? r.Url : r.PushUrl);
 
                 buildServerSettingsUserControl.Initialize(defaultProjectName, remoteUrls);
@@ -130,7 +144,7 @@ namespace GitUI.CommandsDialogs.SettingsDialog.Pages
             return null;
         }
 
-        private string GetSelectedBuildServerType()
+        private string? GetSelectedBuildServerType()
         {
             if (BuildServerType.SelectedIndex == 0)
             {

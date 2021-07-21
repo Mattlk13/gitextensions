@@ -11,13 +11,12 @@ namespace GitUI.UserControls
 
         private int _mouseClicks = 0;
         private DateTime _lastMouseDown = DateTime.MinValue;
-        private DateTime _lastDoubleClick = DateTime.MinValue;
 
         private readonly Func<DateTime> _getCurrentTime;
 
         // Invoked just before an inner tree node is expanded/collapsed. Set CancelEventHandler.Cancel to true
         // to cancel the expand/collapse of the current node.
-        public event CancelEventHandler BeforeDoubleClickExpandCollapse;
+        public event CancelEventHandler? BeforeDoubleClickExpandCollapse;
 
         public NativeTreeViewDoubleClickDecorator(NativeTreeView treeView, Func<DateTime> getCurrentTime)
         {
@@ -43,7 +42,7 @@ namespace GitUI.UserControls
 
             if (doubleClicked)
             {
-                var cancelEventArgs = new CancelEventArgs();
+                CancelEventArgs cancelEventArgs = new();
                 BeforeDoubleClickExpandCollapse?.Invoke(sender, cancelEventArgs);
                 e.Cancel = cancelEventArgs.Cancel;
             }
@@ -65,23 +64,17 @@ namespace GitUI.UserControls
 
             if (_mouseClicks == 2)
             {
-                int delta = (int)now.Subtract(_lastMouseDown).TotalMilliseconds;
-                if (delta >= 0 && delta < SystemInformation.DoubleClickTime)
-                {
-                    _lastDoubleClick = now;
-                }
-
                 _mouseClicks = 0;
             }
 
             _lastMouseDown = now;
         }
 
-        // Returns true if a double-click occured very recently
+        // Returns true if a double-click occurred very recently
         private bool IsDoubleClickStateSet()
         {
             int delta = (int)DateTime.Now.Subtract(_lastMouseDown).TotalMilliseconds;
-            return delta >= 0 && delta < 200;
+            return delta is (>= 0 and < 200);
         }
 
         private void ResetDoubleClickState()

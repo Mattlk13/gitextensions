@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 using Git.hub;
 using GitUIPluginInterfaces.RepositoryHosts;
 
-namespace GitHub3
+namespace GitExtensions.Plugins.GitHub3
 {
     internal class GitHubPullRequest : IPullRequestInformation
     {
@@ -25,50 +25,26 @@ namespace GitHub3
 
         public DateTime Created => _pullRequest.CreatedAt;
 
-        private string _diffData;
+        private string? _diffData;
 
         public async Task<string> GetDiffDataAsync()
         {
-            if (_diffData == null)
+            if (_diffData is null)
             {
                 var request = (HttpWebRequest)WebRequest.Create(_pullRequest.DiffUrl);
-                using (var response = await request.GetResponseAsync())
-                using (var reader = new StreamReader(response.GetResponseStream(), Encoding.UTF8))
-                {
-                    _diffData = await reader.ReadToEndAsync();
-                }
+                using var response = await request.GetResponseAsync();
+                using StreamReader reader = new(response.GetResponseStream(), Encoding.UTF8);
+                _diffData = await reader.ReadToEndAsync();
             }
 
             return _diffData;
         }
 
-        private IHostedRepository _baseRepo;
-        public IHostedRepository BaseRepo
-        {
-            get
-            {
-                if (_baseRepo == null)
-                {
-                    _baseRepo = new GitHubRepo(_pullRequest.Base.Repo);
-                }
+        private IHostedRepository? _baseRepo;
+        public IHostedRepository BaseRepo => _baseRepo ??= new GitHubRepo(_pullRequest.Base.Repo);
 
-                return _baseRepo;
-            }
-        }
-
-        private IHostedRepository _headRepo;
-        public IHostedRepository HeadRepo
-        {
-            get
-            {
-                if (_headRepo == null)
-                {
-                    _headRepo = new GitHubRepo(_pullRequest.Head.Repo);
-                }
-
-                return _headRepo;
-            }
-        }
+        private IHostedRepository? _headRepo;
+        public IHostedRepository HeadRepo => _headRepo ??= new GitHubRepo(_pullRequest.Head.Repo);
 
         public string BaseSha => _pullRequest.Base.Sha;
 
@@ -88,16 +64,11 @@ namespace GitHub3
             _pullRequest.Close();
         }
 
-        private IPullRequestDiscussion _discussion;
+        private IPullRequestDiscussion? _discussion;
 
         public IPullRequestDiscussion GetDiscussion()
         {
-            if (_discussion == null)
-            {
-                _discussion = new GitHubPullRequestDiscussion(_pullRequest);
-            }
-
-            return _discussion;
+            return _discussion ??= new GitHubPullRequestDiscussion(_pullRequest);
         }
     }
 }

@@ -13,12 +13,12 @@ namespace GitCommands.Git
     {
         /// <summary>
         /// Ensures that the branch name meets the GIT branch naming conventions.
-        /// For more details refer to <see href="https://www.git-scm.com/docs/git-check-ref-format/1.8.2"/>.
+        /// For more details refer to <see href="https://git-scm.com/docs/git-check-ref-format"/>.
         /// </summary>
         /// <param name="branchName">Name of the branch.</param>
         /// <param name="options">The options.</param>
         /// <returns>Normalised branch name.</returns>
-        string Normalise(string branchName, GitBranchNameOptions options);
+        string Normalise(string? branchName, GitBranchNameOptions options);
     }
 
     /*
@@ -36,7 +36,7 @@ namespace GitCommands.Git
 
         3. They cannot have two consecutive dots '..' anywhere.
 
-        4. They cannot have ASCII control characters (i.e. bytes whose values are lower than \040, or \177 DEL), space, tilde '~', caret '^', or colon ':' anywhere.
+        4. They cannot have ASCII control characters (i.e. bytes whose values are lower than \040, or \177 DEL), space ' ', tilde '~', caret '^', or colon ':' anywhere.
 
         5. They cannot have question-mark '?', asterisk '*', or open bracket '[' anywhere. See the --refspec-pattern option below for an exception to this rule.
 
@@ -46,7 +46,9 @@ namespace GitCommands.Git
 
         8. They cannot contain a sequence '@{'.
 
-        9. They cannot contain a '\'.
+        9. They cannot be the single character '@'.
+
+        10. They cannot contain a '\'.
 
         These rules make it easy for shell script based tools to parse reference names, pathname expansion by the shell when a reference name is used unquoted (by mistake), and also avoids ambiguities in certain reference name expressions (see gitrevisions(7)):
 
@@ -74,19 +76,20 @@ namespace GitCommands.Git
         /// <param name="branchName">Name of the branch.</param>
         /// <param name="options">The options.</param>
         /// <returns>Normalised branch name.</returns>
-        public string Normalise(string branchName, GitBranchNameOptions options)
+        public string Normalise(string? branchName, GitBranchNameOptions options)
         {
             if (string.IsNullOrWhiteSpace(branchName))
             {
                 return string.Empty;
             }
 
-            if (options == null)
+            if (options is null)
             {
                 throw new ArgumentNullException(nameof(options));
             }
 
             // run rules in reverse order
+            branchName = Rule10(branchName, options);
             branchName = Rule09(branchName, options);
             branchName = Rule08(branchName, options);
             branchName = Rule07(branchName, options);
@@ -107,8 +110,7 @@ namespace GitCommands.Git
         /// </summary>
         public static bool IsValidChar(char c)
         {
-            return (c >= 32 && c < 127) &&
-                    c != ' ' && c != '~' && c != '^' && c != ':' &&
+            return c is (> ' ' and < '~' and not ('^' or ':')) &&
                     Array.IndexOf(Path.GetInvalidPathChars(), c) < 0;
         }
 
@@ -119,8 +121,8 @@ namespace GitCommands.Git
         /// <returns>Normalised branch name.</returns>
         internal string Rule01(string branchName, GitBranchNameOptions options)
         {
-            var tokens = branchName.Split('/').ToList();
-            for (int i = 0; i < tokens.Count; i++)
+            var tokens = branchName.Split(Delimiters.ForwardSlash);
+            for (int i = 0; i < tokens.Length; i++)
             {
                 if (tokens[i].StartsWith("."))
                 {
@@ -157,7 +159,7 @@ namespace GitCommands.Git
         /// <returns>Normalised branch name.</returns>
         internal string Rule04(string branchName, GitBranchNameOptions options)
         {
-            var result = new StringBuilder(branchName.Length);
+            StringBuilder result = new(branchName.Length);
             foreach (char t in branchName)
             {
                 if (IsValidChar(t) || char.IsLetterOrDigit(t))
@@ -228,12 +230,23 @@ namespace GitCommands.Git
         }
 
         /// <summary>
-        /// Branch name cannot contain a '\'.
+        /// Branch name cannot be the single character '@'.
         /// </summary>
         /// <param name="branchName">Name of the branch.</param>
         /// <param name="options">The options.</param>
         /// <returns>Normalised branch name.</returns>
         internal string Rule09(string branchName, GitBranchNameOptions options)
+        {
+            return branchName != "@" ? branchName : options.ReplacementToken;
+        }
+
+        /// <summary>
+        /// Branch name cannot contain a '\'.
+        /// </summary>
+        /// <param name="branchName">Name of the branch.</param>
+        /// <param name="options">The options.</param>
+        /// <returns>Normalised branch name.</returns>
+        internal string Rule10(string branchName, GitBranchNameOptions options)
         {
             return Regex.Replace(branchName, @"(\\{1,})", options.ReplacementToken);
         }

@@ -1,4 +1,7 @@
+using System;
+using System.ComponentModel.Composition;
 using GitCommands.UserRepositoryHistory;
+using GitUIPluginInterfaces;
 
 namespace GitCommands
 {
@@ -13,19 +16,24 @@ namespace GitCommands
         /// <param name="workingDir">Path to repository.</param>
         /// <param name="isValidWorkingDir">Indicates whether the given path contains a valid repository.</param>
         /// <param name="branchName">Current branch name.</param>
-        string Generate(string workingDir = null, bool isValidWorkingDir = false, string branchName = null);
+        string Generate(string? workingDir = null, bool isValidWorkingDir = false, string? branchName = null);
     }
 
     /// <summary>
     /// Generates application title.
     /// </summary>
+    [Export(typeof(IAppTitleGenerator))]
     public sealed class AppTitleGenerator : IAppTitleGenerator
     {
-        private readonly IRepositoryDescriptionProvider _description;
+        private readonly IRepositoryDescriptionProvider _descriptionProvider;
+#if DEBUG
+        private static string? _extraInfo;
+#endif
 
-        public AppTitleGenerator(IRepositoryDescriptionProvider description)
+        [ImportingConstructor]
+        public AppTitleGenerator(IRepositoryDescriptionProvider descriptionProvider)
         {
-            _description = description;
+            _descriptionProvider = descriptionProvider;
         }
 
         /// <summary>
@@ -34,21 +42,39 @@ namespace GitCommands
         /// <param name="workingDir">Path to repository.</param>
         /// <param name="isValidWorkingDir">Indicates whether the given path contains a valid repository.</param>
         /// <param name="branchName">Current branch name.</param>
-        public string Generate(string workingDir = null, bool isValidWorkingDir = false, string branchName = null)
+        public string Generate(string? workingDir = null, bool isValidWorkingDir = false, string? branchName = null)
         {
             if (string.IsNullOrWhiteSpace(workingDir) || !isValidWorkingDir)
             {
-                return "Git Extensions";
+                return AppSettings.ApplicationName;
             }
 
             branchName = branchName?.Trim('(', ')') ?? "no branch";
 
-            var description = _description.Get(workingDir);
+            var description = _descriptionProvider.Get(workingDir);
 
 #if DEBUG
-            return $"{description} ({branchName}) - Git Extensions [DEBUG]";
+            return $"{description} ({branchName}) - {AppSettings.ApplicationName}{_extraInfo}";
 #else
-            return $"{description} ({branchName}) - Git Extensions";
+            return $"{description} ({branchName}) - {AppSettings.ApplicationName}";
+#endif
+        }
+
+        public static void Initialise(string sha, string buildBranch)
+        {
+#if DEBUG
+            if (ObjectId.TryParse(sha, out var objectId))
+            {
+                _extraInfo = $" {objectId.ToShortString()}";
+                if (!string.IsNullOrWhiteSpace(buildBranch))
+                {
+                    _extraInfo += $" ({buildBranch})";
+                }
+            }
+            else
+            {
+                _extraInfo = " [DEBUG]";
+            }
 #endif
         }
     }

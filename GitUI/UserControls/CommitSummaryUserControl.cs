@@ -1,7 +1,8 @@
 ﻿using System;
 using System.Drawing;
 using System.Linq;
-using GitCommands;
+using GitExtUtils.GitUI.Theming;
+using GitUIPluginInterfaces;
 using ResourceManager;
 using ResourceManager.CommitDataRenders;
 
@@ -14,14 +15,14 @@ namespace GitUI.UserControls
     public partial class CommitSummaryUserControl : GitExtensionsControl
     {
         private const int MaxBranchTagLength = 75;
-        private readonly TranslationString _noRevision = new TranslationString("No revision");
-        private readonly TranslationString _notAvailable = new TranslationString("n/a");
+        private readonly TranslationString _noRevision = new("No revision");
+        private readonly TranslationString _notAvailable = new("n/a");
         private readonly IDateFormatter _dateFormatter = new DateFormatter();
         private readonly string _tagsCaption;
         private readonly string _branchesCaption;
         private readonly Color _tagsBackColor = Color.LightSteelBlue;
         private readonly Color _branchesBackColor = Color.LightSalmon;
-        private GitRevision _revision;
+        private GitRevision? _revision;
 
         private readonly int _messageY;
         private readonly int _messageHeight;
@@ -41,23 +42,22 @@ namespace GitUI.UserControls
             labelAuthor.Font = new Font(labelAuthor.Font, FontStyle.Bold);
         }
 
-        public GitRevision Revision
+        /// <summary>
+        /// Gets or sets a revision for which to show a summary.
+        /// </summary>
+        public GitRevision? Revision
         {
-            get
-            {
-                return _revision;
-            }
-
+            get => _revision;
             set
             {
                 _revision = value;
 
-                labelAuthorCaption.Text = ResourceManager.Strings.Author + ":";
-                labelDateCaption.Text = ResourceManager.Strings.CommitDate + ":";
+                labelAuthorCaption.Text = ResourceManager.TranslatedStrings.Author + ":";
+                labelDateCaption.Text = ResourceManager.TranslatedStrings.CommitDate + ":";
                 labelTagsCaption.Text = _tagsCaption;
                 labelBranchesCaption.Text = _branchesCaption;
 
-                if (Revision != null)
+                if (Revision is not null)
                 {
                     groupBox1.Text = Revision.ObjectId.ToShortString();
                     labelAuthor.Text = Revision.Author;
@@ -68,7 +68,7 @@ namespace GitUI.UserControls
                     if (tagList.Any())
                     {
                         labelTags.BackColor = _tagsBackColor;
-                        labelTags.ForeColor = ColorHelper.GetForeColorForBackColor(_tagsBackColor);
+                        labelTags.SetForeColorForBackColor();
                         labelTags.Font = new Font(labelTags.Font, FontStyle.Bold);
                         string tagListStr = string.Join(", ", tagList.Select(h => h.LocalName)).ShortenTo(MaxBranchTagLength);
                         labelTags.Text = tagListStr;
@@ -82,7 +82,7 @@ namespace GitUI.UserControls
                     if (branchesList.Any())
                     {
                         labelBranches.BackColor = _branchesBackColor;
-                        labelBranches.ForeColor = ColorHelper.GetForeColorForBackColor(_branchesBackColor);
+                        labelBranches.SetForeColorForBackColor();
                         labelBranches.Font = new Font(labelBranches.Font, FontStyle.Bold);
                         string branchesListStr = string.Join(", ", branchesList.Select(h => h.LocalName)).ShortenTo(MaxBranchTagLength);
                         labelBranches.Text = branchesListStr;

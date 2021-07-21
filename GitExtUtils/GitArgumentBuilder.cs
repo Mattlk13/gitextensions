@@ -1,86 +1,12 @@
 ﻿using System;
-using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
-using JetBrains.Annotations;
-namespace GitCommands
+
+namespace GitExtUtils
 {
-    /// <summary>
-    /// A configuration key/value pair for use in git command lines.
-    /// </summary>
-    public readonly struct GitConfigItem
-    {
-        public string Key { get; }
-        public string Value { get; }
-
-        public GitConfigItem(string key, string value)
-        {
-            Key = key;
-            Value = value;
-        }
-
-        public void Deconstruct(out string key, out string value)
-        {
-            key = Key;
-            value = Value;
-        }
-    }
-
-    public sealed class GitCommandConfiguration
-    {
-        private readonly ConcurrentDictionary<string, GitConfigItem[]> _configByCommand
-            = new ConcurrentDictionary<string, GitConfigItem[]>(StringComparer.Ordinal);
-
-        /// <summary>
-        /// Gets the default configuration for git commands used by Git Extensions.
-        /// </summary>
-        public static GitCommandConfiguration Default { get; }
-
-        static GitCommandConfiguration()
-        {
-            // The set of default configuration items for Git Extensions
-            Default = new GitCommandConfiguration();
-
-            Default.Add(new GitConfigItem("rebase.autoSquash", "false"), "rebase");
-
-            Default.Add(new GitConfigItem("log.showSignature", "false"), "log", "show", "whatchanged");
-
-            Default.Add(new GitConfigItem("diff.submodule", "short"), "diff");
-            Default.Add(new GitConfigItem("diff.noprefix", "false"), "diff");
-        }
-
-        /// <summary>
-        /// Registers <paramref name="configItem"/> against one or more command names.
-        /// </summary>
-        /// <param name="configItem">The config item to register.</param>
-        /// <param name="commands">One or more command names to register this config item against.</param>
-        public void Add(GitConfigItem configItem, params string[] commands)
-        {
-            foreach (var command in commands)
-            {
-                _configByCommand.AddOrUpdate(
-                    command,
-                    addValueFactory: _ => new[] { configItem },
-                    updateValueFactory: (_, items) => items.Append(configItem));
-            }
-        }
-
-        /// <summary>
-        /// Retrieves the set of default config items for the given <paramref name="command"/>.
-        /// </summary>
-        /// <param name="command">The command to retrieve default config items for.</param>
-        /// <returns>The default config items for <paramref name="command"/>.</returns>
-        public IReadOnlyList<GitConfigItem> Get(string command)
-        {
-            return _configByCommand.TryGetValue(command, out var items)
-                ? items
-                : Array.Empty<GitConfigItem>();
-        }
-    }
-
     /// <summary>
     /// Builds a git command line string from config items, a command name and that command's arguments.
     /// </summary>
@@ -111,7 +37,7 @@ namespace GitCommands
     /// </example>
     public sealed class GitArgumentBuilder : ArgumentBuilder
     {
-        private static readonly Regex _commandRegex = new Regex("^[a-z0-9_.-]+$", RegexOptions.Compiled);
+        private static readonly Regex CommandRegex = new("^[a-z0-9_.-]+$", RegexOptions.Compiled);
 
         private readonly List<GitConfigItem> _configItems;
         private readonly ArgumentString _gitArgs;
@@ -122,24 +48,24 @@ namespace GitCommands
         /// </summary>
         /// <param name="command">The git command this builder is compiling arguments for.</param>
         /// <param name="commandConfiguration">Optional source for default command configuration items. Pass <c>null</c> to use the Git Extensions defaults.</param>
-        /// <param name="gitOptions">Optional arguments that are for the git command.  EX: git --no-optional-locks status </param>
+        /// <param name="gitOptions">Optional arguments that are for the git command.  EX: git --no-optional-locks status.</param>
         /// <exception cref="ArgumentNullException"><paramref name="command"/> is <c>null</c>.</exception>
         /// <exception cref="ArgumentException"><paramref name="command"/> is an invalid string.</exception>
-        public GitArgumentBuilder([NotNull] string command, [CanBeNull] GitCommandConfiguration commandConfiguration = null, [CanBeNull] ArgumentString gitOptions = default)
+        public GitArgumentBuilder(string command, GitCommandConfiguration? commandConfiguration = null, ArgumentString gitOptions = default)
         {
-            if (command == null)
+            if (command is null)
             {
                 throw new ArgumentNullException(nameof(command));
             }
 
-            if (!_commandRegex.IsMatch(command))
+            if (!CommandRegex.IsMatch(command))
             {
                 throw new ArgumentException($"Git command \"{command}\" contains invalid characters.", nameof(command));
             }
 
             _command = command;
             _gitArgs = gitOptions;
-            commandConfiguration = commandConfiguration ?? GitCommandConfiguration.Default;
+            commandConfiguration ??= GitCommandConfiguration.Default;
 
             var defaultConfig = commandConfiguration.Get(command);
             _configItems = new List<GitConfigItem>(capacity: defaultConfig.Count + 2);
@@ -185,7 +111,7 @@ namespace GitCommands
             var capacity = _configItems.Sum(i => i.Key.Length + i.Value.Length + 7) + _command.Length + 1 + arguments.Length;
             capacity += gitArgsLength + 1;
 
-            var str = new StringBuilder(capacity);
+            StringBuilder str = new(capacity);
 
             if (gitArgsLength > 0)
             {

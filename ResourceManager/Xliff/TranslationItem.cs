@@ -18,7 +18,7 @@ namespace ResourceManager.Xliff
             Source = source;
         }
 
-        public TranslationItem(string name, string property, string source, string value)
+        public TranslationItem(string? name, string? property, string? source, string? value)
         {
             Name = name;
             Property = property;
@@ -27,10 +27,10 @@ namespace ResourceManager.Xliff
         }
 
         [XmlIgnore]
-        public string Name { get; set; }
+        public string? Name { get; set; }
 
         [XmlIgnore]
-        public string Property { get; set; }
+        public string? Property { get; set; }
 
         [XmlAttribute("id")]
         public string Id
@@ -38,17 +38,17 @@ namespace ResourceManager.Xliff
             get => Name + "." + Property;
             set
             {
-                var values = value.Split(new[] { '.' }, 2);
+                var values = value.Split(Delimiters.Period, 2);
                 Name = values[0];
                 Property = values.Length > 1 ? values[1] : "";
             }
         }
 
         [XmlElement("source")]
-        public string Source { get; set; }
+        public string? Source { get; set; }
 
         [XmlElement("target")]
-        public string Value { get; set; }
+        public string? Value { get; set; }
 
         public int CompareTo(TranslationItem other)
         {

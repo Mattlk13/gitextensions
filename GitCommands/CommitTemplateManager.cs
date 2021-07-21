@@ -25,14 +25,14 @@ namespace GitCommands
         /// Template file can be set by the following command:
         /// <c>$ git config --global commit.template ~/.git_commit_msg.txt</c>
         /// </remarks>
-        string LoadGitCommitTemplate();
+        string? LoadGitCommitTemplate();
 
         /// <summary>
         /// Allows a plugin to register a new commit template.
         /// </summary>
         /// <param name="templateName">The name of the template.</param>
         /// <param name="templateText">The body of the template.</param>
-        void Register(string templateName, Func<string> templateText, Image icon);
+        void Register(string templateName, Func<string> templateText, Image? icon);
 
         /// <summary>
         /// Allows a plugin to unregister a commit template.
@@ -43,14 +43,14 @@ namespace GitCommands
 
     public sealed class CommitTemplateManager : ICommitTemplateManager
     {
-        private struct RegisteredCommitTemplateItem
+        private readonly struct RegisteredCommitTemplateItem
         {
             public readonly string Name;
 
             public readonly Func<string> Text;
-            public readonly Image Icon;
+            public readonly Image? Icon;
 
-            public RegisteredCommitTemplateItem(string name, Func<string> text, Image icon)
+            public RegisteredCommitTemplateItem(string name, Func<string> text, Image? icon)
             {
                 Name = name;
                 Text = text;
@@ -58,20 +58,20 @@ namespace GitCommands
             }
         }
 
-        private static readonly List<RegisteredCommitTemplateItem> RegisteredTemplatesStorage = new List<RegisteredCommitTemplateItem>();
+        private static readonly List<RegisteredCommitTemplateItem> RegisteredTemplatesStorage = new();
         private readonly IFileSystem _fileSystem;
-        private readonly IGitModule _module;
+        private readonly Func<IGitModule> _getModule;
         private readonly IFullPathResolver _fullPathResolver;
 
-        public CommitTemplateManager(IGitModule module, IFullPathResolver fullPathResolver, IFileSystem fileSystem)
+        public CommitTemplateManager(Func<IGitModule> getModule, IFullPathResolver fullPathResolver, IFileSystem fileSystem)
         {
-            _module = module;
+            _getModule = getModule;
             _fullPathResolver = fullPathResolver;
             _fileSystem = fileSystem;
         }
 
-        public CommitTemplateManager(IGitModule module)
-            : this(module, new FullPathResolver(() => module.WorkingDir), new FileSystem())
+        public CommitTemplateManager(Func<IGitModule> getModule)
+            : this(getModule, new FullPathResolver(() => getModule().WorkingDir), new FileSystem())
         {
         }
 
@@ -99,9 +99,9 @@ namespace GitCommands
         /// Template file can be set by the following command:
         /// <c>$ git config --global commit.template ~/.git_commit_msg.txt</c>
         /// </remarks>
-        public string LoadGitCommitTemplate()
+        public string? LoadGitCommitTemplate()
         {
-            string fileName = _module.GetEffectiveSetting("commit.template");
+            string? fileName = GetModule().GetEffectiveSetting("commit.template");
             if (string.IsNullOrEmpty(fileName))
             {
                 return null;
@@ -122,7 +122,7 @@ namespace GitCommands
         /// </summary>
         /// <param name="templateName">The name of the template.</param>
         /// <param name="templateText">The body of the template.</param>
-        public void Register(string templateName, Func<string> templateText, Image icon)
+        public void Register(string templateName, Func<string> templateText, Image? icon)
         {
             lock (RegisteredTemplatesStorage)
             {
@@ -143,6 +143,17 @@ namespace GitCommands
             {
                 RegisteredTemplatesStorage.RemoveAll(item => item.Name == templateName);
             }
+        }
+
+        private IGitModule GetModule()
+        {
+            var module = _getModule();
+            if (module is null)
+            {
+                throw new ArgumentException($"Require a valid instance of {nameof(IGitModule)}");
+            }
+
+            return module;
         }
     }
 }

@@ -59,7 +59,7 @@ namespace GitCommands
          */
         private readonly Executable _executable;
 
-        public Plink(Executable executable = null)
+        public Plink(Executable? executable = null)
         {
             _executable = executable ?? new Executable("cmd.exe");
         }
@@ -76,10 +76,8 @@ namespace GitCommands
 
             var args = $"/k \"\"{AppSettings.Plink}\" -T {host}\"";
 
-            using (var process = _executable.Start(args, createWindow: true, redirectInput: false, redirectOutput: false, outputEncoding: null))
-            {
-                return await process.WaitForExitAsync() == 0;
-            }
+            using var process = _executable.Start(args, createWindow: true, redirectInput: false, redirectOutput: false, outputEncoding: null);
+            return await process.WaitForExitAsync() == 0;
         }
 
         /// <summary>
@@ -95,9 +93,9 @@ namespace GitCommands
             }
 
             // Turn ssh://user@host/path into user@host:path, which works better
-            var uri = new Uri(inputUrl, UriKind.Absolute);
+            Uri uri = new(inputUrl, UriKind.Absolute);
 
-            var fixedUrl = new StringBuilder();
+            StringBuilder fixedUrl = new();
 
             if (!uri.IsDefaultPort)
             {

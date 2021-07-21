@@ -9,12 +9,12 @@ namespace GitUI.UserControls
 {
     internal sealed class MainThreadScheduler : LocalScheduler
     {
-        internal static readonly MainThreadScheduler Instance = new MainThreadScheduler();
+        internal static readonly MainThreadScheduler Instance = new();
 
         public override IDisposable Schedule<TState>(TState state, TimeSpan dueTime, Func<IScheduler, TState, IDisposable> action)
         {
-            var cancellationDisposable = new CancellationDisposable();
-            var disposable = new SingleAssignmentDisposable();
+            CancellationDisposable cancellationDisposable = new();
+            SingleAssignmentDisposable disposable = new();
             var normalizedTime = Scheduler.Normalize(dueTime);
             var token = cancellationDisposable.Token;
             ThreadHelper.JoinableTaskFactory.RunAsync(
@@ -52,7 +52,9 @@ namespace GitUI.UserControls
                         }
                         else
                         {
+#pragma warning disable VSTHRD003 // Avoid awaiting foreign Tasks
                             return t;
+#pragma warning restore VSTHRD003 // Avoid awaiting foreign Tasks
                         }
                     },
                     CancellationToken.None,

@@ -1,7 +1,8 @@
 ﻿using System;
-using System.Diagnostics;
 using System.Windows.Forms;
 using GitCommands;
+using GitExtUtils;
+using GitUI.HelperDialogs;
 using GitUIPluginInterfaces;
 using ResourceManager;
 
@@ -9,13 +10,15 @@ namespace GitUI.CommandsDialogs
 {
     public sealed partial class FormMergeSubmodule : GitModuleForm
     {
-        private readonly TranslationString _stageFilename = new TranslationString("Stage {0}");
-        private readonly TranslationString _deleted = new TranslationString("deleted");
+        private readonly TranslationString _stageFilename = new("Stage {0}");
+        private readonly TranslationString _deleted = new("deleted");
 
         private readonly string _filename;
 
         [Obsolete("For VS designer and translation test only. Do not remove.")]
+#pragma warning disable CS8618 // Non-nullable field must contain a non-null value when exiting constructor. Consider declaring as nullable.
         private FormMergeSubmodule()
+#pragma warning restore CS8618 // Non-nullable field must contain a non-null value when exiting constructor. Consider declaring as nullable.
         {
             InitializeComponent();
         }
@@ -37,6 +40,7 @@ namespace GitUI.CommandsDialogs
             tbLocal.Text = item.Local.ObjectId?.ToString() ?? _deleted.Text;
             tbRemote.Text = item.Remote.ObjectId?.ToString() ?? _deleted.Text;
             tbCurrent.Text = Module.GetSubmodule(_filename).GetCurrentCheckout()?.ToString() ?? "";
+            btCheckoutBranch.Enabled = item.Base.ObjectId is not null && item.Remote.ObjectId is not null;
         }
 
         private void btRefresh_Click(object sender, EventArgs e)
@@ -46,23 +50,20 @@ namespace GitUI.CommandsDialogs
 
         private void StageSubmodule()
         {
-            using (var form = new FormStatus(ProcessStart, string.Format(_stageFilename.Text, _filename)))
+            GitArgumentBuilder args = new("add")
             {
-                form.ShowDialogOnError(this);
+                "--",
+                _filename.QuoteNE()
+            };
+            string output = Module.GitExecutable.GetOutput(args);
+
+            if (string.IsNullOrWhiteSpace(output))
+            {
+                return;
             }
 
-            void ProcessStart(FormStatus form)
-            {
-                form.AddMessageLine(string.Format(_stageFilename.Text, _filename));
-                var args = new GitArgumentBuilder("add")
-                {
-                    "--",
-                    _filename.QuoteNE()
-                };
-                string output = Module.GitExecutable.GetOutput(args);
-                form.AddMessageLine(output);
-                form.Done(isSuccess: string.IsNullOrWhiteSpace(output));
-            }
+            string text = string.Format(_stageFilename.Text, _filename);
+            FormStatus.ShowErrorDialog(this, text, text, output);
         }
 
         private void btStageCurrent_Click(object sender, EventArgs e)
@@ -74,23 +75,13 @@ namespace GitUI.CommandsDialogs
 
         private void btOpenSubmodule_Click(object sender, EventArgs e)
         {
-            var process = new Process
-            {
-                StartInfo =
-                {
-                    FileName = Application.ExecutablePath,
-                    Arguments = "browse",
-                    WorkingDirectory = Module.GetSubmoduleFullPath(_filename)
-                }
-            };
-
-            process.Start();
+            GitUICommands.LaunchBrowse(workingDir: Module.GetSubmoduleFullPath(_filename));
         }
 
         private void btCheckoutBranch_Click(object sender, EventArgs e)
         {
             var revisions = new[] { ObjectId.Parse(tbLocal.Text), ObjectId.Parse(tbRemote.Text) };
-            var submoduleCommands = new GitUICommands(Module.GetSubmoduleFullPath(_filename));
+            GitUICommands submoduleCommands = new(Module.GetSubmoduleFullPath(_filename));
             if (!submoduleCommands.StartCheckoutBranch(this, revisions))
             {
                 return;

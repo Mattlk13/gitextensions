@@ -2,8 +2,10 @@
 using System.Drawing;
 using System.Windows.Forms;
 using GitCommands;
+using GitCommands.Git.Commands;
+using GitExtUtils;
 using GitUI.HelperDialogs;
-using JetBrains.Annotations;
+using GitUIPluginInterfaces;
 using ResourceManager;
 
 namespace GitUI.CommandsDialogs
@@ -12,15 +14,12 @@ namespace GitUI.CommandsDialogs
     {
         #region Translation
         private readonly TranslationString _noneParentSelectedText =
-            new TranslationString("None parent is selected!");
-        private readonly TranslationString _noneParentSelectedTextCaption =
-            new TranslationString("Error");
+            new("None parent is selected!");
         #endregion
 
         private bool _isMerge;
 
-        [CanBeNull]
-        public GitRevision Revision { get; set; }
+        public GitRevision? Revision { get; set; }
 
         [Obsolete("For VS designer and translation test only. Do not remove.")]
         private FormCherryPick()
@@ -28,7 +27,7 @@ namespace GitUI.CommandsDialogs
             InitializeComponent();
         }
 
-        public FormCherryPick(GitUICommands commands, [CanBeNull] GitRevision revision)
+        public FormCherryPick(GitUICommands commands, GitRevision? revision)
             : base(commands)
         {
             Revision = revision;
@@ -65,14 +64,14 @@ namespace GitUI.CommandsDialogs
 
             ParentsList.Items.Clear();
 
-            if (Revision != null)
+            if (Revision is not null)
             {
                 _isMerge = Module.IsMerge(Revision.ObjectId);
             }
 
             panelParentsList.Visible = _isMerge;
 
-            if (_isMerge)
+            if (_isMerge && Revision is not null)
             {
                 var parents = Module.GetParentRevisions(Revision.ObjectId);
 
@@ -98,14 +97,14 @@ namespace GitUI.CommandsDialogs
 
         private void Revert_Click(object sender, EventArgs e)
         {
-            var args = new ArgumentBuilder();
+            ArgumentBuilder args = new();
             var canExecute = true;
 
             if (_isMerge)
             {
                 if (ParentsList.SelectedItems.Count == 0)
                 {
-                    MessageBox.Show(this, _noneParentSelectedText.Text, _noneParentSelectedTextCaption.Text, MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    MessageBox.Show(this, _noneParentSelectedText.Text, TranslatedStrings.Error, MessageBoxButtons.OK, MessageBoxIcon.Error);
                     canExecute = false;
                 }
                 else
@@ -119,9 +118,14 @@ namespace GitUI.CommandsDialogs
                 args.Add("-x");
             }
 
-            if (canExecute)
+            if (canExecute && Revision is not null)
             {
-                FormProcess.ShowDialog(this, GitCommandHelpers.CherryPickCmd(Revision.ObjectId, AutoCommit.Checked, args.ToString()));
+                var command = GitCommandHelpers.CherryPickCmd(Revision.ObjectId, AutoCommit.Checked, args.ToString());
+
+                // Don't verify whether the command is successful.
+                // If it fails, likely there is a conflict that needs to be resolved.
+                FormProcess.ShowDialog(this, process: null, arguments: command, Module.WorkingDir, input: null, useDialogSettings: true);
+
                 MergeConflictHandler.HandleMergeConflicts(UICommands, this, AutoCommit.Checked);
                 DialogResult = DialogResult.OK;
                 Close();
@@ -138,7 +142,7 @@ namespace GitUI.CommandsDialogs
         {
             using (var chooseForm = new FormChooseCommit(UICommands, Revision?.Guid))
             {
-                if (chooseForm.ShowDialog(this) == DialogResult.OK && chooseForm.SelectedRevision != null)
+                if (chooseForm.ShowDialog(this) == DialogResult.OK && chooseForm.SelectedRevision is not null)
                 {
                     Revision = chooseForm.SelectedRevision;
                 }

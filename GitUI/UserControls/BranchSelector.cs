@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using GitCommands;
 using GitCommands.Git;
 using GitUIPluginInterfaces;
 using Microsoft.VisualStudio.Threading;
@@ -10,13 +11,13 @@ namespace GitUI.UserControls
 {
     public partial class BranchSelector : GitModuleControl
     {
-        public event EventHandler SelectedIndexChanged;
+        public event EventHandler? SelectedIndexChanged;
 
         private readonly bool _isLoading;
-        private IReadOnlyList<ObjectId> _containRevisions;
-        private string[] _localBranches;
-        private string[] _remoteBranches;
-        public ObjectId CommitToCompare;
+        private IReadOnlyList<ObjectId>? _containRevisions;
+        private string[]? _localBranches;
+        private string[]? _remoteBranches;
+        public ObjectId? CommitToCompare;
 
         public BranchSelector()
         {
@@ -37,7 +38,7 @@ namespace GitUI.UserControls
         public string SelectedBranchName => Branches.Text;
         public override string Text => Branches.Text;
 
-        public void Initialize(bool remote, IReadOnlyList<ObjectId> containRevisions)
+        public void Initialize(bool remote, IReadOnlyList<ObjectId>? containRevisions)
         {
             lbChanges.Text = "";
             LocalBranch.Checked = !remote;
@@ -46,13 +47,15 @@ namespace GitUI.UserControls
             _containRevisions = containRevisions;
 
             Branches.Items.Clear();
-            Branches.Items.AddRange(_containRevisions != null
+            Branches.Items.AddRange(_containRevisions is not null
                 ? GetContainsRevisionBranches()
                 : LocalBranch.Checked
                     ? GetLocalBranches()
                     : GetRemoteBranches());
 
-            if (_containRevisions != null && Branches.Items.Count == 1)
+            Branches.ResizeDropDownWidth(AppSettings.BranchDropDownMinWidth, AppSettings.BranchDropDownMaxWidth);
+
+            if (_containRevisions is not null && Branches.Items.Count == 1)
             {
                 Branches.SelectedIndex = 0;
             }
@@ -63,27 +66,17 @@ namespace GitUI.UserControls
 
             string[] GetLocalBranches()
             {
-                if (_localBranches == null)
-                {
-                    _localBranches = Module.GetRefs(false).Select(b => b.Name).ToArray();
-                }
-
-                return _localBranches;
+                return _localBranches ??= Module.GetRefs(RefsFilter.Heads).Select(b => b.Name).ToArray();
             }
 
             string[] GetRemoteBranches()
             {
-                if (_remoteBranches == null)
-                {
-                    _remoteBranches = Module.GetRefs(true, true).Where(h => h.IsRemote && !h.IsTag).Select(b => b.Name).ToArray();
-                }
-
-                return _remoteBranches;
+                return _remoteBranches ??= Module.GetRefs(RefsFilter.Remotes).Select(b => b.Name).ToArray();
             }
 
             string[] GetContainsRevisionBranches()
             {
-                var result = new HashSet<string>();
+                HashSet<string> result = new();
 
                 if (_containRevisions.Count > 0)
                 {
@@ -114,7 +107,7 @@ namespace GitUI.UserControls
             lbChanges.Text = "";
             FireSelectionChangedEvent(sender, e);
 
-            if (SelectedBranchName.IsNullOrWhiteSpace())
+            if (string.IsNullOrWhiteSpace(SelectedBranchName))
             {
                 lbChanges.Text = "";
             }
@@ -123,7 +116,7 @@ namespace GitUI.UserControls
                 var branchName = SelectedBranchName;
                 var currentCheckout = CommitToCompare ?? Module.GetCurrentCheckout();
 
-                if (currentCheckout == null)
+                if (currentCheckout is null)
                 {
                     lbChanges.Text = "";
                     return;

@@ -3,8 +3,9 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Drawing;
 using System.Linq;
+using Microsoft;
 
-namespace GitStatistics.PieChart
+namespace GitExtensions.Plugins.GitStatistics.PieChart
 {
     /// <summary>
     ///   Object representing a pie chart.
@@ -20,7 +21,7 @@ namespace GitStatistics.PieChart
         ///   Array of ordered pie slices constituting the chart, starting from
         ///   270 degrees axis.
         /// </summary>
-        protected PieSlice[] PieSlices;
+        protected PieSlice[] PieSlices = Array.Empty<PieSlice>();
 
         /// <summary>
         ///   Collection of reordered pie slices mapped to original order.
@@ -44,7 +45,7 @@ namespace GitStatistics.PieChart
                     Color.Maroon,
                     Color.Teal,
                     Color.Fuchsia
-                };
+            };
 
         /// <summary>
         ///   Array of relative displacements from the common center.
@@ -255,13 +256,13 @@ namespace GitStatistics.PieChart
         ///   Gets or sets the x-coordinate of the upper-left corner of the
         ///   bounding rectangle.
         /// </summary>
-        public float X { get; set; }
+        public float X { get; }
 
         /// <summary>
         ///   Gets or sets the y-coordinate of the upper-left corner of the
         ///   bounding rectangle.
         /// </summary>
-        public float Y { get; set; }
+        public float Y { get; }
 
         /// <summary>
         ///   Sets the shadowing style used.
@@ -347,10 +348,11 @@ namespace GitStatistics.PieChart
         /// <summary>
         ///   Sets values to be displayed on the chart.
         /// </summary>
-        public void SetValues(decimal[] value)
+        public void SetValues(decimal[] values)
         {
-            Debug.Assert(value != null && value.Length > 0, "value != null && value.Length > 0");
-            Values = value;
+            Requires.NotNullOrEmpty(values, nameof(values));
+
+            Values = values;
         }
 
         /// <summary>
@@ -420,7 +422,7 @@ namespace GitStatistics.PieChart
         /// </param>
         public void Draw(Graphics graphics)
         {
-            Debug.Assert(Values != null && Values.Length > 0, "Values != null && Values.Length > 0");
+            Debug.Assert(Values is not null && Values.Length > 0, "Values is not null && Values.Length > 0");
             InitializePieSlices();
             if (FitToBoundingRectangle)
             {
@@ -460,7 +462,7 @@ namespace GitStatistics.PieChart
             }
 
             // split the backmost (at 270 degrees) pie slice
-            var pieSlices = new List<PieSlice>(PieSlices);
+            List<PieSlice> pieSlices = new(PieSlices);
             var splitSlices = PieSlices[0].Split(270F);
             pieSlices[0] = splitSlices[0];
             if (splitSlices[1].SweepAngle > 0F)
@@ -573,7 +575,8 @@ namespace GitStatistics.PieChart
         /// </returns>
         private static int GetForemostPieSlice(IReadOnlyList<PieSlice> pieSlices)
         {
-            Debug.Assert(pieSlices != null && pieSlices.Count > 0, "pieSlices != null && pieSlices.Count > 0");
+            Requires.NotNullOrEmpty(pieSlices, nameof(pieSlices));
+
             for (var i = 0; i < pieSlices.Count; ++i)
             {
                 var pieSlice = pieSlices[i];
@@ -646,7 +649,7 @@ namespace GitStatistics.PieChart
             var largestDisplacementEllipseSize = LargestDisplacementEllipseSize;
             var maxDisplacementIndex = SliceRelativeDisplacements.Length - 1;
             var largestDisplacement = LargestDisplacement;
-            var listPieSlices = new List<PieSlice>();
+            List<PieSlice> listPieSlices = new();
             PieSlicesMapping.Clear();
             var colorIndex = 0;
             var backPieIndex = -1;
@@ -851,7 +854,7 @@ namespace GitStatistics.PieChart
         /// </returns>
         protected SizeF GetSliceDisplacement(float angle, float displacementFactor)
         {
-            Debug.Assert(displacementFactor > 0F && displacementFactor <= 1F, "displacementFactor > 0F && displacementFactor <= 1F");
+            Debug.Assert(IsDisplacementValid(displacementFactor), "displacementFactor is (>= 0F and <= 1F)");
             if (displacementFactor == 0F)
             {
                 return SizeF.Empty;
@@ -870,7 +873,7 @@ namespace GitStatistics.PieChart
         /// </param>
         protected void DrawSliceSides(Graphics graphics)
         {
-            var pieSlices = new List<PieSlice>(PieSlices);
+            List<PieSlice> pieSlices = new(PieSlices);
 
             // if the first slice spreads across 180 and 360 degrees boundaries it
             // will appear on both left and right edge so its periphery has to be
@@ -995,7 +998,7 @@ namespace GitStatistics.PieChart
         /// </returns>
         private static bool IsDisplacementValid(float value)
         {
-            return value >= 0F && value <= 1F;
+            return value is (>= 0F and <= 1F);
         }
     }
 }

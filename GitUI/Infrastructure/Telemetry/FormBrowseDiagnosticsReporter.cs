@@ -15,7 +15,7 @@ namespace GitUI.Infrastructure.Telemetry
 
         public void Report()
         {
-            var properties = new Dictionary<string, string>
+            Dictionary<string, string> properties = new()
                 {
                     // layout
                     { "ShowLeftPanel".FormatKey(), _owner.MainSplitContainer.Panel1Collapsed.ToString() },
@@ -30,7 +30,7 @@ namespace GitUI.Infrastructure.Telemetry
 
                     // commit info panel
                     { nameof(AppSettings.ShowAuthorAvatarInCommitInfo).FormatKey(), AppSettings.ShowAuthorAvatarInCommitInfo.ToString() },
-                    { nameof(AppSettings.ShowGpgInformation).FormatKey(), AppSettings.ShowGpgInformation.ValueOrDefault.ToString() },
+                    { nameof(AppSettings.ShowGpgInformation).FormatKey(), AppSettings.ShowGpgInformation.Value.ToString() },
 
                     // other
                     { nameof(AppSettings.ShowAheadBehindData).FormatKey(), AppSettings.ShowAheadBehindData.ToString() },

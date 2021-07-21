@@ -4,7 +4,7 @@ using System.ComponentModel;
 using System.Drawing;
 using System.Linq;
 using System.Windows.Forms;
-using JetBrains.Annotations;
+using GitExtUtils.GitUI.Theming;
 
 namespace ResourceManager
 {
@@ -28,7 +28,7 @@ namespace ResourceManager
             set => base.Font = value;
         }
 
-        public bool IsDesignModeActive => _initialiser.IsDesignModeActive;
+        protected bool IsDesignMode => _initialiser.IsDesignMode;
 
         protected virtual void OnRuntimeLoad()
         {
@@ -38,7 +38,7 @@ namespace ResourceManager
         {
             base.OnLoad(e);
 
-            if (!_initialiser.IsDesignModeActive)
+            if (!IsDesignMode)
             {
                 OnRuntimeLoad();
             }
@@ -53,6 +53,13 @@ namespace ResourceManager
         protected void InitializeComplete()
         {
             _initialiser.InitializeComplete();
+
+            if (IsDesignMode)
+            {
+                return;
+            }
+
+            this.FixVisualStyle();
         }
 
         public virtual void AddTranslationItems(ITranslation translation)
@@ -71,16 +78,16 @@ namespace ResourceManager
         protected bool HotkeysEnabled { get; set; }
 
         /// <summary>Gets or sets the hotkeys</summary>
-        protected IEnumerable<HotkeyCommand> Hotkeys { get; set; }
+        protected IEnumerable<HotkeyCommand>? Hotkeys { get; set; }
 
         /// <summary>Checks if a hotkey wants to handle the key before letting the message propagate.</summary>
         protected override bool ProcessCmdKey(ref Message msg, Keys keyData)
         {
-            if (HotkeysEnabled && Hotkeys != null)
+            if (HotkeysEnabled && Hotkeys is not null)
             {
                 foreach (var hotkey in Hotkeys)
                 {
-                    if (hotkey != null && hotkey.KeyData == keyData)
+                    if (hotkey is not null && hotkey.KeyData == keyData)
                     {
                         return ExecuteCommand(hotkey.CommandCode).Executed;
                     }
@@ -95,8 +102,7 @@ namespace ResourceManager
             return GetHotkeyCommand(commandCode)?.KeyData ?? Keys.None;
         }
 
-        [CanBeNull]
-        private HotkeyCommand GetHotkeyCommand(int commandCode)
+        private HotkeyCommand? GetHotkeyCommand(int commandCode)
         {
             return Hotkeys?.FirstOrDefault(h => h.CommandCode == commandCode);
         }
@@ -121,7 +127,10 @@ namespace ResourceManager
             keys &= ~Keys.Shift; // ignore the SHIFT key as modifier
             switch (keys)
             {
-                case Keys key when (key >= Keys.A && key <= Keys.Z) || (key >= Keys.D0 && key <= Keys.D9) || (key >= Keys.Oem1 && key <= Keys.Oem102):
+                case Keys key when key is
+                    (>= Keys.A and <= Keys.Z)
+                    or (>= Keys.D0 and <= Keys.D9)
+                    or (>= Keys.Oem1 and <= Keys.Oem102):
                 case Keys.Space:
                 case Keys.Back:
                 case Keys.Delete:

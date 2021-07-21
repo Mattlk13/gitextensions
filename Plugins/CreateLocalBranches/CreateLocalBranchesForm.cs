@@ -1,9 +1,10 @@
 ﻿using System;
 using System.Windows.Forms;
 using GitCommands;
+using GitExtUtils;
 using GitUIPluginInterfaces;
 
-namespace CreateLocalBranches
+namespace GitExtensions.Plugins.CreateLocalBranches
 {
     public partial class CreateLocalBranchesForm : ResourceManager.GitExtensionsFormBase
     {
@@ -19,13 +20,13 @@ namespace CreateLocalBranches
 
         private void button1_Click(object sender, EventArgs e)
         {
-            var args = new GitArgumentBuilder("branch") { "-a" };
+            GitArgumentBuilder args = new("branch") { "-a" };
             string[] references = _gitUiCommands.GitModule.GitExecutable.GetOutput(args)
                 .Split(new[] { '\n' }, StringSplitOptions.RemoveEmptyEntries);
 
             if (references.Length == 0)
             {
-                MessageBox.Show(this, "No remote branches found.");
+                MessageBox.Show(this, "No remote branches found.", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
                 DialogResult = DialogResult.Cancel;
                 return;
             }
@@ -52,8 +53,8 @@ namespace CreateLocalBranches
                 }
             }
 
-            MessageBox.Show(this, string.Format("{0} local tracking branches have been created/updated.",
-                                          references.Length));
+            MessageBox.Show(this, string.Format("{0} local tracking branches have been created/updated.", references.Length),
+                "Information", MessageBoxButtons.OK, MessageBoxIcon.Information);
             Close();
         }
     }

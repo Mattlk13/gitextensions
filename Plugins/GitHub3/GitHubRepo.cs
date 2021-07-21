@@ -4,7 +4,7 @@ using System.Linq;
 using Git.hub;
 using GitUIPluginInterfaces.RepositoryHosts;
 
-namespace GitHub3
+namespace GitExtensions.Plugins.GitHub3
 {
     public class GitHubRepo : IHostedRepository
     {
@@ -15,7 +15,7 @@ namespace GitHub3
             _repo = repo;
         }
 
-        public string Owner => _repo.Owner?.Login;
+        public string? Owner => _repo.Owner?.Login;
         public string Name => _repo.Name;
         public string Description => _repo.Description;
         public bool IsAFork => _repo.Fork;
@@ -24,7 +24,7 @@ namespace GitHub3
         public int Forks => _repo.Forks;
         public string Homepage => _repo.Homepage;
 
-        public string ParentReadOnlyUrl
+        public string? ParentReadOnlyUrl
         {
             get
             {
@@ -35,7 +35,7 @@ namespace GitHub3
 
                 if (!_repo.Detailed)
                 {
-                    if (_repo.Organization != null)
+                    if (_repo.Organization is not null)
                     {
                         return null;
                     }
@@ -47,7 +47,7 @@ namespace GitHub3
             }
         }
 
-        public string ParentOwner
+        public string? ParentOwner
         {
             get
             {
@@ -58,7 +58,7 @@ namespace GitHub3
 
                 if (!_repo.Detailed)
                 {
-                    if (_repo.Organization != null)
+                    if (_repo.Organization is not null)
                     {
                         return null;
                     }
@@ -96,7 +96,7 @@ namespace GitHub3
         {
             var pullRequests = _repo?.GetPullRequests();
 
-            if (pullRequests != null)
+            if (pullRequests is not null)
             {
                 return pullRequests
                     .Select(pr => new GitHubPullRequest(pr))
@@ -110,7 +110,7 @@ namespace GitHub3
         {
             var pullRequest = _repo.CreatePullRequest(GitHubLoginInfo.Username + ":" + myBranch, remoteBranch, title, body);
 
-            if (pullRequest == null || pullRequest.Number == 0)
+            if (pullRequest is null || pullRequest.Number == 0)
             {
                 throw new Exception("Failed to create pull request.");
             }

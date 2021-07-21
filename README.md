@@ -5,20 +5,13 @@
 Git Extensions is a standalone UI tool for managing git repositories.
 It also integrates with Windows Explorer and Microsoft Visual Studio (2015/2017/2019).
 
-Have a question? Come and talk to us: [![Gitter](https://badges.gitter.im/Join%20Chat.svg)](https://gitter.im/gitextensions/gitextensions?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
+Have a question? Come and talk to us: [![Gitter](https://badges.gitter.im/Join%20Chat.svg)](https://gitter.im/gitextensions/gitextensions?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge) or send us a tweet [![@git_extensions](https://img.shields.io/badge/twitter-%40git__extensions-blue)](https://twitter.com/git_extensions)
 
 ## Current Status
 
 <a href="#backers" alt="sponsors on Open Collective"><img src="https://opencollective.com/gitextensions/backers/badge.svg" /></a> <a href="#sponsors" alt="Sponsors on Open Collective"><img src="https://opencollective.com/gitextensions/sponsors/badge.svg" /></a>
 
-The work has been [split into two streams](https://github.com/gitextensions/gitextensions/wiki/Compare-versions):
- * version 3.x - **[Download it now](https://github.com/gitextensions/gitextensions/releases/latest)** or [install it with Chocolatey](https://chocolatey.org/packages/gitextensions).
- * version 2.5x
-
 ### Version 3.x
-
-This stream contains the code for the new major version with a number of significant changes&mdash;both to the app and the codebase.
-For more details please refer to [versions comparison](https://github.com/gitextensions/gitextensions/wiki/Compare-versions).
 
 <table>
   <tr>
@@ -39,7 +32,7 @@ For more details please refer to [versions comparison](https://github.com/gitext
       Development
     </td>
     <td>
-      MS VS 2017 v15.7+, C#7.3<br />
+      MS VS 2019 (v16.8+), C# 9<br />
       VC++ (inc. ATL for x86/x64 for installer)
     </td>
   </tr>
@@ -61,11 +54,16 @@ For more details please refer to [versions comparison](https://github.com/gitext
   </tr>
 </table>
 
+#### [Build instructions](https://github.com/gitextensions/gitextensions/wiki/How-To%3A-build-instructions)
 
 ### Version 2.5x
 
-This stream contains the last cross-platform version running both on Windows (MS .NET Framework) and on Linux/Mac (Mono).
+<details>
+<summary>This stream contains the last cross-platform version running both on Windows (MS .NET Framework) and on Linux/Mac (Mono). [More...]</summary>
+This stream contains the last cross-platform version running both on Windows (MS .NET Framework) and on Linux/Mac (Mono).<br />
 The code is in maintenance mode with no significant active development planned. Only certain bug fixes are currently ported across, however there may be consideration given for certain features to be ported across from the v3.x stream.
+
+For more details please refer to [versions comparison](https://github.com/gitextensions/gitextensions/wiki/Compare-versions).
 
 <table>
   <tr>
@@ -115,18 +113,30 @@ The code is in maintenance mode with no significant active development planned. 
   </tr>
 </table>
 
+#### [Build instructions](https://github.com/gitextensions/gitextensions/wiki/How-To:-build-instructions#v3x-and-older)
+
+</details>
 
 ## Downloads
+
 <a href="https://github.com/gitextensions/gitextensions/releases" rel="nofollow" style="vertical-align: -webkit-baseline-middle;"><img src="https://img.shields.io/github/downloads/gitextensions/gitextensions/total.svg?label=GitHub%20downloads%20(total)&cacheSeconds=86400"></a> <a href="https://sourceforge.net/projects/gitextensions/files" rel="nofollow" style="vertical-align: -webkit-baseline-middle;"><img src="https://img.shields.io/sourceforge/dt/gitextensions.svg?label=SourceForge%20downloads%20(total)&cacheSeconds=86400"></a> <a href="https://chocolatey.org/packages/gitextensions" rel="nofollow" style="vertical-align: -webkit-baseline-middle;"><img src="https://img.shields.io/chocolatey/dt/gitextensions.svg?label=Chocolatey%20downloads%20(total)&cacheSeconds=86400"></a>
+
+**[Download it now](https://github.com/gitextensions/gitextensions/releases/latest)** or install it with [Chocolatey](https://chocolatey.org/packages/gitextensions) or [AppGet](https://appget.net/packages/i/gitextensions).
+
+If you want to **update a portable version**, you should delete all the files and the subfolders from the existing folder except:
+
+* _GitExtensions.settings_
+* _WindowPositions.xml_
+* User defined themes in folder _Themes_
 
 <table>
   <tr>
     <td>
-      <strong>v3.1.1</strong>
+      <strong>v3.5</strong>
     </td>
     <td>
       <a href="https://github.com/gitextensions/gitextensions/releases/latest">[ Download ]</a><br />
-      <a href="https://github.com/gitextensions/gitextensions/releases/latest" rel="nofollow" style="vertical-align: -webkit-baseline-middle;"><img src="https://img.shields.io/github/downloads/gitextensions/gitextensions/latest/total.svg?label=GitHub%20downloads%20(latest)&cacheSeconds=3600"></a> <a href="https://sourceforge.net/projects/gitextensions/" rel="nofollow" style="vertical-align: -webkit-baseline-middle;"><img src="https://img.shields.io/sourceforge/dt/gitextensions/v3.1.1.svg?label=SourceForge%20downloads%20(latest)&cacheSeconds=3600"></a>
+      <a href="https://github.com/gitextensions/gitextensions/releases/latest" rel="nofollow" style="vertical-align: -webkit-baseline-middle;"><img src="https://img.shields.io/github/downloads/gitextensions/gitextensions/latest/total.svg?label=GitHub%20downloads%20(latest)&cacheSeconds=3600"></a> <a href="https://sourceforge.net/projects/gitextensions/" rel="nofollow" style="vertical-align: -webkit-baseline-middle;"><img src="https://img.shields.io/sourceforge/dt/gitextensions/v3.4.3.svg?label=SourceForge%20downloads%20(latest)&cacheSeconds=3600"></a>
     </td>
   </tr>
   <tr>
@@ -193,13 +203,11 @@ The code is in maintenance mode with no significant active development planned. 
   </tr>
 </table>
 
-
 # Conduct
 
 Project maintainers pledge to foster an open and welcoming environment, and ask contributors to do the same.
 
 For more information see our [code of conduct](CODE_OF_CONDUCT.md).
-
 
 # Shoutouts
 
@@ -207,17 +215,18 @@ For more information see our [code of conduct](CODE_OF_CONDUCT.md).
   <a href="https://github.com/gitextensions/gitextensions/contributors"><img src="https://opencollective.com/gitextensions/contributors.svg?width=890&button=false" /></a>
 * We thank JetBRAINS for [ReSharper](https://www.jetbrains.com/resharper/) licenses<br />
   <a href="https://www.jetbrains.com/?from=gitextensions" target="_blank"><img src="./GitUI/Resources/Icons/originals/jetbrains-variant-4.png"></a>
-* We thank [SignPath.io](https://signpath.io/) for the free code signing
+* We thank [SemanticMerge](https://www.semanticmerge.com) for licenses<br />
+  <a href="https://www.semanticmerge.com" target="_blank"><img src="./GitUI/Resources/Icons/originals/semanticmerge-logo.svg"></a>
+* We thank [SignPath.io](https://signpath.io/) for the free code signing<br />
+  <a href="https://signpath.io/" target="_blank"><img src="./GitUI/Resources/Icons/originals/signpath_logo.png"></a>
 * We thank [SignPath Foundation](https://signpath.org/) for the signing certificate
 * We thank [Yusuke Kamiyamane](http://p.yusukekamiyamane.com/) for the icons ([CCA/3.0](http://creativecommons.org/licenses/by/3.0/))
-
 
 ## Backers
 
 Thank you to all our backers! 🙏 [[Become a backer](https://opencollective.com/gitextensions#backer)]
 
 <a href="https://opencollective.com/gitextensions#backers" target="_blank"><img src="https://opencollective.com/gitextensions/backers.svg?width=890"></a>
-
 
 ## Sponsors
 
@@ -237,9 +246,9 @@ Support this project by becoming a sponsor. Your logo will show up here with a l
 
 # Useful Links
 
-* Website: [gitextensions.github.io](https://gitextensions.github.io/)
+* Website: [gitextensions.github.io](https://gitextensions.github.io/) [Git repo](https://github.com/gitextensions/gitextensions.github.io)
 * Source code: [github.com/gitextensions/gitextensions](https://github.com/gitextensions/gitextensions)
-* Online manual: [git-extensions-documentation.readthedocs.org](https://git-extensions-documentation.readthedocs.org/en/latest/)
+* Online manual: [git-extensions-documentation.readthedocs.org](https://git-extensions-documentation.readthedocs.org/) [Git repo](https://github.com/gitextensions/GitExtensionsDoc)
 * Issue tracker: [github.com/gitextensions/gitextensions/issues](https://github.com/gitextensions/gitextensions/issues)
 * Wiki: [github.com/gitextensions/gitextensions/wiki](https://github.com/gitextensions/gitextensions/wiki)
 * Gitter chat: [gitter.im/gitextensions/gitextensions](https://gitter.im/gitextensions/gitextensions?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)

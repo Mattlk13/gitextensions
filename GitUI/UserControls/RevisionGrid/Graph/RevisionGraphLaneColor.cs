@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Drawing;
-using System.Drawing.Drawing2D;
 
 namespace GitUI.UserControls.RevisionGrid.Graph
 {
@@ -19,11 +18,16 @@ namespace GitUI.UserControls.RevisionGrid.Graph
             Color.FromArgb(231, 176, 15) // orange
         };
 
+        public static int GetColorForLane(int seed)
+        {
+            return Math.Abs(seed) % PresetGraphBrushes.Count;
+        }
+
         public static Color NonRelativeColor { get; } = Color.LightGray;
 
-        internal static Brush NonRelativeBrush { get; private set; }
+        internal static Brush NonRelativeBrush { get; }
 
-        internal static readonly List<Brush> PresetGraphBrushes = new List<Brush>();
+        internal static readonly List<Brush> PresetGraphBrushes = new();
 
         static RevisionGraphLaneColor()
         {
@@ -37,7 +41,7 @@ namespace GitUI.UserControls.RevisionGrid.Graph
 
         public static Brush GetBrushForLane(int laneColor)
         {
-            return PresetGraphBrushes[Math.Abs(laneColor) % PresetGraphBrushes.Count];
+            return PresetGraphBrushes[laneColor];
         }
     }
 }

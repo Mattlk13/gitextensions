@@ -6,17 +6,15 @@ namespace GitUI.Infrastructure.Telemetry
 {
     internal class AppEnvironmentTelemetryInitializer : ITelemetryInitializer
     {
-        private readonly ISshPathLocator _sshPathLocator = new SshPathLocator();
-
         public void Initialize(ITelemetry telemetry)
         {
             string sshClient;
-            var sshPath = _sshPathLocator.Find(AppSettings.GitBinDir);
+            var sshPath = AppSettings.SshPath;
             if (string.IsNullOrEmpty(sshPath))
             {
                 sshClient = "OpenSSH";
             }
-            else if (GitCommandHelpers.Plink())
+            else if (GitSshHelpers.Plink())
             {
                 sshClient = "PuTTY";
             }

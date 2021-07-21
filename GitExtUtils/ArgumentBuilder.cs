@@ -5,7 +5,7 @@ using System.Linq;
 using System.Text;
 using JetBrains.Annotations;
 
-namespace GitCommands
+namespace GitExtUtils
 {
     /// <summary>
     /// Builds a command line argument string from zero or more arguments.
@@ -36,10 +36,9 @@ namespace GitCommands
     /// </example>
     public class ArgumentBuilder : IEnumerable
     {
-        private readonly StringBuilder _arguments = new StringBuilder(capacity: 16);
+        private readonly StringBuilder _arguments = new(capacity: 16);
 
         public bool IsEmpty => _arguments.Length == 0;
-        public int Length => _arguments.Length;
 
         /// <summary>
         /// Adds <paramref name="s"/> to the argument list.
@@ -49,7 +48,7 @@ namespace GitCommands
         /// to the argument list.
         /// </remarks>
         /// <param name="s">The string to add.</param>
-        public void Add([CanBeNull] string s)
+        public void Add(string? s)
         {
             if (string.IsNullOrWhiteSpace(s))
             {
@@ -65,9 +64,9 @@ namespace GitCommands
         }
 
         /// <summary>
-        /// Adds a range of arguments
+        /// Adds a range of arguments.
         /// </summary>
-        /// <param name="args">The arguments to add to this builder</param>
+        /// <param name="args">The arguments to add to this builder.</param>
         public void AddRange(IEnumerable<string> args)
         {
             args = args.Where(a => !string.IsNullOrEmpty(a));
@@ -94,6 +93,21 @@ namespace GitCommands
         IEnumerator IEnumerable.GetEnumerator()
         {
             throw new InvalidOperationException($"{nameof(IEnumerable)} only implemented to support collection initialiser syntax.");
+        }
+
+        internal TestAccessor GetTestAccessor()
+            => new(this);
+
+        internal readonly struct TestAccessor
+        {
+            private readonly ArgumentBuilder _builder;
+
+            public TestAccessor(ArgumentBuilder builder)
+            {
+                _builder = builder;
+            }
+
+            public StringBuilder Arguments => _builder._arguments;
         }
     }
 }

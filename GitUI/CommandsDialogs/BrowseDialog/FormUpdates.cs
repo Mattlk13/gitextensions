@@ -11,7 +11,6 @@ using Git.hub;
 using GitCommands;
 using GitCommands.Config;
 using GitUIPluginInterfaces;
-using JetBrains.Annotations;
 using ResourceManager;
 
 namespace GitUI.CommandsDialogs.BrowseDialog
@@ -19,15 +18,14 @@ namespace GitUI.CommandsDialogs.BrowseDialog
     public partial class FormUpdates : GitExtensionsForm
     {
         #region Translation
-        private readonly TranslationString _newVersionAvailable =
-            new TranslationString("There is a new version {0} of Git Extensions available");
-        private readonly TranslationString _noUpdatesFound =
-            new TranslationString("No updates found");
-        private readonly TranslationString _downloadingUpdate =
-            new TranslationString("Downloading update...");
+        private readonly TranslationString _newVersionAvailable = new("There is a new version {0} of Git Extensions available");
+        private readonly TranslationString _noUpdatesFound = new("No updates found");
+        private readonly TranslationString _downloadingUpdate = new("Downloading update...");
+        private readonly TranslationString _errorHeading = new("Download Failed");
+        private readonly TranslationString _errorMessage = new("Failed to download an update.");
         #endregion
 
-        public IWin32Window OwnerWindow;
+        public IWin32Window? OwnerWindow;
         public Version CurrentVersion { get; }
         public bool UpdateFound;
         public string UpdateUrl = "";
@@ -73,20 +71,20 @@ namespace GitUI.CommandsDialogs.BrowseDialog
         {
             try
             {
-                var github = new Client();
+                Client github = new();
                 Repository gitExtRepo = github.getRepository("gitextensions", "gitextensions");
 
                 var configData = gitExtRepo?.GetRef("heads/configdata");
 
                 var tree = configData?.GetTree();
-                if (tree == null)
+                if (tree is null)
                 {
                     return;
                 }
 
                 var releases = tree.Tree.FirstOrDefault(entry => "GitExtensions.releases".Equals(entry.Path, StringComparison.InvariantCultureIgnoreCase));
 
-                if (releases?.Blob.Value != null)
+                if (releases?.Blob.Value is not null)
                 {
                     CheckForNewerVersion(releases.Blob.Value.GetContent());
                 }
@@ -96,6 +94,12 @@ namespace GitUI.CommandsDialogs.BrowseDialog
                 // InvalidAsynchronousStateException (The destination thread no longer exists) is thrown
                 // if a UI component gets disposed or the UI thread EXITs while a 'check for updates' thread
                 // is in the middle of its run... Ignore it, likely the user has closed the app
+            }
+            catch (NullReferenceException)
+            {
+                // We had a number of NRE reports.
+                // Most likely scenario is that GitHub is API rate limiting unauthenticated requests that lead to failures in Git.hub library.
+                // Nothing we can do here, ignore it.
             }
             catch (Exception ex)
             {
@@ -116,7 +120,7 @@ namespace GitUI.CommandsDialogs.BrowseDialog
             var updates = ReleaseVersion.GetNewerVersions(CurrentVersion, AppSettings.CheckForReleaseCandidates, versions);
 
             var update = updates.OrderBy(version => version.Version).LastOrDefault();
-            if (update != null)
+            if (update is not null)
             {
                 UpdateFound = true;
                 UpdateUrl = update.DownloadPage;
@@ -160,10 +164,10 @@ namespace GitUI.CommandsDialogs.BrowseDialog
             switch (launchType)
             {
                 case LaunchType.ChangeLog:
-                    Process.Start("https://github.com/gitextensions/gitextensions/blob/master/GitUI/Resources/ChangeLog.md");
+                    OsShellUtil.OpenUrlInDefaultBrowser(@"https://github.com/gitextensions/gitextensions/blob/master/GitUI/Resources/ChangeLog.md");
                     break;
                 case LaunchType.DirectDownload:
-                    Process.Start(UpdateUrl);
+                    OsShellUtil.OpenUrlInDefaultBrowser(UpdateUrl);
                     break;
             }
         }
@@ -173,9 +177,9 @@ namespace GitUI.CommandsDialogs.BrowseDialog
             LaunchUrl(LaunchType.ChangeLog);
         }
 
-        private async void btnUpdateNow_Click(object sender, EventArgs e)
+        private void btnUpdateNow_Click(object sender, EventArgs e)
         {
-            try
+            ThreadHelper.JoinableTaskFactory.RunAsync(async () =>
             {
                 linkChangeLog.Visible = false;
                 progressBar1.Visible = true;
@@ -183,24 +187,33 @@ namespace GitUI.CommandsDialogs.BrowseDialog
                 UpdateLabel.Text = _downloadingUpdate.Text;
                 string fileName = Path.GetFileName(UpdateUrl);
 
-                using (WebClient webClient = new WebClient())
+                try
                 {
+                    using WebClient webClient = new();
                     await webClient.DownloadFileTaskAsync(new Uri(UpdateUrl), Environment.GetEnvironmentVariable("TEMP") + "\\" + fileName);
                 }
+                catch (Exception ex)
+                {
+                    MessageBox.Show(this, _errorMessage.Text + Environment.NewLine + ex.Message, _errorHeading.Text, MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                    return;
+                }
 
-                Process process = new Process();
-                process.StartInfo.UseShellExecute = false;
-                process.StartInfo.FileName = "msiexec.exe";
-                process.StartInfo.Arguments = string.Format("/i \"{0}\\{1}\" /qb LAUNCH=1", Environment.GetEnvironmentVariable("TEMP"), fileName);
-                process.Start();
+                try
+                {
+                    Process process = new();
+                    process.StartInfo.UseShellExecute = false;
+                    process.StartInfo.FileName = "msiexec.exe";
+                    process.StartInfo.Arguments = string.Format("/i \"{0}\\{1}\" /qb LAUNCH=1", Environment.GetEnvironmentVariable("TEMP"), fileName);
+                    process.Start();
 
-                progressBar1.Visible = false;
-                Close();
-                Application.Exit();
-            }
-            catch (Win32Exception)
-            {
-            }
+                    progressBar1.Visible = false;
+                    Close();
+                    Application.Exit();
+                }
+                catch (Win32Exception)
+                {
+                }
+            }).FileAndForget();
         }
 
         private void linkDirectDownload_LinkClicked(object sender, LinkLabelLinkClickedEventArgs e)
@@ -224,12 +237,18 @@ namespace GitUI.CommandsDialogs.BrowseDialog
 
     public class ReleaseVersion
     {
-        public Version Version;
-        public ReleaseType ReleaseType;
-        public string DownloadPage;
+        public Version Version { get; }
+        public ReleaseType ReleaseType { get; }
+        public string DownloadPage { get; }
 
-        [CanBeNull]
-        public static ReleaseVersion FromSection(IConfigSection section)
+        public ReleaseVersion(Version version, ReleaseType releaseType, string downloadPage)
+        {
+            Version = version;
+            ReleaseType = releaseType;
+            DownloadPage = downloadPage;
+        }
+
+        public static ReleaseVersion? FromSection(IConfigSection section)
         {
             Version ver;
             try
@@ -242,26 +261,19 @@ namespace GitUI.CommandsDialogs.BrowseDialog
                 return null;
             }
 
-            var version = new ReleaseVersion
-            {
-                Version = ver,
-                ReleaseType = ReleaseType.Major,
-                DownloadPage = section.GetValue("DownloadPage")
-            };
+            Enum.TryParse(section.GetValue("ReleaseType"), true, out ReleaseType releaseType);
 
-            Enum.TryParse(section.GetValue("ReleaseType"), true, out version.ReleaseType);
-
-            return version;
+            return new ReleaseVersion(ver, releaseType, section.GetValue("DownloadPage"));
         }
 
         public static IEnumerable<ReleaseVersion> Parse(string versionsStr)
         {
-            var cfg = new ConfigFile("", true);
+            ConfigFile cfg = new("", true);
             cfg.LoadFromString(versionsStr);
             var sections = cfg.GetConfigSections("Version");
             sections = sections.Concat(cfg.GetConfigSections("RCVersion"));
 
-            return sections.Select(FromSection).Where(version => version != null);
+            return sections.Select(FromSection).WhereNotNull();
         }
 
         public static IEnumerable<ReleaseVersion> GetNewerVersions(

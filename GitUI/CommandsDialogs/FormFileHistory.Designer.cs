@@ -38,7 +38,7 @@ namespace GitUI.CommandsDialogs
             this.View = new GitUI.Editor.FileViewer();
             this.BlameTab = new System.Windows.Forms.TabPage();
             this.Blame = new GitUI.Blame.BlameControl();
-            this.ToolStrip = new System.Windows.Forms.ToolStrip();
+            this.ToolStrip = new GitUI.ToolStripEx();
             this.toolStripLabel1 = new System.Windows.Forms.ToolStripLabel();
             this.toolStripBranchFilterComboBox = new System.Windows.Forms.ToolStripComboBox();
             this.toolStripBranchFilterDropDownButton = new System.Windows.Forms.ToolStripDropDownButton();
@@ -67,6 +67,8 @@ namespace GitUI.CommandsDialogs
             this.showAuthorTimeToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.showLineNumbersToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.showOriginalFilePathToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.showAuthorAvatarToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.gitcommandLogToolStripMenuItem = new System.Windows.Forms.ToolStripButton();
             ((System.ComponentModel.ISupportInitialize)(this.splitContainer1)).BeginInit();
             this.splitContainer1.Panel1.SuspendLayout();
             this.splitContainer1.Panel2.SuspendLayout();
@@ -147,7 +149,7 @@ namespace GitUI.CommandsDialogs
             this.openWithDifftoolToolStripMenuItem.ShortcutKeys = System.Windows.Forms.Keys.F3;
             this.openWithDifftoolToolStripMenuItem.Size = new System.Drawing.Size(339, 22);
             this.openWithDifftoolToolStripMenuItem.Text = "Open with difftool";
-            this.openWithDifftoolToolStripMenuItem.Click += new System.EventHandler(this.OpenWithDifftoolToolStripMenuItemClick);
+            this.openWithDifftoolToolStripMenuItem.Click += new System.EventHandler(this.OpenWithDifftoolToolStripMenuItem_Click);
             // 
             // diffToolRemoteLocalStripMenuItem
             // 
@@ -327,7 +329,7 @@ namespace GitUI.CommandsDialogs
             this.Blame.Name = "Blame";
             this.Blame.Size = new System.Drawing.Size(744, 291);
             this.Blame.TabIndex = 0;
-            this.Blame.CommandClick += new System.EventHandler<GitUI.CommitInfo.CommandEventArgs>(this.Blame_CommandClick);
+            this.Blame.CommandClick += new System.EventHandler<ResourceManager.CommandEventArgs>(this.Blame_CommandClick);
             // 
             // ToolStrip
             // 
@@ -346,7 +348,8 @@ namespace GitUI.CommandsDialogs
             this.toolStripSeparator3,
             this.toolStripSplitLoad,
             this.ShowFullHistory,
-            this.toolStripBlameOptions});
+            this.toolStripBlameOptions,
+            this.gitcommandLogToolStripMenuItem});
             this.ToolStrip.LayoutStyle = System.Windows.Forms.ToolStripLayoutStyle.HorizontalStackWithOverflow;
             this.ToolStrip.Location = new System.Drawing.Point(0, 0);
             this.ToolStrip.Name = "ToolStrip";
@@ -481,6 +484,7 @@ namespace GitUI.CommandsDialogs
             this.toolStripSeparator5,
             this.displaySettingsToolStripMenuItem,
             this.displayAuthorFirstToolStripMenuItem,
+            this.showAuthorAvatarToolStripMenuItem,
             this.showAuthorToolStripMenuItem,
             this.showAuthorDateToolStripMenuItem,
             this.showAuthorTimeToolStripMenuItem,
@@ -575,6 +579,21 @@ namespace GitUI.CommandsDialogs
             this.showOriginalFilePathToolStripMenuItem.Text = "Show original file path";
             this.showOriginalFilePathToolStripMenuItem.Click += new System.EventHandler(this.showOriginalFilePathToolStripMenuItem_Click);
             // 
+            // showAuthorAvatarToolStripMenuItem
+            // 
+            this.showAuthorAvatarToolStripMenuItem.Name = "showAuthorAvatarToolStripMenuItem";
+            this.showAuthorAvatarToolStripMenuItem.Size = new System.Drawing.Size(247, 22);
+            this.showAuthorAvatarToolStripMenuItem.Text = "Show author avatar";
+            this.showAuthorAvatarToolStripMenuItem.Click += new System.EventHandler(this.showAuthorAvatarToolStripMenuItem_Click);
+            // 
+            // gitcommandLogToolStripMenuItem
+            // 
+            this.gitcommandLogToolStripMenuItem.Image = global::GitUI.Properties.Images.GitCommandLog;
+            this.gitcommandLogToolStripMenuItem.Name = "gitcommandLogToolStripMenuItem";
+            this.gitcommandLogToolStripMenuItem.Size = new System.Drawing.Size(217, 22);
+            this.gitcommandLogToolStripMenuItem.ToolTipText = "Git command log";
+            this.gitcommandLogToolStripMenuItem.Click += new System.EventHandler(this.GitcommandLogToolStripMenuItemClick);
+            // 
             // FormFileHistory
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(96F, 96F);
@@ -626,7 +645,7 @@ namespace GitUI.CommandsDialogs
         private System.Windows.Forms.ToolStripMenuItem cherryPickThisCommitToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem revertCommitToolStripMenuItem;
         private System.Windows.Forms.ToolStripSeparator toolStripSeparator2;
-        private System.Windows.Forms.ToolStrip ToolStrip;
+        private GitUI.ToolStripEx ToolStrip;
         private System.Windows.Forms.ToolStripLabel toolStripLabel1;
         private System.Windows.Forms.ToolStripComboBox toolStripBranchFilterComboBox;
         private System.Windows.Forms.ToolStripDropDownButton toolStripBranchFilterDropDownButton;
@@ -661,5 +680,7 @@ namespace GitUI.CommandsDialogs
         private System.Windows.Forms.ToolStripMenuItem displaySettingsToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem showAuthorToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem showOriginalFilePathToolStripMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem showAuthorAvatarToolStripMenuItem;
+        private System.Windows.Forms.ToolStripButton gitcommandLogToolStripMenuItem;
     }
 }

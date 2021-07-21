@@ -13,7 +13,7 @@
         /// <param name="disposing">true if managed resources should be disposed; otherwise, false.</param>
         protected override void Dispose(bool disposing)
         {
-            if (disposing && (components != null))
+            if (disposing && (components is not null))
             {
                 components.Dispose();
             }
@@ -150,7 +150,6 @@
             // 
             this.downloadGitForWindows.AutoSize = true;
             this.downloadGitForWindows.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.downloadGitForWindows.LinkColor = System.Drawing.SystemColors.HotTrack;
             this.downloadGitForWindows.Location = new System.Drawing.Point(3, 71);
             this.downloadGitForWindows.Name = "downloadGitForWindows";
             this.downloadGitForWindows.Size = new System.Drawing.Size(291, 13);

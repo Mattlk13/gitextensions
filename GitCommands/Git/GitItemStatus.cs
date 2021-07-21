@@ -1,22 +1,26 @@
 ﻿using System;
-using System.Diagnostics;
 using System.Text;
 using System.Threading.Tasks;
 using GitUIPluginInterfaces;
-using JetBrains.Annotations;
+using Microsoft;
 using Microsoft.VisualStudio.Threading;
 
 namespace GitCommands
 {
+    /// <summary>
+    /// Status if the file can be staged (worktree->index), unstaged or None (normal commits).
+    /// The status may not be available or unset for some commands.
+    /// </summary>
     public enum StagedStatus
     {
-        Unknown = 0,
+        Unset = 0,
         None,
         WorkTree,
-        Index
+        Index,
+        Unknown
     }
 
-    public sealed class GitItemStatus : IComparable<GitItemStatus>
+    public sealed class GitItemStatus
     {
         [Flags]
         private enum Flags
@@ -32,98 +36,137 @@ namespace GitCommands
             IsAssumeUnchanged = 1 << 9,
             IsSkipWorktree = 1 << 10,
             IsSubmodule = 1 << 11,
+            IsDirty = 1 << 12,
+
+            // Other flags are parsed from Git status, set fake flags for special uses
+            IsStatusOnly = 1 << 13,
+            IsRangeDiff = 1 << 14
         }
 
-        private JoinableTask<GitSubmoduleStatus> _submoduleStatus;
+        private JoinableTask<GitSubmoduleStatus?>? _submoduleStatus;
 
         private Flags _flags;
 
-        public string Name { get; set; }
-        public string OldName { get; set; }
-        [CanBeNull]
-        public ObjectId TreeGuid { get; set; }
-        public string RenameCopyPercentage { get; set; }
-
-        // Staged is three state and has no default status
-        private StagedStatus _staged = StagedStatus.Unknown;
-        public StagedStatus Staged
+        public GitItemStatus(string name)
         {
-            get
-            {
-                // Catch usage of unset accesses
-                Debug.Assert(_staged != StagedStatus.Unknown, "Staged is used without being set. Continue should generally be OK.");
-
-                return _staged;
-            }
-            set { _staged = value; }
+            Requires.NotNull(name, nameof(name));
+            Name = name;
         }
+
+        public string Name { get; set; }
+        public string? OldName { get; set; }
+        public string? ErrorMessage { get; set; }
+        public ObjectId? TreeGuid { get; set; }
+        public string? RenameCopyPercentage { get; set; }
+
+        public StagedStatus Staged { get; set; }
 
         #region Flags
 
         public bool IsTracked
         {
-            get => _flags.HasFlag(Flags.IsTracked);
+            get => HasFlag(Flags.IsTracked);
             set => SetFlag(value, Flags.IsTracked);
         }
 
         public bool IsDeleted
         {
-            get => _flags.HasFlag(Flags.IsDeleted);
+            get => HasFlag(Flags.IsDeleted);
             set => SetFlag(value, Flags.IsDeleted);
         }
 
+        /// <summary>
+        /// For files, the file is modified
+        /// For submodules, the commit is changed.
+        /// </summary>
         public bool IsChanged
         {
-            get => _flags.HasFlag(Flags.IsChanged);
+            get => HasFlag(Flags.IsChanged);
             set => SetFlag(value, Flags.IsChanged);
         }
 
         public bool IsNew
         {
-            get => _flags.HasFlag(Flags.IsNew);
+            get => HasFlag(Flags.IsNew);
             set => SetFlag(value, Flags.IsNew);
         }
 
         public bool IsIgnored
         {
-            get => _flags.HasFlag(Flags.IsIgnored);
+            get => HasFlag(Flags.IsIgnored);
             set => SetFlag(value, Flags.IsIgnored);
         }
 
         public bool IsRenamed
         {
-            get => _flags.HasFlag(Flags.IsRenamed);
+            get => HasFlag(Flags.IsRenamed);
             set => SetFlag(value, Flags.IsRenamed);
         }
 
         public bool IsCopied
         {
-            get => _flags.HasFlag(Flags.IsCopied);
+            get => HasFlag(Flags.IsCopied);
             set => SetFlag(value, Flags.IsCopied);
         }
 
         public bool IsConflict
         {
-            get => _flags.HasFlag(Flags.IsConflict);
+            get => HasFlag(Flags.IsConflict);
             set => SetFlag(value, Flags.IsConflict);
         }
 
         public bool IsAssumeUnchanged
         {
-            get => _flags.HasFlag(Flags.IsAssumeUnchanged);
+            get => HasFlag(Flags.IsAssumeUnchanged);
             set => SetFlag(value, Flags.IsAssumeUnchanged);
         }
 
         public bool IsSkipWorktree
         {
-            get => _flags.HasFlag(Flags.IsSkipWorktree);
+            get => HasFlag(Flags.IsSkipWorktree);
             set => SetFlag(value, Flags.IsSkipWorktree);
         }
 
         public bool IsSubmodule
         {
-            get => _flags.HasFlag(Flags.IsSubmodule);
+            get => HasFlag(Flags.IsSubmodule);
             set => SetFlag(value, Flags.IsSubmodule);
+        }
+
+        /// <summary>
+        /// Submodule is dirty
+        /// Info from git-status, may be available before GetSubmoduleStatusAsync is evaluated.
+        /// </summary>
+        public bool IsDirty
+        {
+            get => HasFlag(Flags.IsDirty);
+            set => SetFlag(value, Flags.IsDirty);
+        }
+
+        /// <remarks>
+        /// This item is not a Git item, just status information
+        /// If ErrorMessage is set, this is an error from Git, otherwise just a marker that nothing is changed.
+        /// </remarks>
+        public bool IsStatusOnly
+        {
+            get => HasFlag(Flags.IsStatusOnly);
+            set => SetFlag(value, Flags.IsStatusOnly);
+        }
+
+        /// <remarks>
+        /// This item is not a native git item, but a status information
+        /// calculated with git range-diff command.
+        /// </remarks>
+        public bool IsRangeDiff
+        {
+            get => HasFlag(Flags.IsRangeDiff);
+            set => SetFlag(value, Flags.IsRangeDiff);
+        }
+
+        private bool HasFlag(Flags flags)
+        {
+            // NOTE Enum.HasFlag boxes its argument
+            return (flags & _flags) == flags;
         }
 
         private void SetFlag(bool isSet, Flags flag)
@@ -140,18 +183,25 @@ namespace GitCommands
 
         #endregion
 
-        [CanBeNull]
-        public Task<GitSubmoduleStatus> GetSubmoduleStatusAsync()
+        /// <summary>
+        /// Gets a task whose result is the submodule status.
+        /// </summary>
+        /// <returns>
+        /// A null task when <see cref="SetSubmoduleStatus"/> has not been called on this object, or
+        /// a task whose result is the status. The task may also return null if the status could not be
+        /// determined.
+        /// </returns>
+        public Task<GitSubmoduleStatus?>? GetSubmoduleStatusAsync()
         {
             return _submoduleStatus?.JoinAsync();
         }
 
-        internal void SetSubmoduleStatus(JoinableTask<GitSubmoduleStatus> status)
+        internal void SetSubmoduleStatus(JoinableTask<GitSubmoduleStatus?> status)
         {
             _submoduleStatus = status;
         }
 
-        public int CompareTo(GitItemStatus other)
+        public int CompareName(GitItemStatus other)
         {
             int value = StringComparer.InvariantCulture.Compare(Name, other.Name);
 
@@ -165,7 +215,12 @@ namespace GitCommands
 
         public override string ToString()
         {
-            var str = new StringBuilder();
+            StringBuilder str = new();
+
+            if (!string.IsNullOrWhiteSpace(ErrorMessage))
+            {
+                str.Append(ErrorMessage);
+            }
 
             if (IsRenamed)
             {
@@ -183,6 +238,11 @@ namespace GitCommands
             if (IsConflict)
             {
                 str.Append(" (Conflict)");
+            }
+
+            if (Staged is not (StagedStatus.None or StagedStatus.Unset))
+            {
+                str.Append($" {Staged}");
             }
 
             if (!string.IsNullOrEmpty(RenameCopyPercentage))

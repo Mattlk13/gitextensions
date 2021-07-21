@@ -36,12 +36,12 @@ namespace GitUI.UserControls
 
         private void RemotesComboboxControl_Load(object sender, EventArgs e)
         {
-            if (Site != null && Site.DesignMode)
+            if (Site is not null && Site.DesignMode)
             {
                 return;
             }
 
-            var remotesManager = new ConfigFileRemoteSettingsManager(() => Module);
+            ConfigFileRemoteSettingsManager remotesManager = new(() => Module);
             comboBoxRemotes.DataSource = remotesManager.LoadRemotes(false).Select(x => x.Name).ToList();
         }
     }

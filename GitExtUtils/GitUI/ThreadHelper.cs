@@ -4,6 +4,7 @@ using System.Diagnostics;
 using System.Globalization;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
+using System.Threading;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 using Microsoft.VisualStudio.Threading;
@@ -12,13 +13,10 @@ namespace GitUI
 {
     public static class ThreadHelper
     {
-#pragma warning disable SA1139 // Use literal suffix notation instead of casting
         private const int RPC_E_WRONG_THREAD = unchecked((int)0x8001010E);
-#pragma warning restore SA1139 // Use literal suffix notation instead of casting
-
-        private static JoinableTaskContext _joinableTaskContext;
-        private static JoinableTaskCollection _joinableTaskCollection;
-        private static JoinableTaskFactory _joinableTaskFactory;
+        private static JoinableTaskContext _joinableTaskContext = null!;
+        private static JoinableTaskCollection _joinableTaskCollection = null!;
+        private static JoinableTaskFactory _joinableTaskFactory = null!;
 
         public static JoinableTaskContext JoinableTaskContext
         {
@@ -34,11 +32,11 @@ namespace GitUI
                     return;
                 }
 
-                if (value == null)
+                if (value is null)
                 {
-                    _joinableTaskContext = null;
-                    _joinableTaskCollection = null;
-                    _joinableTaskFactory = null;
+                    _joinableTaskContext = null!;
+                    _joinableTaskCollection = null!;
+                    _joinableTaskFactory = null!;
                 }
                 else
                 {
@@ -86,19 +84,21 @@ namespace GitUI
             }
         }
 
-        public static void FileAndForget(this JoinableTask joinableTask, Func<Exception, bool> fileOnlyIf = null)
+        public static void FileAndForget(this JoinableTask joinableTask, Func<Exception, bool>? fileOnlyIf = null)
         {
             joinableTask.Task.FileAndForget(fileOnlyIf);
         }
 
-        public static void FileAndForget(this Task task, Func<Exception, bool> fileOnlyIf = null)
+        public static void FileAndForget(this Task task, Func<Exception, bool>? fileOnlyIf = null)
         {
             JoinableTaskFactory.RunAsync(
                 async () =>
                 {
                     try
                     {
+#pragma warning disable VSTHRD003 // Avoid awaiting foreign Tasks
                         await task.ConfigureAwait(false);
+#pragma warning restore VSTHRD003 // Avoid awaiting foreign Tasks
                     }
                     catch (OperationCanceledException)
                     {
@@ -112,9 +112,16 @@ namespace GitUI
                 });
         }
 
-        public static async Task JoinPendingOperationsAsync()
+        public static async Task JoinPendingOperationsAsync(CancellationToken cancellationToken)
         {
-            await _joinableTaskCollection.JoinTillEmptyAsync();
+            await _joinableTaskCollection.JoinTillEmptyAsync(cancellationToken);
+        }
+
+        public static void JoinPendingOperations()
+        {
+            // Note that JoinableTaskContext.Factory must be used to bypass the default behavior of JoinableTaskFactory
+            // since the latter adds new tasks to the collection and would therefore never complete.
+            JoinableTaskContext.Factory.Run(_joinableTaskCollection.JoinTillEmptyAsync);
         }
 
         public static T CompletedResult<T>(this Task<T> task)
@@ -129,7 +136,7 @@ namespace GitUI
 #pragma warning restore VSTHRD002 // Avoid problematic synchronous waits
         }
 
-        public static T CompletedOrDefault<T>(this Task<T> task)
+        public static T? CompletedOrDefault<T>(this Task<T> task)
         {
             if (!task.IsCompleted)
             {

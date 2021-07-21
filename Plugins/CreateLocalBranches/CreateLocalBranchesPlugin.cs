@@ -1,26 +1,26 @@
-﻿using System.ComponentModel.Composition;
-using CreateLocalBranches.Properties;
+﻿using System;
+using System.ComponentModel.Composition;
+using GitExtensions.Plugins.CreateLocalBranches.Properties;
 using GitUIPluginInterfaces;
 using ResourceManager;
 
-namespace CreateLocalBranches
+namespace GitExtensions.Plugins.CreateLocalBranches
 {
     [Export(typeof(IGitPlugin))]
     public class CreateLocalBranchesPlugin : GitPluginBase, IGitPluginForRepository
     {
-        public CreateLocalBranchesPlugin()
+        public CreateLocalBranchesPlugin() : base(false)
         {
-            SetNameAndDescription("Create local tracking branches");
+            Id = new Guid("BE7BEE10-21B5-489F-9664-957945C203DC");
+            Name = "Create local tracking branches";
             Translate();
             Icon = Resources.IconCreateLocalBranches;
         }
 
         public override bool Execute(GitUIEventArgs args)
         {
-            using (var frm = new CreateLocalBranchesForm(args))
-            {
-                frm.ShowDialog(args.OwnerForm);
-            }
+            using CreateLocalBranchesForm frm = new(args);
+            frm.ShowDialog(args.OwnerForm);
 
             return true;
         }

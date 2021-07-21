@@ -1,7 +1,6 @@
 ﻿using System.IO;
 using System.Windows.Forms;
 using GitCommands;
-using JetBrains.Annotations;
 
 namespace GitUI
 {
@@ -13,8 +12,7 @@ namespace GitUI
         /// <summary>
         /// Prompts the user to browse for a key, and attempts to load it. Returns the path to the key, if successful.
         /// </summary>
-        [CanBeNull]
-        public static string BrowseAndLoad(IWin32Window parent)
+        public static string? BrowseAndLoad(IWin32Window parent)
         {
             var path = Browse(parent);
             if (!string.IsNullOrEmpty(path))
@@ -31,29 +29,26 @@ namespace GitUI
         /// <summary>
         /// Prompts the user to browse for a key. Returns the path chosen, or null.
         /// </summary>
-        [CanBeNull]
-        public static string Browse(IWin32Window parent)
+        public static string? Browse(IWin32Window parent)
         {
-            using (var dialog = new OpenFileDialog
+            using OpenFileDialog dialog = new()
             {
                 Filter = " (*.ppk)|*.ppk",
                 InitialDirectory = ".",
                 Title = "Browse for key"
-            })
+            };
+            if (dialog.ShowDialog(parent) == DialogResult.OK)
             {
-                if (dialog.ShowDialog(parent) == DialogResult.OK)
-                {
-                    return dialog.FileName;
-                }
-
-                return null;
+                return dialog.FileName;
             }
+
+            return null;
         }
 
         /// <summary>
         /// Tries to load the given key. Returns whether successful.
         /// </summary>
-        public static bool LoadKey(IWin32Window parent, string path)
+        public static bool LoadKey(IWin32Window parent, string? path)
         {
             if (!File.Exists(AppSettings.Pageant))
             {

@@ -7,12 +7,12 @@ namespace GitUI.CommandsDialogs.SettingsDialog.Pages
     public class TextboxHotkey : TextBox
     {
         private readonly TranslationString _hotkeyNotSet =
-            new TranslationString("None");
+            new("None");
 
         #region Key
         private Keys _keyData;
 
-        /// <summary>Gets or sets the KeyData</summary>
+        /// <summary>Gets or sets the KeyData.</summary>
         public Keys KeyData
         {
             get { return _keyData; }
@@ -21,7 +21,7 @@ namespace GitUI.CommandsDialogs.SettingsDialog.Pages
                 _keyData = value;
 
                 // TODO: do not change text color on already assigned keys, which occur only once
-                ForeColor = HotkeySettingsManager.IsUniqueKey(_keyData) ? System.Drawing.Color.Red : System.Drawing.Color.Black;
+                ForeColor = HotkeySettingsManager.IsUniqueKey(_keyData) ? System.Drawing.Color.Red : System.Drawing.SystemColors.WindowText;
                 Text = _keyData.ToText();
             }
         }

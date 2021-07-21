@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Linq;
 using System.Reactive.Linq;
 using System.Windows.Forms;
@@ -22,15 +21,15 @@ namespace GitUI.CommitInfo
         private readonly ICommitDataHeaderRenderer _commitDataHeaderRenderer;
         private readonly IDisposable _rtbResizedSubscription;
 
-        public event EventHandler<CommandEventArgs> CommandClicked;
+        public event EventHandler<CommandEventArgs>? CommandClicked;
 
         public CommitInfoHeader()
         {
             InitializeComponent();
             InitializeComplete();
 
-            var labelFormatter = new TabbedHeaderLabelFormatter();
-            var headerRenderer = new TabbedHeaderRenderStyleProvider();
+            TabbedHeaderLabelFormatter labelFormatter = new();
+            TabbedHeaderRenderStyleProvider headerRenderer = new();
 
             _commitDataManager = new CommitDataManager(() => Module);
             _commitDataHeaderRenderer = new CommitDataHeaderRenderer(labelFormatter, _dateFormatter, headerRenderer, _linkFactory);
@@ -56,12 +55,12 @@ namespace GitUI.CommitInfo
             rtbRevisionHeader.ContextMenuStrip = contextMenuStrip;
         }
 
-        public void ShowCommitInfo(GitRevision revision, IReadOnlyList<ObjectId> children)
+        public void ShowCommitInfo(GitRevision revision, IReadOnlyList<ObjectId>? children)
         {
             this.InvokeAsync(() =>
             {
                 var data = _commitDataManager.CreateFromRevision(revision, children);
-                var header = _commitDataHeaderRenderer.Render(data, showRevisionsAsLinks: CommandClicked != null);
+                var header = _commitDataHeaderRenderer.Render(data, showRevisionsAsLinks: CommandClicked is not null);
 
                 rtbRevisionHeader.SuspendLayout();
 
@@ -82,7 +81,7 @@ namespace GitUI.CommitInfo
             return rtbRevisionHeader.GetPlainText();
         }
 
-        private void LoadAuthorImage(GitRevision revision)
+        private void LoadAuthorImage(GitRevision? revision)
         {
             var showAvatar = AppSettings.ShowAuthorAvatarInCommitInfo;
             avatarControl.Visible = showAvatar;
@@ -92,7 +91,7 @@ namespace GitUI.CommitInfo
                 return;
             }
 
-            if (revision == null)
+            if (revision is null)
             {
                 avatarControl.LoadImage(null, null);
                 return;
@@ -108,8 +107,7 @@ namespace GitUI.CommitInfo
 
         private void rtbRevisionHeader_KeyDown(object sender, KeyEventArgs e)
         {
-            var rtb = sender as RichTextBox;
-            if (rtb == null || !e.Control || e.KeyCode != Keys.C)
+            if (!e.Control || e.KeyCode != Keys.C || sender is not RichTextBox rtb)
             {
                 return;
             }
@@ -121,29 +119,13 @@ namespace GitUI.CommitInfo
 
         private void rtbRevisionHeader_LinkClicked(object sender, LinkClickedEventArgs e)
         {
-            var link = _linkFactory.ParseLink(e.LinkText);
-
             try
             {
-                var result = new Uri(link);
-                if (result.Scheme == "gitext")
-                {
-                    CommandClicked?.Invoke(sender, new CommandEventArgs(result.Host, result.AbsolutePath.TrimStart('/')));
-                }
-                else
-                {
-                    using (var process = new Process
-                    {
-                        EnableRaisingEvents = false,
-                        StartInfo = { FileName = result.AbsoluteUri }
-                    })
-                    {
-                        process.Start();
-                    }
-                }
+                _linkFactory.ExecuteLink(e.LinkText, commandEventArgs => CommandClicked?.Invoke(sender, commandEventArgs));
             }
-            catch (UriFormatException)
+            catch (Exception ex)
             {
+                MessageBox.Show(this, ex.Message, TranslatedStrings.Error, MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
         }
 
@@ -166,8 +148,16 @@ namespace GitUI.CommitInfo
 
         protected override void DisposeCustomResources()
         {
-            _rtbResizedSubscription.Dispose();
-            base.DisposeCustomResources();
+            try
+            {
+                _rtbResizedSubscription?.Dispose();
+
+                base.DisposeCustomResources();
+            }
+            catch (InvalidOperationException)
+            {
+                // System.Reactive causes the app to fail with: 'Invoke or BeginInvoke cannot be called on a control until the window handle has been created.'
+            }
         }
     }
 }

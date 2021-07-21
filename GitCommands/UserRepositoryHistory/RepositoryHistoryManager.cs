@@ -1,13 +1,13 @@
 ﻿namespace GitCommands.UserRepositoryHistory
 {
     /// <summary>
-    /// Provides a convinient and centralised way of dealing with histories of local and remote repositories.
+    /// Provides a convenient and centralised way of dealing with histories of local and remote repositories.
     /// </summary>
     public static class RepositoryHistoryManager
     {
         static RepositoryHistoryManager()
         {
-            var repositoryStorage = new RepositoryStorage();
+            RepositoryStorage repositoryStorage = new();
             Locals = new LocalRepositoryManager(repositoryStorage, new Legacy.RepositoryHistoryMigrator());
             Remotes = new RemoteRepositoryManager(repositoryStorage);
         }

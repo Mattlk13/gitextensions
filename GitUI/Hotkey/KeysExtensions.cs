@@ -3,14 +3,13 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
 using System.Windows.Forms;
-using JetBrains.Annotations;
 
 namespace GitUI.Hotkey
 {
     public static class KeysExtensions
     {
         /// <summary>
-        /// Strips the modifier from KeyData
+        /// Strips the modifier from KeyData.
         /// </summary>
         public static Keys GetKeyCode(this Keys keyData)
         {
@@ -29,7 +28,7 @@ namespace GitUI.Hotkey
             // Retrieve the modifiers, mask away the rest
             Keys modifier = key & Keys.Modifiers;
 
-            var modifierList = new List<Keys>();
+            List<Keys> modifierList = new();
 
             void AddIfContains(Keys m)
             {
@@ -56,8 +55,7 @@ namespace GitUI.Hotkey
                     .ToArray());
         }
 
-        [CanBeNull]
-        public static string ToFormattedString(this Keys key)
+        public static string? ToFormattedString(this Keys key)
         {
             if (key == Keys.Oemcomma)
             {
@@ -73,7 +71,7 @@ namespace GitUI.Hotkey
             var str = key.ToCultureSpecificString();
 
             // Strip the leading 'D' if it's a Decimal Key (D1, D2, ...)
-            if (str != null && str.Length == 2 && str[0] == 'D')
+            if (str is not null && str.Length == 2 && str[0] == 'D')
             {
                 str = str[1].ToString();
             }
@@ -86,8 +84,7 @@ namespace GitUI.Hotkey
             return key.ToText();
         }
 
-        [CanBeNull]
-        private static string ToCultureSpecificString(this Keys key)
+        private static string? ToCultureSpecificString(this Keys key)
         {
             if (key == Keys.None)
             {

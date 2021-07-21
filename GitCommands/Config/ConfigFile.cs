@@ -5,7 +5,6 @@ using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
 using GitUIPluginInterfaces;
-using JetBrains.Annotations;
 
 namespace GitCommands.Config
 {
@@ -14,7 +13,7 @@ namespace GitCommands.Config
         private static Encoding GetEncoding() => GitModule.SystemEncoding;
         public static readonly char[] CommentChars = { ';', '#' };
 
-        private readonly List<IConfigSection> _configSections = new List<IConfigSection>();
+        private readonly List<IConfigSection> _configSections = new();
 
         public string FileName { get; }
         public bool Local { get; }
@@ -33,8 +32,7 @@ namespace GitCommands.Config
             }
             catch (Exception ex)
             {
-                ex.Data.Add(GetType().Name + ".Load", "Could not load config file: " + FileName);
-                throw;
+                throw new GitConfigurationException(fileName, ex);
             }
         }
 
@@ -84,7 +82,7 @@ namespace GitCommands.Config
 
         public string GetAsString()
         {
-            var configFileContent = new StringBuilder();
+            StringBuilder configFileContent = new();
 
             foreach (var section in ConfigSections)
             {
@@ -126,22 +124,6 @@ namespace GitCommands.Config
             SetStringValue(setting, value);
         }
 
-        public void SetPathValue(string setting, string value)
-        {
-            SetStringValue(setting, ConfigSection.FixPath(value));
-        }
-
-        public bool HasValue(string setting)
-        {
-            var keyIndex = FindAndCheckKeyIndex(setting);
-
-            var configSectionName = setting.Substring(0, keyIndex);
-            var keyName = setting.Substring(keyIndex + 1);
-
-            var configSection = FindConfigSection(configSectionName);
-            return configSection != null && configSection.GetValue(keyName) != string.Empty;
-        }
-
         private static int FindAndCheckKeyIndex(string setting)
         {
             var keyIndex = FindKeyIndex(setting);
@@ -159,18 +141,7 @@ namespace GitCommands.Config
             return setting.LastIndexOf('.');
         }
 
-        public bool HasConfigSection(string configSectionName)
-        {
-            var configSection = FindConfigSection(configSectionName);
-            return configSection != null;
-        }
-
         private string GetStringValue(string setting)
-        {
-            return GetValue(setting, string.Empty);
-        }
-
-        public string GetValue(string setting)
         {
             return GetValue(setting, string.Empty);
         }
@@ -189,7 +160,7 @@ namespace GitCommands.Config
 
             var configSection = FindConfigSection(configSectionName);
 
-            if (configSection == null)
+            if (configSection is null)
             {
                 return defaultValue;
             }
@@ -211,7 +182,7 @@ namespace GitCommands.Config
 
             var configSection = FindConfigSection(configSectionName);
 
-            if (configSection == null)
+            if (configSection is null)
             {
                 return Array.Empty<string>();
             }
@@ -219,22 +190,10 @@ namespace GitCommands.Config
             return configSection.GetValues(keyName);
         }
 
-        public void RemoveSetting(string setting)
-        {
-            var keyIndex = FindAndCheckKeyIndex(setting);
-
-            var configSectionName = setting.Substring(0, keyIndex);
-            var keyName = setting.Substring(keyIndex + 1);
-
-            var configSection = FindConfigSection(configSectionName);
-
-            configSection?.SetValue(keyName, null);
-        }
-
         public IConfigSection FindOrCreateConfigSection(string name)
         {
             var result = FindConfigSection(name);
-            if (result == null)
+            if (result is null)
             {
                 result = new ConfigSection(name, true);
                 _configSections.Add(result);
@@ -245,7 +204,7 @@ namespace GitCommands.Config
 
         public void AddConfigSection(IConfigSection configSection)
         {
-            if (FindConfigSection(configSection) != null)
+            if (FindConfigSection(configSection) is not null)
             {
                 throw new ArgumentException("Can not add a section that already exists: " + configSection.SectionName);
             }
@@ -257,7 +216,7 @@ namespace GitCommands.Config
         {
             var configSection = FindConfigSection(configSectionName);
 
-            if (configSection == null)
+            if (configSection is null)
             {
                 return;
             }
@@ -265,16 +224,14 @@ namespace GitCommands.Config
             _configSections.Remove(configSection);
         }
 
-        [CanBeNull]
-        public IConfigSection FindConfigSection(string name)
+        public IConfigSection? FindConfigSection(string name)
         {
-            var configSectionToFind = new ConfigSection(name, true);
+            ConfigSection configSectionToFind = new(name, true);
 
             return FindConfigSection(configSectionToFind);
         }
 
-        [CanBeNull]
-        private IConfigSection FindConfigSection(IConfigSection configSectionToFind)
+        private IConfigSection? FindConfigSection(IConfigSection configSectionToFind)
         {
             return ConfigSections.FirstOrDefault(configSectionToFind.Equals);
         }
@@ -286,22 +243,22 @@ namespace GitCommands.Config
             private delegate ParsePart ParsePart(char c);
 
             private readonly ConfigFile _configFile;
-            private string _fileContent;
-            private IConfigSection _section;
-            private string _key;
+            private string? _fileContent;
+            private IConfigSection? _section;
+            private string? _key;
             private string FileName => _configFile.FileName;
 
             // parsed char
             private int _pos;
-            private readonly StringBuilder _token = new StringBuilder();
-            private readonly StringBuilder _valueToken = new StringBuilder();
+            private readonly StringBuilder _token = new();
+            private readonly StringBuilder _valueToken = new();
 
             public ConfigFileParser(ConfigFile configFile)
             {
                 _configFile = configFile;
             }
 
-            public void Parse(string fileContent = null)
+            public void Parse(string? fileContent = null)
             {
                 _fileContent = fileContent ?? File.ReadAllText(FileName, GetEncoding());
 
@@ -323,7 +280,7 @@ namespace GitCommands.Config
                 var sectionName = _token.ToString();
                 _token.Clear();
                 _section = _configFile.FindConfigSection(sectionName);
-                if (_section == null)
+                if (_section is null)
                 {
                     _section = new ConfigSection(sectionName, false);
                     _configFile._configSections.Add(_section);
@@ -335,7 +292,7 @@ namespace GitCommands.Config
                 _key = _token.ToString().Trim();
                 _token.Clear();
 
-                if (_section == null)
+                if (_section is null)
                 {
                     throw new Exception($"Key {_key} in config file {FileName} is not in a section.");
                 }
@@ -348,12 +305,12 @@ namespace GitCommands.Config
 
                 string value = _token.ToString();
 
-                if (_key.IsNullOrEmpty())
+                if (string.IsNullOrEmpty(_key))
                 {
                     throw new Exception($"Value {value} for empty key in config file {FileName}.");
                 }
 
-                _section.AddValue(_key, value);
+                _section?.AddValue(_key, value);
 
                 _key = null;
             }

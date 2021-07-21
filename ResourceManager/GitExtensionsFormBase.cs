@@ -1,10 +1,10 @@
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Windows.Forms;
 using GitCommands;
 using GitUI;
-using JetBrains.Annotations;
 using ResourceManager.Properties;
 
 namespace ResourceManager
@@ -27,11 +27,16 @@ namespace ResourceManager
         {
             _initialiser = new GitExtensionsControlInitialiser(this);
 
+            if (IsDesignMode)
+            {
+                return;
+            }
+
             ShowInTaskbar = Application.OpenForms.Count <= 0;
             Icon = Resources.GitExtensionsLogoIcon;
         }
 
-        protected bool IsDesignModeActive => _initialiser.IsDesignModeActive;
+        protected bool IsDesignMode => _initialiser.IsDesignMode;
 
         #region Hotkeys
 
@@ -39,17 +44,16 @@ namespace ResourceManager
         protected bool HotkeysEnabled { get; set; }
 
         /// <summary>Gets or sets the hotkeys</summary>
-        [CanBeNull]
-        protected IEnumerable<HotkeyCommand> Hotkeys { get; set; }
+        protected IEnumerable<HotkeyCommand>? Hotkeys { get; set; }
 
         /// <summary>Overridden: Checks if a hotkey wants to handle the key before letting the message propagate</summary>
         protected override bool ProcessCmdKey(ref Message msg, Keys keyData)
         {
-            if (HotkeysEnabled && Hotkeys != null)
+            if (!IsDesignMode && HotkeysEnabled && Hotkeys is not null)
             {
                 foreach (var hotkey in Hotkeys)
                 {
-                    if (hotkey != null && hotkey.KeyData == keyData)
+                    if (hotkey is not null && hotkey.KeyData == keyData)
                     {
                         return ExecuteCommand(hotkey.CommandCode).Executed;
                     }
@@ -64,8 +68,7 @@ namespace ResourceManager
             return GetHotkeyCommand(commandCode)?.KeyData ?? Keys.None;
         }
 
-        [CanBeNull]
-        protected HotkeyCommand GetHotkeyCommand(int commandCode)
+        protected HotkeyCommand? GetHotkeyCommand(int commandCode)
         {
             return Hotkeys?.FirstOrDefault(h => h.CommandCode == commandCode);
         }
@@ -80,9 +83,12 @@ namespace ResourceManager
 
         protected override void WndProc(ref Message m)
         {
-            if (m.Msg == NativeMethods.WM_ACTIVATEAPP && m.WParam != IntPtr.Zero)
+            if (!IsDesignMode)
             {
-                OnApplicationActivated();
+                if (m.Msg == NativeMethods.WM_ACTIVATEAPP && m.WParam != IntPtr.Zero)
+                {
+                    OnApplicationActivated();
+                }
             }
 
             base.WndProc(ref m);
@@ -98,6 +104,11 @@ namespace ResourceManager
         protected void InitializeComplete()
         {
             _initialiser.InitializeComplete();
+
+            if (IsDesignMode)
+            {
+                return;
+            }
 
             AutoScaleMode = AppSettings.EnableAutoScale
                 ? AutoScaleMode.Dpi

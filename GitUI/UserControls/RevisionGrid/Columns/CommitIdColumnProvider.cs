@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.Drawing;
 using System.Linq;
 using System.Windows.Forms;
@@ -11,7 +12,7 @@ namespace GitUI.UserControls.RevisionGrid.Columns
 {
     internal sealed class CommitIdColumnProvider : ColumnProvider
     {
-        private readonly Dictionary<Font, int[]> _widthByLengthByFont = new Dictionary<Font, int[]>(capacity: 4);
+        private readonly Dictionary<Font, int[]> _widthByLengthByFont = new(capacity: 4);
         private readonly RevisionGridControl _grid;
 
         public CommitIdColumnProvider(RevisionGridControl grid)
@@ -59,7 +60,7 @@ namespace GitUI.UserControls.RevisionGrid.Columns
             }
         }
 
-        public override bool TryGetToolTip(DataGridViewCellMouseEventArgs e, GitRevision revision, out string toolTip)
+        public override bool TryGetToolTip(DataGridViewCellMouseEventArgs e, GitRevision revision, [NotNullWhen(returnValue: true)] out string? toolTip)
         {
             if (revision.ObjectId.IsArtificial)
             {

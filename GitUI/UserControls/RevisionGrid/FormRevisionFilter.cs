@@ -1,6 +1,6 @@
 ﻿using System;
 using GitCommands;
-using GitUIPluginInterfaces;
+using GitExtUtils;
 
 namespace GitUI.UserControls.RevisionGrid
 {
@@ -11,7 +11,6 @@ namespace GitUI.UserControls.RevisionGrid
             InitializeComponent();
             InitializeComplete();
 
-            LimitCheck.Checked = AppSettings.MaxRevisionGraphCommits > 0;
             _NO_TRANSLATE_Limit.Value = AppSettings.MaxRevisionGraphCommits;
         }
 
@@ -75,7 +74,7 @@ namespace GitUI.UserControls.RevisionGrid
 
         public ArgumentString GetRevisionFilter()
         {
-            var filter = new ArgumentBuilder();
+            ArgumentBuilder filter = new();
 
             if (AuthorCheck.Checked && GitVersion.Current.IsRegExStringCmdPassable(Author.Text))
             {
@@ -107,58 +106,32 @@ namespace GitUI.UserControls.RevisionGrid
                 filter.Add($"--until=\"{Until.Value:yyyy-MM-dd hh:mm:ss}\"");
             }
 
-            if (LimitCheck.Checked && _NO_TRANSLATE_Limit.Value > 0)
-            {
-                filter.Add($"--max-count={(int)_NO_TRANSLATE_Limit.Value}");
-            }
-
             return filter;
+        }
+
+        public int GetMaxCount()
+        {
+            return LimitCheck.Checked ? (int)_NO_TRANSLATE_Limit.Value : AppSettings.MaxRevisionGraphCommits;
         }
 
         public string GetPathFilter()
         {
-            if (FileFilterCheck.Checked)
-            {
-                return FileFilter.Text.ToPosixPath();
-            }
-
-            return "";
-        }
-
-        public bool ShouldHideGraph()
-        {
-            return AuthorCheck.Checked || CommitterCheck.Checked ||
-                   MessageCheck.Checked || FileFilterCheck.Checked;
+            return FileFilterCheck.Checked ? $" {FileFilter.Text.ToPosixPath()}" : "";
         }
 
         public string GetInMemAuthorFilter()
         {
-            if (AuthorCheck.Checked && !GitVersion.Current.IsRegExStringCmdPassable(Author.Text))
-            {
-                return Author.Text;
-            }
-
-            return string.Empty;
+            return (AuthorCheck.Checked && !GitVersion.Current.IsRegExStringCmdPassable(Author.Text)) ? Author.Text : "";
         }
 
         public string GetInMemCommitterFilter()
         {
-            if (CommitterCheck.Checked && !GitVersion.Current.IsRegExStringCmdPassable(Committer.Text))
-            {
-                return Committer.Text;
-            }
-
-            return string.Empty;
+            return (CommitterCheck.Checked && !GitVersion.Current.IsRegExStringCmdPassable(Committer.Text)) ? Committer.Text : "";
         }
 
         public string GetInMemMessageFilter()
         {
-            if (MessageCheck.Checked && !GitVersion.Current.IsRegExStringCmdPassable(Message.Text))
-            {
-                return Message.Text;
-            }
-
-            return string.Empty;
+            return (MessageCheck.Checked && !GitVersion.Current.IsRegExStringCmdPassable(Message.Text)) ? Message.Text : "";
         }
 
         public bool GetIgnoreCase()
@@ -168,17 +141,12 @@ namespace GitUI.UserControls.RevisionGrid
 
         public string GetBranchFilter()
         {
-            if (!AppSettings.BranchFilterEnabled || AppSettings.ShowCurrentBranchOnly)
-            {
-                return string.Empty;
-            }
-
-            return BranchFilter.Text;
+            return (!AppSettings.BranchFilterEnabled || AppSettings.ShowCurrentBranchOnly) ? "" : BranchFilter.Text;
         }
 
         public void SetBranchFilter(string filter)
         {
-            BranchFilter.Text = filter;
+            BranchFilter.Text = filter?.Trim();
         }
 
         private void OkClick(object sender, EventArgs e)

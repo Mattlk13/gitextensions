@@ -17,12 +17,12 @@ namespace GitUI.CommandsDialogs
 {
     public partial class FormReflog : GitModuleForm
     {
-        private readonly TranslationString _continueResetCurrentBranchEvenWithChangesText = new TranslationString("You have changes in your working directory that could be lost.\n\nDo you want to continue?");
-        private readonly TranslationString _continueResetCurrentBranchCaptionText = new TranslationString("Changes not committed...");
+        private readonly TranslationString _continueResetCurrentBranchEvenWithChangesText = new("You have changes in your working directory that could be lost.\n\nDo you want to continue?");
+        private readonly TranslationString _continueResetCurrentBranchCaptionText = new("Changes not committed...");
 
-        private readonly Regex _regexReflog = new Regex("^([^ ]+) ([^:]+): (.+)$", RegexOptions.Compiled);
+        private readonly Regex _regexReflog = new("^([^ ]+) ([^:]+): (.+)$", RegexOptions.Compiled);
 
-        private string _currentBranch;
+        private string? _currentBranch;
         private bool _isBranchCheckedOut;
         private bool _isDirtyDir;
         private int _lastHitRowIndex;
@@ -58,8 +58,8 @@ namespace GitUI.CommandsDialogs
             lblDirtyWorkingDirectory.Visible = _isDirtyDir;
             resetCurrentBranchOnThisCommitToolStripMenuItem.Enabled = _isBranchCheckedOut;
 
-            var branches = new List<string> { "HEAD" };
-            branches.AddRange(UICommands.Module.GetRefs(false, true).Select(r => r.Name).OrderBy(n => n));
+            List<string> branches = new() { "HEAD" };
+            branches.AddRange(UICommands.Module.GetRefs(RefsFilter.Heads).Select(r => r.Name).OrderBy(n => n));
             branches.AddRange(UICommands.Module.GetRemoteBranches().Select(r => r.Name).OrderBy(n => n));
             Branches.DataSource = branches;
         }
@@ -72,7 +72,7 @@ namespace GitUI.CommandsDialogs
             {
                 var item = (string)Branches.SelectedItem;
                 await TaskScheduler.Default;
-                var arguments = new GitArgumentBuilder("reflog")
+                GitArgumentBuilder arguments = new("reflog")
                 {
                     "--no-abbrev",
                     item
@@ -80,20 +80,16 @@ namespace GitUI.CommandsDialogs
                 var output = UICommands.GitModule.GitExecutable.GetOutput(arguments);
                 var refLines = ConvertReflogOutput().ToList();
                 await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync();
+                _lastHitRowIndex = 0;
                 gridReflog.DataSource = refLines;
 
                 IEnumerable<RefLine> ConvertReflogOutput()
-                    => from line in output.Split('\n')
+                    => from line in output.LazySplit('\n')
                         where line.Length != 0
                         select _regexReflog.Match(line)
                         into match
                         where match.Success
-                        select new RefLine
-                        {
-                            Sha = ObjectId.Parse(match.Groups[1].Value),
-                            Ref = match.Groups[2].Value,
-                            Action = match.Groups[3].Value,
-                        };
+                        select new RefLine(ObjectId.Parse(match.Groups[1].Value), match.Groups[2].Value, match.Groups[3].Value);
             }
         }
 
@@ -106,13 +102,11 @@ namespace GitUI.CommandsDialogs
 
             UICommands.DoActionOnRepo(() =>
             {
-                using (var form = new FormCreateBranch(UICommands, GetShaOfRefLine()))
-                {
-                    form.CheckoutAfterCreation = false;
-                    form.UserAbleToChangeRevision = false;
-                    form.CouldBeOrphan = false;
-                    return form.ShowDialog(this) == DialogResult.OK;
-                }
+                using FormCreateBranch form = new(UICommands, GetShaOfRefLine());
+                form.CheckoutAfterCreation = false;
+                form.UserAbleToChangeRevision = false;
+                form.CouldBeOrphan = false;
+                return form.ShowDialog(this) == DialogResult.OK;
             });
         }
 
@@ -124,9 +118,17 @@ namespace GitUI.CommandsDialogs
 
             DataGridViewRow GetSelectedRow()
             {
-                return gridReflog.SelectedRows.Count > 0
-                    ? gridReflog.SelectedRows[0]
-                    : gridReflog.Rows[gridReflog.SelectedCells[0].RowIndex];
+                if (gridReflog.SelectedRows.Count > 0)
+                {
+                    return gridReflog.SelectedRows[0];
+                }
+
+                if (gridReflog.SelectedCells.Count > 0)
+                {
+                    return gridReflog.Rows[gridReflog.SelectedCells[0].RowIndex];
+                }
+
+                return gridReflog.CurrentRow;
             }
         }
 
@@ -136,7 +138,7 @@ namespace GitUI.CommandsDialogs
             {
                 if (MessageBox.Show(this, _continueResetCurrentBranchEvenWithChangesText.Text,
                         _continueResetCurrentBranchCaptionText.Text,
-                        MessageBoxButtons.YesNo, MessageBoxIcon.Warning) == DialogResult.No)
+                        MessageBoxButtons.YesNo, MessageBoxIcon.Warning, MessageBoxDefaultButton.Button2) == DialogResult.No)
                 {
                     return;
                 }
@@ -146,10 +148,8 @@ namespace GitUI.CommandsDialogs
             var resetType = _isDirtyDir ? FormResetCurrentBranch.ResetType.Soft : FormResetCurrentBranch.ResetType.Hard;
             UICommands.DoActionOnRepo(() =>
             {
-                using (var form = new FormResetCurrentBranch(UICommands, gitRevision, resetType))
-                {
-                    return form.ShowDialog(this) == DialogResult.OK;
-                }
+                using var form = FormResetCurrentBranch.Create(UICommands, gitRevision, resetType);
+                return form.ShowDialog(this) == DialogResult.OK;
             });
         }
 
@@ -174,7 +174,11 @@ namespace GitUI.CommandsDialogs
 
             if (hit.Type == DataGridViewHitTestType.Cell && _lastHitRowIndex != hit.RowIndex)
             {
-                gridReflog.Rows[_lastHitRowIndex].Selected = false;
+                if (_lastHitRowIndex < gridReflog.Rows.Count)
+                {
+                    gridReflog.Rows[_lastHitRowIndex].Selected = false;
+                }
+
                 _lastHitRowIndex = hit.RowIndex;
                 gridReflog.Rows[_lastHitRowIndex].Selected = true;
             }
@@ -191,5 +195,12 @@ namespace GitUI.CommandsDialogs
         public ObjectId Sha { get; set; }
         public string Ref { get; set; }
         public string Action { get; set; }
+
+        public RefLine(ObjectId sha, string @ref, string action)
+        {
+            Sha = sha;
+            Ref = @ref;
+            Action = action;
+        }
     }
 }

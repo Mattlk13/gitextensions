@@ -1,10 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using GitCommands.Config;
 using GitUIPluginInterfaces;
-using JetBrains.Annotations;
+using Microsoft;
 
 namespace GitCommands.Remotes
 {
@@ -16,7 +15,7 @@ namespace GitCommands.Remotes
         /// Returns the default remote for push operation.
         /// </summary>
         /// <returns>The <see cref="GitRef.Name"/> if found, otherwise <see langword="null"/>.</returns>
-        string GetDefaultPushRemote(ConfigFileRemote remote, string branch);
+        string? GetDefaultPushRemote(ConfigFileRemote remote, string branch);
 
         /// <summary>
         /// Loads the list of remotes configured in .git/config file.
@@ -59,7 +58,7 @@ namespace GitCommands.Remotes
         /// <param name="remotePushUrl">An optional alternative remote push URL.</param>
         /// <param name="remotePuttySshKey">An optional Putty SSH key.</param>
         /// <returns>Result of the operation.</returns>
-        ConfigFileRemoteSaveResult SaveRemote(ConfigFileRemote remote, string remoteName, string remoteUrl, string remotePushUrl, string remotePuttySshKey);
+        ConfigFileRemoteSaveResult SaveRemote(ConfigFileRemote? remote, string remoteName, string remoteUrl, string? remotePushUrl, string remotePuttySshKey);
 
         /// <summary>
         ///  Marks the remote as enabled or disabled in .git/config file.
@@ -68,7 +67,7 @@ namespace GitCommands.Remotes
         void ToggleRemoteState(string remoteName, bool disabled);
 
         /// <summary>
-        /// Retrieves disabled remotes from .git/config file
+        /// Retrieves disabled remotes from .git/config file.
         /// </summary>
         IReadOnlyList<Remote> GetDisabledRemotes();
 
@@ -78,12 +77,12 @@ namespace GitCommands.Remotes
         IReadOnlyList<string> GetDisabledRemoteNames();
 
         /// <summary>
-        /// Retrieves enabled remote names
+        /// Retrieves enabled remote names.
         /// </summary>
         IReadOnlyList<string> GetEnabledRemoteNames();
 
         /// <summary>
-        /// Retrieves enabled remote names of remotes without branches (i.e. that require a fetch)
+        /// Retrieves enabled remote names of remotes without branches (i.e. that require a fetch).
         /// </summary>
         IReadOnlyList<string> GetEnabledRemoteNamesWithoutBranches();
     }
@@ -92,20 +91,19 @@ namespace GitCommands.Remotes
     {
         internal static readonly string DisabledSectionPrefix = "-";
         internal static readonly string SectionRemote = "remote";
-        private readonly Func<IGitModule> _getModule;
+        private readonly Func<IGitModule?> _getModule;
 
-        public ConfigFileRemoteSettingsManager(Func<IGitModule> getModule)
+        public ConfigFileRemoteSettingsManager(Func<IGitModule?> getModule)
         {
             _getModule = getModule;
         }
 
         // TODO: moved verbatim from FormRemotes.cs, perhaps needs refactoring
-        [SuppressMessage("ReSharper", "RedundantArgumentDefaultValue")]
         public void ConfigureRemotes(string remoteName)
         {
             var module = GetModule();
             var localConfig = module.LocalConfigFile;
-            var moduleRefs = module.GetRefs(tags: false, branches: true);
+            var moduleRefs = module.GetRefs(RefsFilter.Heads);
 
             foreach (var remoteHead in moduleRefs)
             {
@@ -135,10 +133,9 @@ namespace GitCommands.Remotes
         /// </summary>
         /// <returns>The <see cref="GitRef.Name"/> if found, otherwise <see langword="null"/>.</returns>
         // TODO: moved verbatim from FormPush.cs, perhaps needs refactoring
-        [CanBeNull]
-        public string GetDefaultPushRemote(ConfigFileRemote remote, string branch)
+        public string? GetDefaultPushRemote(ConfigFileRemote remote, string branch)
         {
-            if (remote == null)
+            if (remote is null)
             {
                 throw new ArgumentNullException(nameof(remote));
             }
@@ -146,12 +143,12 @@ namespace GitCommands.Remotes
             var module = GetModule();
             bool IsSettingForBranch(string setting, string branchName)
             {
-                var head = new GitRef(module, null, setting);
+                GitRef head = new(module, null, setting);
                 return head.IsHead && head.Name.Equals(branchName, StringComparison.OrdinalIgnoreCase);
             }
 
             var remoteHead = remote.Push
-                                   .Select(s => s.Split(':'))
+                                   .Select(s => s.Split(Delimiters.Colon))
                                    .Where(t => t.Length == 2)
                                    .Where(t => IsSettingForBranch(t[0], branch))
                                    .Select(t => new GitRef(module, null, t[1]))
@@ -161,16 +158,23 @@ namespace GitCommands.Remotes
         }
 
         /// <summary>
-        /// Retrieves disabled remotes from .git/config file
+        /// Retrieves disabled remotes from .git/config file.
         /// </summary>
         public IReadOnlyList<Remote> GetDisabledRemotes()
         {
-            var disabledRemotes = GetModule().LocalConfigFile.GetConfigSections()
-                .Where(s => s.SectionName == $"{DisabledSectionPrefix}remote")
-                .Select(s => new Remote(s.SubSection, s.GetValue("pushurl", s.GetValue("url")), s.GetValue("url")))
-                .ToList();
+            return GetDisabledRemotes().ToList();
 
-            return disabledRemotes;
+            IEnumerable<Remote> GetDisabledRemotes()
+            {
+                foreach (IConfigSection section in GetModule().LocalConfigFile.GetConfigSections())
+                {
+                    if (section.SectionName == $"{DisabledSectionPrefix}remote")
+                    {
+                        Validates.NotNull(section.SubSection);
+                        yield return new Remote(section.SubSection, section.GetValue("url"), section.GetValue("pushurl", section.GetValue("url")));
+                    }
+                }
+            }
         }
 
         /// <summary>
@@ -182,11 +186,12 @@ namespace GitCommands.Remotes
             return module.LocalConfigFile.GetConfigSections()
                 .Where(s => s.SectionName == $"{DisabledSectionPrefix}remote")
                 .Select(s => s.SubSection)
+                .WhereNotNull()
                 .ToList();
         }
 
         /// <summary>
-        /// Retrieves enabled remote names
+        /// Retrieves enabled remote names.
         /// </summary>
         public IReadOnlyList<string> GetEnabledRemoteNames()
         {
@@ -194,12 +199,11 @@ namespace GitCommands.Remotes
         }
 
         /// <summary>
-        /// Retrieves enabled remote names of remotes without branches (i.e. that require a fetch)
+        /// Retrieves enabled remote names of remotes without branches (i.e. that require a fetch).
         /// </summary>
         public IReadOnlyList<string> GetEnabledRemoteNamesWithoutBranches()
         {
-            HashSet<string> remotesWithBranches = GetModule().GetRefs()
-                .Where(branch => branch.IsRemote && !branch.IsTag)
+            HashSet<string> remotesWithBranches = GetModule().GetRefs(RefsFilter.Remotes)
                 .Select(branch => branch.Name.SubstringUntil('/'))
                 .ToHashSet();
 
@@ -214,9 +218,9 @@ namespace GitCommands.Remotes
         // TODO: candidate for Async implementations
         public IEnumerable<ConfigFileRemote> LoadRemotes(bool loadDisabled)
         {
-            var remotes = new List<ConfigFileRemote>();
+            List<ConfigFileRemote> remotes = new();
             var module = _getModule();
-            if (module == null)
+            if (module is null)
             {
                 return remotes;
             }
@@ -237,7 +241,7 @@ namespace GitCommands.Remotes
         /// <returns>Output of <see cref="IGitModule.RemoveRemote"/> operation, if the remote is active; otherwise <see cref="string.Empty"/>.</returns>
         public string RemoveRemote(ConfigFileRemote remote)
         {
-            if (remote == null)
+            if (remote is null)
             {
                 throw new ArgumentNullException(nameof(remote));
             }
@@ -245,6 +249,7 @@ namespace GitCommands.Remotes
             var module = GetModule();
             if (!remote.Disabled)
             {
+                Validates.NotNull(remote.Name);
                 return module.RemoveRemote(remote.Name);
             }
 
@@ -260,7 +265,7 @@ namespace GitCommands.Remotes
         /// <returns>True if input remote exists and is enabled.</returns>
         public bool EnabledRemoteExists(string remoteName)
         {
-            return GetEnabledRemoteNames().FirstOrDefault(r => r == remoteName) != null;
+            return GetEnabledRemoteNames().Any(r => r == remoteName);
         }
 
         /// <summary>
@@ -270,7 +275,7 @@ namespace GitCommands.Remotes
         /// <returns>True if input remote exists and is disabled.</returns>
         public bool DisabledRemoteExists(string remoteName)
         {
-            return GetDisabledRemoteNames().FirstOrDefault(r => r == remoteName) != null;
+            return GetDisabledRemoteNames().Any(r => r == remoteName);
         }
 
         /// <summary>
@@ -288,7 +293,7 @@ namespace GitCommands.Remotes
         /// <param name="remotePushUrl">An optional alternative remote push URL.</param>
         /// <param name="remotePuttySshKey">An optional Putty SSH key.</param>
         /// <returns>Result of the operation.</returns>
-        public ConfigFileRemoteSaveResult SaveRemote(ConfigFileRemote remote, string remoteName, string remoteUrl, string remotePushUrl, string remotePuttySshKey)
+        public ConfigFileRemoteSaveResult SaveRemote(ConfigFileRemote? remote, string remoteName, string remoteUrl, string? remotePushUrl, string remotePuttySshKey)
         {
             if (string.IsNullOrWhiteSpace(remoteName))
             {
@@ -304,9 +309,8 @@ namespace GitCommands.Remotes
             var output = string.Empty;
 
             var module = GetModule();
-            bool creatingNew = remote == null;
             bool remoteDisabled = false;
-            if (creatingNew)
+            if (remote is null)
             {
                 output = module.AddRemote(remoteName, remoteUrl);
 
@@ -329,13 +333,15 @@ namespace GitCommands.Remotes
                 }
 
                 remoteDisabled = remote.Disabled;
-                if (!string.Equals(remote.Name, remoteName, StringComparison.OrdinalIgnoreCase))
+                if (!string.Equals(remote.Name, remoteName, StringComparison.Ordinal))
                 {
+                    Validates.NotNull(remote.Name);
+
                     // the name of the remote changed - perform rename
                     output = module.RenameRemote(remote.Name, remoteName);
                 }
 
-                if (!string.Equals(remote.Url, remoteUrl, StringComparison.OrdinalIgnoreCase))
+                if (!string.Equals(remote.Url, remoteUrl, StringComparison.Ordinal))
                 {
                     // the remote url changed - we may need to update remote
                     updateRemoteRequired = true;
@@ -367,7 +373,7 @@ namespace GitCommands.Remotes
             var module = GetModule();
             var sections = module.LocalConfigFile.GetConfigSections();
             var section = sections.FirstOrDefault(s => s.SectionName == sectionName && s.SubSection == remoteName);
-            if (section == null)
+            if (section is null)
             {
                 // we didn't find it, nothing we can do
                 return;
@@ -391,7 +397,7 @@ namespace GitCommands.Remotes
             // - then added a remote with the same name from a command line or via UI
             // - then attempted to deactivate the new remote
             var dupSection = sections.FirstOrDefault(s => s.SectionName == newSectionName && s.SubSection == remoteName);
-            if (dupSection != null)
+            if (dupSection is not null)
             {
                 module.LocalConfigFile.RemoveConfigSection($"{newSectionName}.{remoteName}");
             }
@@ -427,6 +433,8 @@ namespace GitCommands.Remotes
                     Name = remote,
                     Url = module.GetSetting(GetSettingKey(SettingKeyString.RemoteUrl, remote, enabled)),
                     Push = module.GetSettings(GetSettingKey(SettingKeyString.RemotePush, remote, enabled)).ToList(),
+
+                    // Note: This only gets the last pushurl
                     PushUrl = module.GetSetting(GetSettingKey(SettingKeyString.RemotePushUrl, remote, enabled)),
                     PuttySshKey = module.GetSetting(GetSettingKey(SettingKeyString.RemotePuttySshKey, remote, enabled)),
                 }));
@@ -436,7 +444,7 @@ namespace GitCommands.Remotes
         private IGitModule GetModule()
         {
             var module = _getModule();
-            if (module == null)
+            if (module is null)
             {
                 throw new ArgumentException($"Require a valid instance of {nameof(IGitModule)}");
             }
@@ -450,7 +458,7 @@ namespace GitCommands.Remotes
             return remoteEnabled ? key : DisabledSectionPrefix + key;
         }
 
-        private static void UpdateSettings(IGitModule module, string remoteName, bool remoteDisabled, string settingName, string value)
+        private static void UpdateSettings(IGitModule module, string remoteName, bool remoteDisabled, string settingName, string? value)
         {
             var prefix = remoteDisabled ? DisabledSectionPrefix : string.Empty;
             var fullSettingName = prefix + string.Format(settingName, remoteName);

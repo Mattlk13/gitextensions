@@ -3,7 +3,6 @@ using System.Drawing;
 using GitCommands;
 using ICSharpCode.TextEditor;
 using ICSharpCode.TextEditor.Document;
-using JetBrains.Annotations;
 
 namespace GitUI.Editor
 {
@@ -20,7 +19,7 @@ namespace GitUI.Editor
         d, drop = remove commit
         */
 
-        private static readonly Dictionary<char, (string longForm, HighlightColor color)> _commandByFirstChar = new Dictionary<char, (string longForm, HighlightColor color)>
+        private static readonly Dictionary<char, (string longForm, HighlightColor color)> _commandByFirstChar = new()
         {
             { 'p', ("pick", new HighlightColor(Color.Black, bold: true, italic: false)) },
             { 'r', ("reword", new HighlightColor(Color.Purple, bold: true, italic: false)) },
@@ -31,7 +30,7 @@ namespace GitUI.Editor
             { 'd', ("drop", new HighlightColor(Color.Red, bold: true, italic: false)) }
         };
 
-        public RebaseTodoHighlightingStrategy([NotNull] GitModule module)
+        public RebaseTodoHighlightingStrategy(GitModule module)
             : base("GitRebaseTodo", module)
         {
         }
@@ -127,7 +126,7 @@ namespace GitUI.Editor
                         {
                             var idLength = index - idStartIndex;
 
-                            if (idLength <= 5)
+                            if (idLength < 4)
                             {
                                 return false;
                             }

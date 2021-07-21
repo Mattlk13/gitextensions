@@ -1,32 +1,34 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.ComponentModel.Composition;
 using System.IO;
 using System.Text;
 using System.Windows.Forms;
-using AutoCompileSubmodules.Properties;
+using GitExtensions.Plugins.AutoCompileSubmodules.Properties;
 using GitUIPluginInterfaces;
 using ResourceManager;
 
-namespace AutoCompileSubmodules
+namespace GitExtensions.Plugins.AutoCompileSubmodules
 {
     [Export(typeof(IGitPlugin))]
     public class AutoCompileSubModulesPlugin : GitPluginBase, IGitPluginForRepository
     {
         private readonly TranslationString _doYouWantBuild =
-            new TranslationString("Do you want to build {0}?\n\n{1}");
+            new("Do you want to build {0}?\n\n{1}");
         private readonly TranslationString _enterCorrectMsBuildPath =
-            new TranslationString("Please enter correct MSBuild path in the plugin settings dialog and try again.");
+            new("Please enter correct MSBuild path in the plugin settings dialog and try again.");
 
-        public AutoCompileSubModulesPlugin()
+        public AutoCompileSubModulesPlugin() : base(true)
         {
-            SetNameAndDescription("Auto compile SubModules");
+            Id = new Guid("D4D1ACB7-0B6B-4A3C-B0DB-A25056A277D9");
+            Name = "Auto compile SubModules";
             Translate();
             Icon = Resources.IconAutoCompileSubmodules;
         }
 
-        private readonly BoolSetting _msBuildEnabled = new BoolSetting("Enabled", false);
-        private readonly StringSetting _msBuildPath = new StringSetting("Path to msbuild.exe", FindMsBuild());
-        private readonly StringSetting _msBuildArguments = new StringSetting("msbuild.exe arguments", "/p:Configuration=Debug");
+        private readonly BoolSetting _msBuildEnabled = new("Enabled", false);
+        private readonly StringSetting _msBuildPath = new("Path to msbuild.exe", FindMsBuild());
+        private readonly StringSetting _msBuildArguments = new("msbuild.exe arguments", "/p:Configuration=Debug");
 
         private const string DefaultMsBuildPath = @"C:\Windows\Microsoft.NET\Framework\v3.5\msbuild.exe";
 
@@ -66,7 +68,7 @@ namespace AutoCompileSubmodules
 
             var msbuildPath = _msBuildPath.ValueOrDefault(Settings);
 
-            var workingDir = new DirectoryInfo(args.GitModule.WorkingDir);
+            DirectoryInfo workingDir = new(args.GitModule.WorkingDir);
             var solutionFiles = workingDir.GetFiles("*.sln", SearchOption.AllDirectories);
 
             for (var n = solutionFiles.Length - 1; n > 0; n--)
@@ -79,7 +81,8 @@ namespace AutoCompileSubmodules
                                       solutionFile.Name,
                                       SolutionFilesToString(solutionFiles)),
                         "Build",
-                        MessageBoxButtons.YesNoCancel);
+                        MessageBoxButtons.YesNoCancel,
+                        MessageBoxIcon.Question);
 
                 if (result == DialogResult.Cancel)
                 {
@@ -93,7 +96,7 @@ namespace AutoCompileSubmodules
 
                 if (string.IsNullOrEmpty(msbuildPath) || !File.Exists(msbuildPath))
                 {
-                    MessageBox.Show(args.OwnerForm, _enterCorrectMsBuildPath.Text);
+                    MessageBox.Show(args.OwnerForm, _enterCorrectMsBuildPath.Text, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
                 }
                 else
                 {
@@ -119,7 +122,7 @@ namespace AutoCompileSubmodules
 
         private static string SolutionFilesToString(IReadOnlyList<FileInfo> solutionFiles)
         {
-            var solutionString = new StringBuilder();
+            StringBuilder solutionString = new();
 
             for (var n = solutionFiles.Count - 1; n > 0; n--)
             {

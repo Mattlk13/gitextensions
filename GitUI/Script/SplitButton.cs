@@ -45,7 +45,7 @@ namespace GitUI.Script
 
         private bool _isSplitMenuVisible;
 
-        private ContextMenuStrip _splitMenuStrip;
+        private ContextMenuStrip? _splitMenuStrip;
 
         private TextFormatFlags _textFormatFlags = TextFormatFlags.Default;
 
@@ -57,14 +57,14 @@ namespace GitUI.Script
         #region Properties
 
         [Browsable(false)]
-        public override ContextMenuStrip ContextMenuStrip
+        public override ContextMenuStrip? ContextMenuStrip
         {
             get => SplitMenuStrip;
             set => SplitMenuStrip = value;
         }
 
         [DefaultValue(null)]
-        public ContextMenuStrip SplitMenuStrip
+        public ContextMenuStrip? SplitMenuStrip
         {
             get
             {
@@ -73,14 +73,14 @@ namespace GitUI.Script
             set
             {
                 // remove the event handlers for the old SplitMenuStrip
-                if (_splitMenuStrip != null)
+                if (_splitMenuStrip is not null)
                 {
                     _splitMenuStrip.Closing -= SplitMenuStrip_Closing;
                     _splitMenuStrip.Opening -= SplitMenuStrip_Opening;
                 }
 
                 // add the event handlers for the new SplitMenuStrip
-                if (value != null)
+                if (value is not null)
                 {
                     ShowSplit = true;
                     value.Closing += SplitMenuStrip_Closing;
@@ -273,7 +273,7 @@ namespace GitUI.Script
             {
                 ShowContextMenuStrip();
             }
-            else if (_splitMenuStrip == null || !_isSplitMenuVisible)
+            else if (_splitMenuStrip is null || !_isSplitMenuVisible)
             {
                 SetButtonDrawState();
 
@@ -303,7 +303,7 @@ namespace GitUI.Script
                 backgroundBounds.Inflate(-1, -1);
                 ButtonRenderer.DrawButton(g, backgroundBounds, State);
 
-                // button renderer doesnt draw the black frame when themes are off
+                // button renderer doesn't draw the black frame when themes are off
                 g.DrawRectangle(SystemPens.WindowFrame, 0, 0, bounds.Width - 1, bounds.Height - 1);
             }
             else
@@ -316,12 +316,12 @@ namespace GitUI.Script
 
             int internalBorder = BorderSize;
             Rectangle focusRect =
-                new Rectangle(internalBorder - 1,
+                new(internalBorder - 1,
                               internalBorder - 1,
                               bounds.Width - _dropDownRectangle.Width - internalBorder,
                               bounds.Height - (internalBorder * 2) + 2);
 
-            bool drawSplitLine = State == PushButtonState.Hot || State == PushButtonState.Pressed || !Application.RenderWithVisualStyles;
+            bool drawSplitLine = State is (PushButtonState.Hot or PushButtonState.Pressed) || !Application.RenderWithVisualStyles;
 
             if (RightToLeft == RightToLeft.Yes)
             {
@@ -365,7 +365,7 @@ namespace GitUI.Script
             CalculateButtonTextAndImageLayout(ref bounds, out var text_rectangle, out var image_rectangle);
 
             // draw the image
-            if (Image != null)
+            if (Image is not null)
             {
                 if (Enabled)
                 {
@@ -377,7 +377,7 @@ namespace GitUI.Script
                 }
             }
 
-            // If we dont' use mnemonic, set formatFlag to NoPrefix as this will show ampersand.
+            // If we don't use mnemonic, set formatFlag to NoPrefix as this will show ampersand.
             if (!UseMnemonic)
             {
                 _textFormatFlags = _textFormatFlags | TextFormatFlags.NoPrefix;
@@ -403,7 +403,7 @@ namespace GitUI.Script
 
         private void PaintArrow(Graphics g, Rectangle dropDownRect)
         {
-            var middle = new Point(Convert.ToInt32(dropDownRect.Left + (dropDownRect.Width / 2)), Convert.ToInt32(dropDownRect.Top + (dropDownRect.Height / 2)));
+            Point middle = new(Convert.ToInt32(dropDownRect.Left + (dropDownRect.Width / 2)), Convert.ToInt32(dropDownRect.Top + (dropDownRect.Height / 2)));
 
             // if the width is odd - favor pushing it over one pixel right.
             middle.X += dropDownRect.Width % 2;
@@ -509,7 +509,7 @@ namespace GitUI.Script
                     }
 
                     // Image is dependent on ImageAlign
-                    if (Image != null)
+                    if (Image is not null)
                     {
                         imageRectangle = OverlayObjectRect(ref content_rect, ref image_size, ImageAlign);
                     }
@@ -619,7 +619,7 @@ namespace GitUI.Script
             {
                 offset = excess_width;
             }
-            else if (h_image == HorizontalAlignment.Center && (h_text == HorizontalAlignment.Left || h_text == HorizontalAlignment.Center))
+            else if (h_image == HorizontalAlignment.Center && h_text is (HorizontalAlignment.Left or HorizontalAlignment.Center))
             {
                 offset += excess_width / 3;
             }
@@ -682,7 +682,7 @@ namespace GitUI.Script
             {
                 offset = excess_height;
             }
-            else if (v_image == VerticalAlignment.Center && (v_text == VerticalAlignment.Top || v_text == VerticalAlignment.Center))
+            else if (v_image == VerticalAlignment.Center && v_text is (VerticalAlignment.Top or VerticalAlignment.Center))
             {
                 offset += excess_height / 3;
             }
@@ -758,31 +758,21 @@ namespace GitUI.Script
             int x = 0;
             int y = 0;
 
-            if (align == ContentAlignment.BottomLeft || align == ContentAlignment.MiddleLeft || align == ContentAlignment.TopLeft)
+            x = align switch
             {
-                x = outer.X;
-            }
-            else if (align == ContentAlignment.BottomCenter || align == ContentAlignment.MiddleCenter || align == ContentAlignment.TopCenter)
-            {
-                x = Math.Max(outer.X + ((outer.Width - inner.Width) / 2), outer.Left);
-            }
-            else if (align == ContentAlignment.BottomRight || align == ContentAlignment.MiddleRight || align == ContentAlignment.TopRight)
-            {
-                x = outer.Right - inner.Width;
-            }
+                (ContentAlignment.BottomLeft or ContentAlignment.MiddleLeft or ContentAlignment.TopLeft) => outer.X,
+                (ContentAlignment.BottomCenter or ContentAlignment.MiddleCenter or ContentAlignment.TopCenter) => Math.Max(outer.X + ((outer.Width - inner.Width) / 2), outer.Left),
+                (ContentAlignment.BottomRight or ContentAlignment.MiddleRight or ContentAlignment.TopRight) => outer.Right - inner.Width,
+                _ => x
+            };
 
-            if (align == ContentAlignment.TopCenter || align == ContentAlignment.TopLeft || align == ContentAlignment.TopRight)
+            y = align switch
             {
-                y = outer.Y;
-            }
-            else if (align == ContentAlignment.MiddleCenter || align == ContentAlignment.MiddleLeft || align == ContentAlignment.MiddleRight)
-            {
-                y = outer.Y + ((outer.Height - inner.Height) / 2);
-            }
-            else if (align == ContentAlignment.BottomCenter || align == ContentAlignment.BottomRight || align == ContentAlignment.BottomLeft)
-            {
-                y = outer.Bottom - inner.Height;
-            }
+                (ContentAlignment.TopCenter or ContentAlignment.TopLeft or ContentAlignment.TopRight) => outer.Y,
+                (ContentAlignment.MiddleCenter or ContentAlignment.MiddleLeft or ContentAlignment.MiddleRight) => outer.Y + ((outer.Height - inner.Height) / 2),
+                (ContentAlignment.BottomCenter or ContentAlignment.BottomRight or ContentAlignment.BottomLeft) => outer.Bottom - inner.Height,
+                _ => y
+            };
 
             return new Rectangle(x, y, Math.Min(inner.Width, outer.Width), Math.Min(inner.Height, outer.Height));
         }

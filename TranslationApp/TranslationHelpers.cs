@@ -20,18 +20,25 @@ namespace TranslationApp
                 var translatableTypes = TranslationUtil.GetTranslatableTypes();
                 foreach (var (key, types) in translatableTypes)
                 {
-                    var translation = new TranslationFile();
+                    TranslationFile translation = new();
                     try
                     {
                         foreach (Type type in types)
                         {
-                            if (TranslationUtil.CreateInstanceOfClass(type) is ITranslate obj)
+                            try
                             {
-                                obj.AddTranslationItems(translation);
-                                if (obj is IDisposable disposable)
+                                if (TranslationUtil.CreateInstanceOfClass(type) is ITranslate obj)
                                 {
-                                    disposable.Dispose();
+                                    obj.AddTranslationItems(translation);
+                                    if (obj is IDisposable disposable)
+                                    {
+                                        disposable.Dispose();
+                                    }
                                 }
+                            }
+                            catch
+                            {
+                                // no-op
                             }
                         }
                     }
@@ -53,7 +60,7 @@ namespace TranslationApp
 
         public static IDictionary<string, List<TranslationItemWithCategory>> GetItemsDictionary(IDictionary<string, TranslationFile> translations)
         {
-            var items = new Dictionary<string, List<TranslationItemWithCategory>>();
+            Dictionary<string, List<TranslationItemWithCategory>> items = new();
             foreach (var (key, file) in translations)
             {
                 var list = from item in file.TranslationCategories
@@ -79,7 +86,7 @@ namespace TranslationApp
         public static IDictionary<string, List<TranslationItemWithCategory>> LoadTranslation(
             IDictionary<string, TranslationFile> translation, IDictionary<string, List<TranslationItemWithCategory>> neutralItems)
         {
-            var translateItems = new Dictionary<string, List<TranslationItemWithCategory>>();
+            Dictionary<string, List<TranslationItemWithCategory>> translateItems = new();
 
             var oldTranslationItems = GetItemsDictionary(translation);
 
@@ -87,7 +94,7 @@ namespace TranslationApp
             {
                 var oldItems = oldTranslationItems.Find(key);
                 var transItems = translateItems.Find(key);
-                var dict = new Dictionary<string, string>();
+                Dictionary<string, string> dict = new();
                 foreach (var item in items)
                 {
                     var curItems = oldItems.Where(
@@ -96,7 +103,7 @@ namespace TranslationApp
                                   oldItem.Property == item.Property);
                     var curItem = curItems.FirstOrDefault();
 
-                    if (curItem == null)
+                    if (curItem is null)
                     {
                         curItem = item.Clone();
                         transItems.Add(curItem);
@@ -127,7 +134,7 @@ namespace TranslationApp
                 {
                     // Obsolete should be added only to dictionary
                     if (!string.IsNullOrEmpty(item.TranslatedValue) &&
-                        item.NeutralValue != null && !dict.ContainsKey(item.NeutralValue))
+                        item.NeutralValue is not null && !dict.ContainsKey(item.NeutralValue))
                     {
                         dict.Add(item.NeutralValue, item.TranslatedValue);
                     }
@@ -155,13 +162,13 @@ namespace TranslationApp
 
             foreach (var (key, translateItems) in items)
             {
-                var foreignTranslation = new TranslationFile(GitCommands.AppSettings.ProductVersion, "en", targetLanguageCode);
+                TranslationFile foreignTranslation = new(GitCommands.AppSettings.ProductVersion, "en", targetLanguageCode);
                 foreach (var translateItem in translateItems)
                 {
                     var item = translateItem.GetTranslationItem();
 
-                    var ti = new TranslationItem(item.Name, item.Property, item.Source, item.Value);
-                    ti.Value = ti.Value ?? string.Empty;
+                    TranslationItem ti = new(item.Name, item.Property, item.Source, item.Value);
+                    ti.Value ??= string.Empty;
                     foreignTranslation.FindOrAddTranslationCategory(translateItem.Category)
                         .Body.AddTranslationItem(ti);
                 }

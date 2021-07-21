@@ -1,28 +1,67 @@
-﻿using System.Threading.Tasks;
+﻿using System;
+using System.Threading.Tasks;
+using System.Windows.Forms;
 using GitCommands;
+using GitCommands.Git;
 using GitCommands.Gpg;
-using JetBrains.Annotations;
+using GitCommands.UserRepositoryHistory;
+using GitUIPluginInterfaces;
 
 namespace GitUI.CommandsDialogs
 {
     public interface IFormBrowseController
     {
-        Task<GpgInfo> LoadGpgInfoAsync(GitRevision revision);
+        void AddRecentRepositories(ToolStripDropDownItem menuItemContainer,
+                                   Repository repo,
+                                   string? caption,
+                                   Action<object, GitModuleEventArgs> setGitModule);
+
+        Task<GpgInfo?> LoadGpgInfoAsync(GitRevision? revision);
     }
 
     public class FormBrowseController : IFormBrowseController
     {
         private readonly IGitGpgController _gitGpgController;
+        private readonly IRepositoryCurrentBranchNameProvider _repositoryCurrentBranchNameProvider;
+        private readonly IInvalidRepositoryRemover _invalidRepositoryRemover;
 
-        public FormBrowseController(IGitGpgController gitGpgController)
+        public FormBrowseController(IGitGpgController gitGpgController,
+                                    IRepositoryCurrentBranchNameProvider repositoryCurrentBranchNameProvider,
+                                    IInvalidRepositoryRemover invalidRepositoryRemover)
         {
             _gitGpgController = gitGpgController;
+            _repositoryCurrentBranchNameProvider = repositoryCurrentBranchNameProvider;
+            _invalidRepositoryRemover = invalidRepositoryRemover;
         }
 
-        [ItemCanBeNull]
-        public async Task<GpgInfo> LoadGpgInfoAsync(GitRevision revision)
+        public void AddRecentRepositories(ToolStripDropDownItem menuItemContainer,
+                                          Repository repo,
+                                          string? caption,
+                                          Action<object, GitModuleEventArgs> setGitModule)
         {
-            if (!AppSettings.ShowGpgInformation.ValueOrDefault || string.IsNullOrWhiteSpace(revision?.Guid))
+            string branchName = _repositoryCurrentBranchNameProvider.GetCurrentBranchName(repo.Path);
+            ToolStripMenuItem item = new(caption)
+            {
+                DisplayStyle = ToolStripItemDisplayStyle.ImageAndText,
+                ShortcutKeyDisplayString = branchName
+            };
+
+            menuItemContainer.DropDownItems.Add(item);
+
+            item.Click += (obj, args) =>
+            {
+                OpenRepo(repo.Path, setGitModule);
+            };
+
+            if (repo.Path != caption)
+            {
+                item.ToolTipText = repo.Path;
+            }
+        }
+
+        public async Task<GpgInfo?> LoadGpgInfoAsync(GitRevision? revision)
+        {
+            if (!AppSettings.ShowGpgInformation.Value || revision?.ObjectId is null)
             {
                 return null;
             }
@@ -45,21 +84,28 @@ namespace GitUI.CommandsDialogs
                                tagStatus,
                                _gitGpgController.GetTagVerifyMessage(revision));
         }
-    }
 
-    public class GpgInfo
-    {
-        public GpgInfo(CommitStatus commitStatus, string commitVerificationMessage, TagStatus tagStatus, string tagVerificationMessage)
+        private void ChangeWorkingDir(string path, Action<object, GitModuleEventArgs> setGitModule)
         {
-            CommitStatus = commitStatus;
-            CommitVerificationMessage = commitVerificationMessage;
-            TagStatus = tagStatus;
-            TagVerificationMessage = tagVerificationMessage;
+            GitModule module = new(path);
+            if (module.IsValidGitWorkingDir())
+            {
+                setGitModule(this, new GitModuleEventArgs(module));
+                return;
+            }
+
+            _invalidRepositoryRemover.ShowDeleteInvalidRepositoryDialog(path);
         }
 
-        public CommitStatus CommitStatus { get; }
-        public string CommitVerificationMessage { get; }
-        public TagStatus TagStatus { get; }
-        public string TagVerificationMessage { get; }
+        private void OpenRepo(string repoPath, Action<object, GitModuleEventArgs> setGitModule)
+        {
+            if (Control.ModifierKeys != Keys.Control)
+            {
+                ChangeWorkingDir(repoPath, setGitModule);
+                return;
+            }
+
+            GitUICommands.LaunchBrowse(repoPath);
+        }
     }
 }

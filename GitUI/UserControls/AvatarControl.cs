@@ -1,6 +1,5 @@
 ﻿using System;
 using System.ComponentModel;
-using System.Diagnostics;
 using System.Drawing;
 using System.Threading.Tasks;
 using System.Windows.Forms;
@@ -9,15 +8,15 @@ using GitCommands.Utils;
 using GitExtUtils.GitUI;
 using GitUI.Avatars;
 using GitUI.Properties;
-using JetBrains.Annotations;
 using ResourceManager;
 
 namespace GitUI
 {
     public sealed partial class AvatarControl : GitExtensionsControl
     {
-        private readonly CancellationTokenSequence _cancellationTokenSequence = new CancellationTokenSequence();
-        private readonly IAvatarProvider _avatarProvider = AvatarService.Default;
+        private readonly CancellationTokenSequence _cancellationTokenSequence = new();
+        private IAvatarProvider _avatarProvider = AvatarService.DefaultProvider;
+        private IAvatarCacheCleaner _avatarCacheCleaner = AvatarService.CacheCleaner;
 
         public AvatarControl()
         {
@@ -25,11 +24,10 @@ namespace GitUI
             InitializeComplete();
 
             clearImagecacheToolStripMenuItem.Click += delegate { ClearCache(); };
-            UpdateGravatarOptionDisplayState();
 
             foreach (var avatarProvider in EnumHelper.GetValues<AvatarProvider>())
             {
-                var item = new ToolStripMenuItem
+                ToolStripMenuItem item = new()
                 {
                     CheckOnClick = true,
                     Tag = avatarProvider,
@@ -40,16 +38,15 @@ namespace GitUI
                 item.Click += delegate
                 {
                     AppSettings.AvatarProvider = avatarProvider;
-                    UpdateGravatarOptionDisplayState();
                     ClearCache();
                 };
 
                 avatarProviderToolStripMenuItem.DropDownItems.Add(item);
             }
 
-            foreach (var defaultImageType in EnumHelper.GetValues<GravatarFallbackAvatarType>())
+            foreach (var defaultImageType in EnumHelper.GetValues<AvatarFallbackType>())
             {
-                var item = new ToolStripMenuItem
+                ToolStripMenuItem item = new()
                 {
                     CheckOnClick = true,
                     Tag = defaultImageType,
@@ -58,20 +55,12 @@ namespace GitUI
 
                 item.Click += delegate
                 {
-                    AppSettings.GravatarFallbackAvatarType = defaultImageType;
+                    AppSettings.AvatarFallbackType = defaultImageType;
                     ClearCache();
                 };
 
                 fallbackAvatarStyleToolStripMenuItem.DropDownItems.Add(item);
             }
-        }
-
-        private void UpdateGravatarOptionDisplayState()
-        {
-            var isGravatarOptionsVisible = AppSettings.AvatarProvider == AvatarProvider.Gravatar;
-            fallbackAvatarStyleToolStripMenuItem.Visible = isGravatarOptionsVisible;
-            registerGravatarToolStripMenuItem.Visible = isGravatarOptionsVisible;
-            toolStripSeparator1.Visible = isGravatarOptionsVisible;
         }
 
         public void ClearCache()
@@ -80,7 +69,8 @@ namespace GitUI
                 .RunAsync(
                     async () =>
                     {
-                        await _avatarProvider.ClearCacheAsync().ConfigureAwait(true);
+                        AvatarService.UpdateAvatarProvider();
+                        await _avatarCacheCleaner.ClearCacheAsync().ConfigureAwait(true);
                         await UpdateAvatarAsync().ConfigureAwait(false);
                     })
                 .FileAndForget();
@@ -92,24 +82,22 @@ namespace GitUI
         /// <param name="disposing">true if managed resources should be disposed; otherwise, false.</param>
         protected override void Dispose(bool disposing)
         {
-            if (disposing && (components != null))
+            if (disposing)
             {
                 _cancellationTokenSequence.Dispose();
-                components.Dispose();
+                components?.Dispose();
             }
 
             base.Dispose(disposing);
         }
 
-        [CanBeNull]
         [Browsable(false)]
-        public string Email { get; private set; }
+        public string? Email { get; private set; }
 
-        [CanBeNull]
         [Browsable(false)]
-        public string AuthorName { get; private set; }
+        public string? AuthorName { get; private set; }
 
-        public void LoadImage(string email, string name)
+        public void LoadImage(string? email, string? name)
         {
             if (string.IsNullOrEmpty(email))
             {
@@ -122,7 +110,7 @@ namespace GitUI
             ThreadHelper.JoinableTaskFactory.RunAsync(() => UpdateAvatarAsync()).FileAndForget();
         }
 
-        private void RefreshImage(Image image)
+        private void RefreshImage(Image? image)
         {
             _avatarImage.Image = image ?? Images.User80;
             _avatarImage.Refresh();
@@ -133,7 +121,7 @@ namespace GitUI
             await this.SwitchToMainThreadAsync();
 
             // resize our control (I'm not using AutoSize for a reason)
-            var size = new Size(AppSettings.AuthorImageSizeInCommitInfo, AppSettings.AuthorImageSizeInCommitInfo);
+            Size size = new(AppSettings.AuthorImageSizeInCommitInfo, AppSettings.AuthorImageSizeInCommitInfo);
 
             DpiUtil.Scale(ref size);
 
@@ -167,94 +155,30 @@ namespace GitUI
                 return;
             }
 
-            ThreadHelper.JoinableTaskFactory
-                .RunAsync(
-                    async () =>
-                    {
-                        await _avatarProvider.ClearCacheAsync().ConfigureAwait(true);
-                        await UpdateAvatarAsync().ConfigureAwait(false);
-                    })
-                .FileAndForget();
+            ClearCache();
         }
 
         private void OnRegisterGravatarClick(object sender, EventArgs e)
         {
-            try
-            {
-                Process.Start("https://www.gravatar.com");
-            }
-            catch (Exception ex)
-            {
-                MessageBox.Show(this, ex.Message);
-            }
+            OsShellUtil.OpenUrlInDefaultBrowser(@"https://www.gravatar.com");
         }
 
         private void OnDefaultImageDropDownOpening(object sender, EventArgs e)
         {
-            var defaultImageType = AppSettings.GravatarFallbackAvatarType;
-
-            ToolStripMenuItem selectedItem = null;
-            ToolStripMenuItem noneItem = null;
-            foreach (ToolStripMenuItem menu in fallbackAvatarStyleToolStripMenuItem.DropDownItems)
-            {
-                menu.Checked = false;
-
-                var type = (GravatarFallbackAvatarType)menu.Tag;
-
-                if (type == defaultImageType)
-                {
-                    selectedItem = menu;
-                }
-
-                if (type == GravatarFallbackAvatarType.None)
-                {
-                    noneItem = menu;
-                }
-            }
-
-            Debug.Assert(noneItem != null && selectedItem != null, "noneItem != null && selectedItem != null");
-
-            if (selectedItem == null)
-            {
-                AppSettings.GravatarFallbackAvatarType = GravatarFallbackAvatarType.None;
-                selectedItem = noneItem;
-            }
-
-            selectedItem.Checked = true;
+            UpdateMenuItemSelection(fallbackAvatarStyleToolStripMenuItem.DropDownItems, AppSettings.AvatarFallbackType);
         }
 
         private void avatarProviderToolStripMenuItem_DropDownOpening(object sender, EventArgs e)
         {
-            var avatarProvider = AppSettings.AvatarProvider;
+            UpdateMenuItemSelection(avatarProviderToolStripMenuItem.DropDownItems, AppSettings.AvatarProvider);
+        }
 
-            ToolStripMenuItem selectedItem = null;
-            ToolStripMenuItem defaultItem = null;
-            foreach (ToolStripMenuItem menu in avatarProviderToolStripMenuItem.DropDownItems)
+        private static void UpdateMenuItemSelection<T>(ToolStripItemCollection toolStripItems, T currentValue)
+        {
+            foreach (ToolStripMenuItem item in toolStripItems)
             {
-                menu.Checked = false;
-
-                var type = (AvatarProvider)menu.Tag;
-
-                if (type == avatarProvider)
-                {
-                    selectedItem = menu;
-                }
-
-                if (type == AvatarProvider.Gravatar)
-                {
-                    defaultItem = menu;
-                }
+                item.Checked = Equals((T)item.Tag, currentValue);
             }
-
-            Debug.Assert(defaultItem != null && selectedItem != null, "noneItem != null && selectedItem != null");
-
-            if (selectedItem == null)
-            {
-                AppSettings.AvatarProvider = AvatarProvider.Gravatar;
-                selectedItem = defaultItem;
-            }
-
-            selectedItem.Checked = true;
         }
     }
 }

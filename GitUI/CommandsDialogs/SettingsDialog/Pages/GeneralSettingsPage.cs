@@ -1,8 +1,8 @@
 ﻿using System;
 using System.ComponentModel;
-using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using System.Windows.Forms;
 using GitCommands;
 using GitCommands.UserRepositoryHistory;
 using ResourceManager;
@@ -11,12 +11,12 @@ namespace GitUI.CommandsDialogs.SettingsDialog.Pages
 {
     public partial class GeneralSettingsPage : SettingsPageWithHeader
     {
-        private readonly TranslationString _openPullDialog = new TranslationString("Open pull dialog");
-        private readonly TranslationString _pullMerge = new TranslationString("Pull - merge");
-        private readonly TranslationString _pullRebase = new TranslationString("Pull - rebase");
-        private readonly TranslationString _fetch = new TranslationString("Fetch");
-        private readonly TranslationString _fetchAll = new TranslationString("Fetch all");
-        private readonly TranslationString _fetchAndPruneAll = new TranslationString("Fetch and prune all");
+        private readonly TranslationString _openPullDialog = new("Open pull dialog");
+        private readonly TranslationString _pullMerge = new("Pull - merge");
+        private readonly TranslationString _pullRebase = new("Pull - rebase");
+        private readonly TranslationString _fetch = new("Fetch");
+        private readonly TranslationString _fetchAll = new("Fetch all");
+        private readonly TranslationString _fetchAndPruneAll = new("Fetch and prune all");
 
         public GeneralSettingsPage()
         {
@@ -80,17 +80,20 @@ namespace GitUI.CommandsDialogs.SettingsDialog.Pages
         {
             chkCheckForUncommittedChangesInCheckoutBranch.Checked = AppSettings.CheckForUncommittedChangesInCheckoutBranch;
             chkStartWithRecentWorkingDir.Checked = AppSettings.StartWithRecentWorkingDir;
-            chkUsePatienceDiffAlgorithm.Checked = AppSettings.UsePatienceDiffAlgorithm;
+            chkUseHistogramDiffAlgorithm.Checked = AppSettings.UseHistogramDiffAlgorithm;
             RevisionGridQuickSearchTimeout.Value = AppSettings.RevisionGridQuickSearchTimeout;
             chkFollowRenamesInFileHistory.Checked = AppSettings.FollowRenamesInFileHistory;
             chkStashUntrackedFiles.Checked = AppSettings.IncludeUntrackedFilesInAutoStash;
+            chkUpdateModules.CheckState = ToCheckboxState(AppSettings.UpdateSubmodulesOnCheckout);
             chkShowStashCountInBrowseWindow.Checked = AppSettings.ShowStashCount;
             chkShowAheadBehindDataInBrowseWindow.Checked = AppSettings.ShowAheadBehindData;
             chkShowAheadBehindDataInBrowseWindow.Enabled = GitVersion.Current.SupportAheadBehindData;
             chkShowGitStatusInToolbar.Checked = AppSettings.ShowGitStatusInBrowseToolbar;
             chkShowGitStatusForArtificialCommits.Checked = AppSettings.ShowGitStatusForArtificialCommits;
             chkShowSubmoduleStatusInBrowse.Checked = AppSettings.ShowSubmoduleStatus;
+            lblCommitsLimit.Checked = AppSettings.MaxRevisionGraphCommits != 0;
             _NO_TRANSLATE_MaxCommits.Value = AppSettings.MaxRevisionGraphCommits;
+            _NO_TRANSLATE_MaxCommits.Enabled = AppSettings.MaxRevisionGraphCommits != 0;
             chkCloseProcessDialog.Checked = AppSettings.CloseProcessDialog;
             chkShowGitCommandLine.Checked = AppSettings.ShowGitCommandLine;
             chkUseFastChecks.Checked = AppSettings.UseFastChecks;
@@ -108,15 +111,16 @@ namespace GitUI.CommandsDialogs.SettingsDialog.Pages
         {
             AppSettings.CheckForUncommittedChangesInCheckoutBranch = chkCheckForUncommittedChangesInCheckoutBranch.Checked;
             AppSettings.StartWithRecentWorkingDir = chkStartWithRecentWorkingDir.Checked;
-            AppSettings.UsePatienceDiffAlgorithm = chkUsePatienceDiffAlgorithm.Checked;
+            AppSettings.UseHistogramDiffAlgorithm = chkUseHistogramDiffAlgorithm.Checked;
             AppSettings.IncludeUntrackedFilesInAutoStash = chkStashUntrackedFiles.Checked;
+            AppSettings.UpdateSubmodulesOnCheckout = ToBoolean(chkUpdateModules.CheckState);
             AppSettings.FollowRenamesInFileHistory = chkFollowRenamesInFileHistory.Checked;
             AppSettings.ShowGitStatusInBrowseToolbar = chkShowGitStatusInToolbar.Checked;
             AppSettings.ShowGitStatusForArtificialCommits = chkShowGitStatusForArtificialCommits.Checked;
             AppSettings.CloseProcessDialog = chkCloseProcessDialog.Checked;
             AppSettings.ShowGitCommandLine = chkShowGitCommandLine.Checked;
             AppSettings.UseFastChecks = chkUseFastChecks.Checked;
-            AppSettings.MaxRevisionGraphCommits = (int)_NO_TRANSLATE_MaxCommits.Value;
+            AppSettings.MaxRevisionGraphCommits = lblCommitsLimit.Checked ? (int)_NO_TRANSLATE_MaxCommits.Value : 0;
             AppSettings.RevisionGridQuickSearchTimeout = (int)RevisionGridQuickSearchTimeout.Value;
             AppSettings.ShowStashCount = chkShowStashCountInBrowseWindow.Checked;
             AppSettings.ShowAheadBehindData = chkShowAheadBehindDataInBrowseWindow.Checked;
@@ -138,8 +142,8 @@ namespace GitUI.CommandsDialogs.SettingsDialog.Pages
                     return string.Empty;
                 }
 
-                var dir = new DirectoryInfo(x.Path);
-                if (dir.Parent == null)
+                DirectoryInfo dir = new(x.Path);
+                if (dir.Parent is null)
                 {
                     return x.Path;
                 }
@@ -148,11 +152,31 @@ namespace GitUI.CommandsDialogs.SettingsDialog.Pages
             };
         }
 
+        private static CheckState ToCheckboxState(bool? booleanValue)
+        {
+            if (!booleanValue.HasValue)
+            {
+                return CheckState.Indeterminate;
+            }
+
+            return booleanValue == true ? CheckState.Checked : CheckState.Unchecked;
+        }
+
+        private static bool? ToBoolean(CheckState state)
+        {
+            if (state == CheckState.Indeterminate)
+            {
+                return null;
+            }
+
+            return state == CheckState.Checked;
+        }
+
         private void DefaultCloneDestinationBrowseClick(object sender, EventArgs e)
         {
             var userSelectedPath = OsShellUtil.PickFolder(this, cbDefaultCloneDestination.Text);
 
-            if (userSelectedPath != null)
+            if (userSelectedPath is not null)
             {
                 cbDefaultCloneDestination.Text = userSelectedPath;
             }
@@ -165,7 +189,12 @@ namespace GitUI.CommandsDialogs.SettingsDialog.Pages
 
         private void LlblTelemetryPrivacyLink_LinkClicked(object sender, System.Windows.Forms.LinkLabelLinkClickedEventArgs e)
         {
-            Process.Start("https://github.com/gitextensions/gitextensions/blob/master/PrivacyPolicy.md");
+            OsShellUtil.OpenUrlInDefaultBrowser(@"https://github.com/gitextensions/gitextensions/blob/master/PrivacyPolicy.md");
+        }
+
+        private void lblCommitsLimit_CheckedChanged(object sender, EventArgs e)
+        {
+            _NO_TRANSLATE_MaxCommits.Enabled = lblCommitsLimit.Checked;
         }
     }
 }

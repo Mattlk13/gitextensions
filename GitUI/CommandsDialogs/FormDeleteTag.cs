@@ -3,6 +3,7 @@ using System.Diagnostics;
 using System.Drawing;
 using System.Windows.Forms;
 using GitExtUtils.GitUI;
+using GitUI.HelperDialogs;
 using GitUI.Script;
 using GitUIPluginInterfaces;
 
@@ -16,7 +17,7 @@ namespace GitUI.CommandsDialogs
             InitializeComponent();
         }
 
-        public FormDeleteTag(GitUICommands commands, string tag)
+        public FormDeleteTag(GitUICommands commands, string? tag)
             : base(commands)
         {
             InitializeComponent();
@@ -32,7 +33,7 @@ namespace GitUI.CommandsDialogs
         private void FormDeleteTagLoad(object sender, EventArgs e)
         {
             Tags.DisplayMember = nameof(IGitRef.LocalName);
-            Tags.DataSource = Module.GetRefs(true, false);
+            Tags.DataSource = Module.GetRefs(RefsFilter.Tags);
             Tags.Text = Tag as string;
             remotesComboboxControl1.SelectedRemote = Module.GetCurrentRemote();
             EnableOrDisableRemotesCombobox();
@@ -62,20 +63,20 @@ namespace GitUI.CommandsDialogs
         {
             var pushCmd = string.Format("push \"{0}\" :refs/tags/{1}", remotesComboboxControl1.SelectedRemote, tagName);
 
-            ScriptManager.RunEventScripts(this, ScriptEvent.BeforePush);
-
-            using (var form = new FormRemoteProcess(Module, pushCmd)
+            bool success = ScriptManager.RunEventScripts(this, ScriptEvent.BeforePush);
+            if (!success)
             {
-                ////Remote = currentRemote,
-                ////Text = string.Format(_deleteFromCaption.Text, currentRemote),
-            })
-            {
-                form.ShowDialog();
+                return;
+            }
 
-                if (!Module.InTheMiddleOfAction() && !form.ErrorOccurred())
-                {
-                    ScriptManager.RunEventScripts(this, ScriptEvent.AfterPush);
-                }
+            using FormRemoteProcess form = new(UICommands, process: null, pushCmd);
+            ////Remote = currentRemote,
+            ////Text = string.Format(_deleteFromCaption.Text, currentRemote),
+            form.ShowDialog();
+
+            if (!Module.InTheMiddleOfAction() && !form.ErrorOccurred())
+            {
+                ScriptManager.RunEventScripts(this, ScriptEvent.AfterPush);
             }
         }
 

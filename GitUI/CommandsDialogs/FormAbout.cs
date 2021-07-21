@@ -1,8 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Drawing;
 using System.Linq;
+using GitCommands;
+using GitExtUtils;
 using GitUI.CommandsDialogs.AboutBoxDialog;
 using GitUI.CommandsDialogs.BrowseDialog;
 using GitUI.Properties;
@@ -12,31 +13,32 @@ namespace GitUI.CommandsDialogs
 {
     public sealed partial class FormAbout : GitExtensionsForm
     {
-        private readonly TranslationString _thanksToContributors = new TranslationString("Thanks to over {0:#,##0} contributors: ");
-        private readonly TranslationString _copyTooltip = new TranslationString("Copy environment info");
+        private readonly TranslationString _thanksToContributors = new("Thanks to over {0:#,##0} contributors: ");
+        private readonly TranslationString _copyTooltip = new("Copy environment info");
 
         public FormAbout()
         {
             InitializeComponent();
+            _NO_TRANSLATE_labelProductName.Text = AppSettings.ApplicationName;
             InitializeComplete();
 
             environmentInfo.SetCopyButtonTooltip(_copyTooltip.Text);
 
-            Color clrLink = Color.Blue; // ColorHelper.IsLightTheme() ? Color.Blue : Color.SkyBlue;
+            Color clrLink = SystemColors.Highlight;
             _NO_TRANSLATE_labelProductName.LinkColor = clrLink;
             _NO_TRANSLATE_ThanksTo.LinkColor = clrLink;
             linkLabelIcons.LinkColor = clrLink;
 
             // Click handlers
-            _NO_TRANSLATE_labelProductName.LinkClicked += delegate { Process.Start("https://github.com/gitextensions/gitextensions"); };
+            _NO_TRANSLATE_labelProductName.LinkClicked += delegate { OsShellUtil.OpenUrlInDefaultBrowser(@"https://github.com/gitextensions/gitextensions"); };
             _NO_TRANSLATE_ThanksTo.LinkClicked += delegate { ShowContributorsForm(); };
-            pictureDonate.Click += delegate { Process.Start(FormDonate.DonationUrl); };
-            linkLabelIcons.LinkClicked += delegate { Process.Start("http://p.yusukekamiyamane.com/"); };
+            pictureDonate.Click += delegate { OsShellUtil.OpenUrlInDefaultBrowser(FormDonate.DonationUrl); };
+            linkLabelIcons.LinkClicked += delegate { OsShellUtil.OpenUrlInDefaultBrowser(@"http://p.yusukekamiyamane.com/"); };
 
             var contributorsList = GetContributorList();
             var thanksToContributorsText = string.Format(_thanksToContributors.Text, contributorsList.Count);
 
-            var random = new Random();
+            Random random = new();
 
             thanksTimer.Tick += delegate { ThankNextContributor(); };
             thanksTimer.Enabled = true;
@@ -49,10 +51,8 @@ namespace GitUI.CommandsDialogs
 
             void ShowContributorsForm()
             {
-                using (var formContributors = new FormContributors())
-                {
-                    formContributors.ShowDialog(owner: this);
-                }
+                using FormContributors formContributors = new();
+                formContributors.ShowDialog(owner: this);
             }
 
             void ThankNextContributor()
@@ -67,7 +67,7 @@ namespace GitUI.CommandsDialogs
             {
                 return new[] { Resources.Team, Resources.Coders, Resources.Translators, Resources.Designers }
                     .Select(c => c.Replace(Environment.NewLine, ""))
-                    .SelectMany(line => line.Split(new[] { "," }, StringSplitOptions.RemoveEmptyEntries))
+                    .SelectMany(line => line.LazySplit(',', StringSplitOptions.RemoveEmptyEntries))
                     .Select(contributor => contributor.Trim())
                     .ToList();
             }

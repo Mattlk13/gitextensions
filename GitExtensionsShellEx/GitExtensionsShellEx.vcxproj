@@ -19,11 +19,14 @@
     </ProjectConfiguration>
   </ItemGroup>
   <PropertyGroup Label="Globals">
+    <VCProjectVersion>16.0</VCProjectVersion>
     <ProjectGuid>{BBE7B8AD-D175-4679-A614-38BFF28B0269}</ProjectGuid>
     <RootNamespace>GitExtensionsShellEx</RootNamespace>
     <Keyword>AtlProj</Keyword>
     <ProjectName>GitExtensionsShellEx</ProjectName>
-    <WindowsTargetPlatformVersion>10.0.17134.0</WindowsTargetPlatformVersion>
+    <WindowsTargetPlatformVersion>10.0</WindowsTargetPlatformVersion>
+    <CLRSupport>false</CLRSupport>
+    <TargetFrameworkVersion>v4.0</TargetFrameworkVersion>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="Configuration">
@@ -141,14 +144,13 @@
     <ClCompile>
       <Optimization>Disabled</Optimization>
       <PreprocessorDefinitions>WIN32;_WINDOWS;_USRDLL;_DEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <BasicRuntimeChecks>EnableFastChecks</BasicRuntimeChecks>
-      <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
+      <BasicRuntimeChecks>Default</BasicRuntimeChecks>
+      <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
       <PrecompiledHeader>Use</PrecompiledHeader>
       <PrecompiledHeaderFile>stdafx.h</PrecompiledHeaderFile>
       <BrowseInformation>true</BrowseInformation>
       <WarningLevel>Level3</WarningLevel>
       <SuppressStartupBanner>true</SuppressStartupBanner>
-      <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
       <ExceptionHandling>Async</ExceptionHandling>
     </ClCompile>
     <ResourceCompile />
@@ -251,24 +253,24 @@
   <ItemGroup>
     <None Include="GitExtensionsShellEx.rgs" />
     <None Include="GitExtensionsShellEx.def" />
-    <None Include="Resources\IconAbout.ico" />
-    <None Include="Resources\IconAdded.ico" />
+    <None Include="Resources\information.ico" />
+    <None Include="Resources\FileStatusAdded.ico" />
     <None Include="Resources\git-extensions-logo.ico" />
-    <None Include="Resources\IconBranchCheckout.ico" />
-    <None Include="Resources\IconBranchCreate.ico" />
-    <None Include="Resources\IconBrowseFileExplorer.ico" />
-    <None Include="Resources\IconCloneRepoGit.ico" />
-    <None Include="Resources\IconCommit.ico" />
-    <None Include="Resources\IconDiff.ico" />
-    <None Include="Resources\IconFileHistory.ico" />
-    <None Include="Resources\IconPatchApply.ico" />
-    <None Include="Resources\IconPull.ico" />
-    <None Include="Resources\IconPush.ico" />
-    <None Include="Resources\IconRepoCreate.ico" />
-    <None Include="Resources\IconResetFileTo.ico" />
-    <None Include="Resources\IconRevisionCheckout.ico" />
-    <None Include="Resources\IconSettings.ico" />
-    <None Include="Resources\IconStash.ico" />
+    <None Include="Resources\BranchCheckout.ico" />
+    <None Include="Resources\BranchCreate.ico" />
+    <None Include="Resources\ShellExtensions.ico" />
+    <None Include="Resources\CloneRepoGit.ico" />
+    <None Include="Resources\RepoStateClean.ico" />
+    <None Include="Resources\Diff.ico" />
+    <None Include="Resources\FileHistory.ico" />
+    <None Include="Resources\PatchApply.ico" />
+    <None Include="Resources\Pull.ico" />
+    <None Include="Resources\Push.ico" />
+    <None Include="Resources\RepoCreate.ico" />
+    <None Include="Resources\ResetWorkingDirChanges.ico" />
+    <None Include="Resources\checkout.ico" />
+    <None Include="Resources\Settings.ico" />
+    <None Include="Resources\stash.ico" />
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include=".\GitExtensionsShellEx.rc" />

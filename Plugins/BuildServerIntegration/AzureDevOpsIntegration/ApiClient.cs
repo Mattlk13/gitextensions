@@ -1,12 +1,13 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Net;
 using System.Net.Http;
 using System.Net.Http.Headers;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
-using JetBrains.Annotations;
+using Microsoft;
 using Newtonsoft.Json;
 
 namespace AzureDevOpsIntegration
@@ -17,10 +18,8 @@ namespace AzureDevOpsIntegration
     public class ApiClient : IDisposable
     {
         private const string BuildDefinitionsUrl = "build/definitions?api-version=2.0";
+        private const string Properties = "properties=sourceVersion,status,buildNumber,result,definition,_links,startTime,finishTime";
         private readonly HttpClient _httpClient;
-
-        private string _buildDefinitionsToQuery;
-        private string _lastBuildDefinitionFilter;
 
         /// <summary>
         /// Creates a new API client instance for the given Azure DevOps / TFS project, that uses the given authentication token.
@@ -58,17 +57,19 @@ namespace AzureDevOpsIntegration
 
         private async Task<T> HttpGetAsync<T>(string url)
         {
-            using (var response = await _httpClient.GetAsync(url))
+            using var response = await _httpClient.GetAsync(url);
+            if (response.StatusCode == HttpStatusCode.Unauthorized)
             {
-                response.EnsureSuccessStatusCode();
-                string json = await response.Content.ReadAsStringAsync();
-
-                return JsonConvert.DeserializeObject<T>(json);
+                throw new UnauthorizedAccessException();
             }
+
+            response.EnsureSuccessStatusCode();
+            string json = await response.Content.ReadAsStringAsync();
+
+            return JsonConvert.DeserializeObject<T>(json);
         }
 
-        [ItemCanBeNull]
-        private async Task<string> GetBuildDefinitionsAsync(string buildDefinitionNameFilter)
+        public async Task<string?> GetBuildDefinitionsAsync(string buildDefinitionNameFilter)
         {
             var isNotFiltered = string.IsNullOrWhiteSpace(buildDefinitionNameFilter);
             var buildDefinitionUriFilter = isNotFiltered ? string.Empty : "&name=" + buildDefinitionNameFilter;
@@ -85,14 +86,13 @@ namespace AzureDevOpsIntegration
 
             buildDefinitions = await HttpGetAsync<ListWrapper<BuildDefinition>>(BuildDefinitionsUrl);
 
-            var tfsBuildDefinitionNameFilter = new Regex(buildDefinitionNameFilter, RegexOptions.Compiled);
+            Regex tfsBuildDefinitionNameFilter = new(buildDefinitionNameFilter, RegexOptions.Compiled);
             return GetBuildDefinitionsIds(buildDefinitions.Value.Where(b => tfsBuildDefinitionNameFilter.IsMatch(b.Name)));
         }
 
-        [CanBeNull]
-        private static string GetBuildDefinitionsIds(IEnumerable<BuildDefinition> buildDefinitions)
+        private static string? GetBuildDefinitionsIds(IEnumerable<BuildDefinition>? buildDefinitions)
         {
-            if (buildDefinitions != null && buildDefinitions.Any())
+            if (buildDefinitions is not null && buildDefinitions.Any())
             {
                 return string.Join(",", buildDefinitions.Select(b => b.Id));
             }
@@ -106,32 +106,36 @@ namespace AzureDevOpsIntegration
         /// <param name="buildId">
         /// The id of the build to get the build definition name for.
         /// </param>
-        public async Task<string> GetBuildDefinitionNameFromIdAsync(int buildId)
+        public async Task<string?> GetBuildDefinitionNameFromIdAsync(int buildId)
         {
             var build = await HttpGetAsync<Build>($"build/builds/{buildId}?api-version=2.0");
-            return build.Definition.Name;
+            return build.Definition?.Name;
         }
 
-        public async Task<IEnumerable<Build>> QueryBuildsAsync(string buildDefinitionFilter, DateTime? sinceDate, bool? running)
+        public async Task<IList<Build>> QueryFinishedBuildsAsync(string buildDefinitionsToQuery, DateTime? sinceDate)
         {
-            if (_buildDefinitionsToQuery == null || !string.Equals(_lastBuildDefinitionFilter, buildDefinitionFilter, StringComparison.OrdinalIgnoreCase))
-            {
-                _buildDefinitionsToQuery = await GetBuildDefinitionsAsync(buildDefinitionFilter);
-                _lastBuildDefinitionFilter = buildDefinitionFilter;
-            }
+            string queryUrl = QueryForBuildStatus(buildDefinitionsToQuery, "completed");
+            queryUrl += sinceDate.HasValue
+                ? $"&minTime={sinceDate.Value.ToUniversalTime():s}&api-version=4.1"
+                : "&api-version=2.0";
 
-            if (_buildDefinitionsToQuery == null)
-            {
-                return Enumerable.Empty<Build>();
-            }
-
-            var builds = (await HttpGetAsync<ListWrapper<Build>>($"build/builds?api-version=2.0&definitions={_buildDefinitionsToQuery}")).Value;
-
-            return builds
-                .Where(b => !running.HasValue || running.Value == b.IsInProgress)
-                .Where(b => !sinceDate.HasValue || b.StartTime >= sinceDate.Value)
-                .ToList();
+            var finishedBuilds = (await HttpGetAsync<ListWrapper<Build>>(queryUrl)).Value;
+            Validates.NotNull(finishedBuilds);
+            return finishedBuilds;
         }
+
+        public async Task<IList<Build>> QueryRunningBuildsAsync(string buildDefinitionsToQuery)
+        {
+            string queryUrl = QueryForBuildStatus(buildDefinitionsToQuery, "cancelling,inProgress,none,notStarted,postponed") + "&api-version=2.0";
+
+            var runningBuilds = (await HttpGetAsync<ListWrapper<Build>>(queryUrl)).Value;
+            Validates.NotNull(runningBuilds);
+            return runningBuilds;
+        }
+
+        // Api doc: https://docs.microsoft.com/en-us/rest/api/azure/devops/build/builds/list?view=azure-devops-rest-4.1
+        private string QueryForBuildStatus(string buildDefinitionsToQuery, string statusFilter)
+            => $"build/builds?{Properties}&definitions={buildDefinitionsToQuery}&statusFilter={statusFilter}";
 
         public void Dispose()
         {
@@ -143,21 +147,21 @@ namespace AzureDevOpsIntegration
     internal class ListWrapper<T>
     {
         public int Count { get; set; }
-        public IList<T> Value { get; set; }
+        public IList<T>? Value { get; set; }
     }
 
     internal class Project
     {
-        public string Id { get; set; }
-        public string Name { get; set; }
-        public string Url { get; set; }
+        public string? Id { get; set; }
+        public string? Name { get; set; }
+        public string? Url { get; set; }
     }
 
     public class BuildDefinition
     {
-        public string Id { get; set; }
-        public string Name { get; set; }
-        public string Url { get; set; }
+        public string? Id { get; set; }
+        public string? Name { get; set; }
+        public string? Url { get; set; }
     }
 
     /// <summary>
@@ -165,25 +169,33 @@ namespace AzureDevOpsIntegration
     /// </summary>
     public class Build
     {
-        public string SourceVersion { get; set; }
-        public string Status { get; set; }
-        public string BuildNumber { get; set; }
-        public string Result { get; set; }
-        public BuildDefinition Definition { get; set; }
-        public BuildLinks _links { get; set; }
+        public const string StatusAll = "all"; // All status.
+        public const string StatusCancelling = "cancelling"; // The build is cancelling
+        public const string StatusCompleted = "completed"; // The build has completed.
+        public const string StatusInProgress = "inProgress"; // The build is currently in progress.
+        public const string StatusNone = "none"; // No status.
+        public const string StatusNotStarted = "notStarted"; // The build has not yet started.
+        public const string StatusPostponed = "postponed"; // The build is inactive in the queue.
+
+        public string? SourceVersion { get; set; }
+        public string? Status { get; set; }
+        public string? BuildNumber { get; set; }
+        public string? Result { get; set; }
+        public BuildDefinition? Definition { get; set; }
+        public BuildLinks? _links { get; set; }
         public DateTime? StartTime { get; set; }
         public DateTime? FinishTime { get; set; }
 
-        public bool IsInProgress => Status != "completed";
+        public bool IsInProgress => Status != StatusCompleted;
     }
 
     public class BuildLinks
     {
-        public Link Web { get; set; }
+        public Link? Web { get; set; }
     }
 
     public class Link
     {
-        public string Href { get; set; }
+        public string? Href { get; set; }
     }
 }

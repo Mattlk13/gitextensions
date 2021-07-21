@@ -1,22 +1,21 @@
 ﻿using System;
 using System.ComponentModel;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Threading;
 using System.Windows.Forms;
 using GitCommands;
-using JetBrains.Annotations;
 using ResourceManager;
 
 namespace GitUI
 {
     public sealed class GitUICommandsSourceEventArgs : EventArgs
     {
-        public GitUICommandsSourceEventArgs([NotNull] IGitUICommandsSource gitUiCommandsSource)
+        public GitUICommandsSourceEventArgs(IGitUICommandsSource gitUiCommandsSource)
         {
             GitUICommandsSource = gitUiCommandsSource;
         }
 
-        [NotNull]
         public IGitUICommandsSource GitUICommandsSource { get; }
     }
 
@@ -25,7 +24,7 @@ namespace GitUI
     /// </summary>
     public class GitModuleControl : GitExtensionsControl
     {
-        private readonly object _lock = new object();
+        private readonly object _lock = new();
 
         private int _isDisposed;
 
@@ -34,9 +33,9 @@ namespace GitUI
         /// Will only occur once, as the source cannot change after being set.
         /// </summary>
         [Browsable(false)]
-        public event EventHandler<GitUICommandsSourceEventArgs> UICommandsSourceSet;
+        public event EventHandler<GitUICommandsSourceEventArgs>? UICommandsSourceSet;
 
-        [CanBeNull] private IGitUICommandsSource _uiCommandsSource;
+        private IGitUICommandsSource? _uiCommandsSource;
 
         /// <summary>
         /// Gets a <see cref="IGitUICommandsSource"/> for this control.
@@ -47,19 +46,18 @@ namespace GitUI
         /// </remarks>
         /// <exception cref="InvalidOperationException">Unable to initialise the source as
         /// no ancestor of type <see cref="IGitUICommandsSource"/> was found.</exception>
-        [NotNull]
         [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         [Browsable(false)]
         public IGitUICommandsSource UICommandsSource
         {
             get
             {
-                if (_uiCommandsSource == null)
+                if (_uiCommandsSource is null)
                 {
                     lock (_lock)
                     {
                         // Double check locking
-                        if (_uiCommandsSource == null)
+                        if (_uiCommandsSource is null)
                         {
                             // Search ancestors for an implementation of IGitUICommandsSource
                             UICommandsSource = this.FindAncestors().OfType<IGitUICommandsSource>().FirstOrDefault()
@@ -69,11 +67,11 @@ namespace GitUI
                 }
 
                 // ReSharper disable once AssignNullToNotNullAttribute
-                return _uiCommandsSource;
+                return _uiCommandsSource!;
             }
             set
             {
-                if (_uiCommandsSource != null)
+                if (_uiCommandsSource is not null)
                 {
                     throw new ArgumentException($"{nameof(UICommandsSource)} is already set.");
                 }
@@ -84,7 +82,6 @@ namespace GitUI
         }
 
         /// <summary>Gets the <see cref="UICommandsSource"/>'s <see cref="GitUICommands"/> reference.</summary>
-        [NotNull]
         [Browsable(false)]
         public GitUICommands UICommands => UICommandsSource.UICommands;
 
@@ -97,16 +94,13 @@ namespace GitUI
         /// <para>By contrast, the <see cref="UICommands"/> property attempts to initialise
         /// the value if not previously initialised.</para>
         /// </remarks>
-        [ContractAnnotation("=>false,commands:null")]
-        [ContractAnnotation("=>true,commands:notnull")]
-        public bool TryGetUICommands(out GitUICommands commands)
+        public bool TryGetUICommands([NotNullWhen(returnValue: true)] out GitUICommands? commands)
         {
             commands = _uiCommandsSource?.UICommands;
-            return commands != null;
+            return commands is not null;
         }
 
         /// <summary>Gets the <see cref="UICommands"/>' <see cref="GitModule"/> reference.</summary>
-        [NotNull]
         [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         [Browsable(false)]
         public GitModule Module => UICommands.Module;
@@ -122,7 +116,7 @@ namespace GitUI
                 return;
             }
 
-            if (_uiCommandsSource != null)
+            if (_uiCommandsSource is not null)
             {
                 DisposeUICommandsSource();
             }
@@ -153,12 +147,18 @@ namespace GitUI
 
             CommandStatus ExecuteScriptCommand()
             {
-                return Script.ScriptRunner.ExecuteScriptCommand(this, Module, command, UICommands, this as RevisionGridControl);
+                var revisionGridControl = this as RevisionGridControl;
+                if (revisionGridControl is null)
+                {
+                    revisionGridControl = (FindForm() as GitModuleForm)?.RevisionGridControl;
+                }
+
+                return Script.ScriptRunner.ExecuteScriptCommand(this, Module, command, UICommands, revisionGridControl);
             }
         }
 
         /// <summary>Raises the <see cref="UICommandsSourceSet"/> event.</summary>
-        protected virtual void OnUICommandsSourceSet([NotNull] IGitUICommandsSource source)
+        protected virtual void OnUICommandsSourceSet(IGitUICommandsSource source)
         {
             UICommandsSourceSet?.Invoke(this, new GitUICommandsSourceEventArgs(source));
         }

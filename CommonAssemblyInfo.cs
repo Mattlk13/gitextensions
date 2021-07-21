@@ -2,6 +2,8 @@
 using System.Reflection;
 using System.Runtime.InteropServices;
 
+[assembly: System.Runtime.Versioning.SupportedOSPlatform("windows7.0")]
+
 // General Information about an assembly is controlled through the following
 // set of attributes. Change these attribute values to modify the information
 // associated with an assembly.
@@ -20,9 +22,9 @@ using System.Runtime.InteropServices;
 //      Build Number
 //      Revision
 //
-[assembly: AssemblyVersion("3.2.0")]
-[assembly: AssemblyFileVersion("3.2.0")]
-[assembly: AssemblyInformationalVersion("3.2.0")]
+[assembly: AssemblyVersion("33.33.33")]
+[assembly: AssemblyFileVersion("33.33.33")]
+[assembly: AssemblyInformationalVersion("33.33.33")]
 
 // Disable CLS compliance. See https://github.com/gitextensions/gitextensions/issues/4710
 [assembly: CLSCompliant(isCompliant: false)]

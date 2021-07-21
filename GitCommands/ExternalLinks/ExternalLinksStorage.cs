@@ -6,7 +6,6 @@ using System.Linq;
 using System.Xml;
 using System.Xml.Serialization;
 using GitCommands.Settings;
-using JetBrains.Annotations;
 
 namespace GitCommands.ExternalLinks
 {
@@ -15,7 +14,7 @@ namespace GitCommands.ExternalLinks
         /// <summary>
         /// Loads external link definitions from the settings.
         /// </summary>
-        IReadOnlyList<ExternalLinkDefinition> Load(RepoDistSettings settings);
+        IReadOnlyList<ExternalLinkDefinition>? Load(RepoDistSettings settings);
 
         /// <summary>
         /// Saves the provided external link definitions to the settings.
@@ -30,10 +29,9 @@ namespace GitCommands.ExternalLinks
         /// <summary>
         /// Loads external link definitions from the settings.
         /// </summary>
-        public IReadOnlyList<ExternalLinkDefinition> Load(RepoDistSettings settings)
+        public IReadOnlyList<ExternalLinkDefinition>? Load(RepoDistSettings settings)
         {
-            var cachedSettings = new RepoDistSettings(null, settings.SettingsCache, settings.SettingLevel);
-            var xml = cachedSettings.GetString(SettingName, null);
+            var xml = settings.GetString(SettingName, null);
             return LoadFromXmlString(xml);
         }
 
@@ -44,7 +42,7 @@ namespace GitCommands.ExternalLinks
         {
             try
             {
-                string xml;
+                string? xml;
                 if (definitions.Count == 0)
                 {
                     xml = null;
@@ -56,16 +54,15 @@ namespace GitCommands.ExternalLinks
                         definition.RemoveEmptyFormats();
                     }
 
-                    var sw = new StringWriter();
-                    var serializer = new XmlSerializer(typeof(List<ExternalLinkDefinition>));
-                    var ns = new XmlSerializerNamespaces();
+                    StringWriter sw = new();
+                    XmlSerializer serializer = new(typeof(List<ExternalLinkDefinition>));
+                    XmlSerializerNamespaces ns = new();
                     ns.Add(string.Empty, string.Empty);
                     serializer.Serialize(sw, definitions.OrderBy(x => x.Name).ToList(), ns);
                     xml = sw.ToString();
                 }
 
-                var cachedSettings = new RepoDistSettings(null, settings.SettingsCache, settings.SettingLevel);
-                cachedSettings.SetString(SettingName, xml);
+                settings.SetString(SettingName, xml);
             }
             catch (Exception e)
             {
@@ -73,9 +70,8 @@ namespace GitCommands.ExternalLinks
             }
         }
 
-        // TODO: refactor and outsource to the centralised SettingsSerialiser implementations.
-        [CanBeNull]
-        private static IReadOnlyList<ExternalLinkDefinition> LoadFromXmlString(string xmlString)
+        // TODO: refactor and outsource to the centralised SettingsSerializer implementations.
+        private static IReadOnlyList<ExternalLinkDefinition>? LoadFromXmlString(string? xmlString)
         {
             if (string.IsNullOrWhiteSpace(xmlString))
             {
@@ -84,14 +80,10 @@ namespace GitCommands.ExternalLinks
 
             try
             {
-                var serializer = new XmlSerializer(typeof(List<ExternalLinkDefinition>));
-                using (var stringReader = new StringReader(xmlString))
-                {
-                    using (var xmlReader = new XmlTextReader(stringReader))
-                    {
-                        return serializer.Deserialize(xmlReader) as List<ExternalLinkDefinition>;
-                    }
-                }
+                XmlSerializer serializer = new(typeof(List<ExternalLinkDefinition>));
+                using StringReader stringReader = new(xmlString);
+                using XmlTextReader xmlReader = new(stringReader);
+                return serializer.Deserialize(xmlReader) as List<ExternalLinkDefinition>;
             }
             catch (Exception ex)
             {

@@ -14,27 +14,31 @@ using System.Windows.Forms;
 using GitCommands;
 using GitCommands.Config;
 using GitCommands.Remotes;
+using GitCommands.Settings;
+using GitUI.CommandsDialogs.SettingsDialog.Pages;
 using GitUI.HelperDialogs;
 using GitUI.UserControls;
 using GitUI.UserControls.RevisionGrid;
 using GitUI.UserControls.RevisionGrid.Columns;
 using GitUIPluginInterfaces;
 using GitUIPluginInterfaces.BuildServerIntegration;
-using JetBrains.Annotations;
+using GitUIPluginInterfaces.Settings;
 using Microsoft.VisualStudio.Threading;
 
 namespace GitUI.BuildServerIntegration
 {
     public sealed class BuildServerWatcher : IBuildServerWatcher, IDisposable
     {
-        private readonly CancellationTokenSequence _launchCancellation = new CancellationTokenSequence();
-        private readonly object _buildServerCredentialsLock = new object();
+        private static readonly TimeSpan ShortPollInterval = TimeSpan.FromSeconds(10);
+        private static readonly TimeSpan LongPollInterval = TimeSpan.FromSeconds(120);
+        private readonly CancellationTokenSequence _launchCancellation = new();
+        private readonly object _buildServerCredentialsLock = new();
         private readonly RevisionGridControl _revisionGrid;
         private readonly RevisionDataGridView _revisionGridView;
         private readonly Func<GitModule> _module;
         private readonly IRepoNameExtractor _repoNameExtractor;
-        private IDisposable _buildStatusCancellationToken;
-        private IBuildServerAdapter _buildServerAdapter;
+        private IDisposable? _buildStatusCancellationToken;
+        private IBuildServerAdapter? _buildServerAdapter;
 
         internal BuildStatusColumnProvider ColumnProvider { get; }
 
@@ -65,7 +69,7 @@ namespace GitUI.BuildServerIntegration
 
             await TaskScheduler.Default;
 
-            if (buildServerAdapter == null || launchToken.IsCancellationRequested)
+            if (buildServerAdapter is null || launchToken.IsCancellationRequested)
             {
                 return;
             }
@@ -77,22 +81,39 @@ namespace GitUI.BuildServerIntegration
 
             var fullDayObservable = buildServerAdapter.GetFinishedBuildsSince(scheduler, DateTime.Today - TimeSpan.FromDays(3));
             var fullObservable = buildServerAdapter.GetFinishedBuildsSince(scheduler);
-            var fromNowObservable = buildServerAdapter.GetFinishedBuildsSince(scheduler, DateTime.Now);
 
-            var cancellationToken = new CompositeDisposable
+            bool anyRunningBuilds = false;
+            var delayObservable = Observable.Defer(() => Observable.Empty<BuildInfo>()
+                                                                   .DelaySubscription(anyRunningBuilds ? ShortPollInterval : LongPollInterval));
+
+            var shouldLookForNewlyFinishedBuilds = false;
+            DateTime nowFrozen = DateTime.Now;
+
+            // All finished builds have already been retrieved,
+            // so looking for new finished builds make sense only if running builds have been found previously
+            var fromNowObservable = Observable.If(() => shouldLookForNewlyFinishedBuilds,
+                buildServerAdapter.GetFinishedBuildsSince(scheduler, nowFrozen)
+                            .Finally(() => shouldLookForNewlyFinishedBuilds = false));
+
+            CompositeDisposable cancellationToken = new()
                     {
                         fullDayObservable.OnErrorResumeNext(fullObservable)
                                          .OnErrorResumeNext(Observable.Empty<BuildInfo>()
-                                                                      .DelaySubscription(TimeSpan.FromMinutes(1))
+                                                                      .DelaySubscription(LongPollInterval)
                                                                       .OnErrorResumeNext(fromNowObservable)
                                                                       .Retry()
                                                                       .Repeat())
                                          .ObserveOn(MainThreadScheduler.Instance)
                                          .Subscribe(OnBuildInfoUpdate),
 
-                        runningBuildsObservable.OnErrorResumeNext(Observable.Empty<BuildInfo>()
-                                                                            .DelaySubscription(TimeSpan.FromSeconds(10)))
+                        runningBuildsObservable.Do(buildInfo =>
+                                                    {
+                                                        anyRunningBuilds = true;
+                                                        shouldLookForNewlyFinishedBuilds = true;
+                                                    })
+                                               .OnErrorResumeNext(delayObservable)
                                                .Retry()
+                                               .Finally(() => anyRunningBuilds = false)
                                                .Repeat()
                                                .ObserveOn(MainThreadScheduler.Instance)
                                                .Subscribe(OnBuildInfoUpdate)
@@ -111,12 +132,11 @@ namespace GitUI.BuildServerIntegration
             cancellationToken?.Dispose();
         }
 
-        [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Usage", "CA2202:Do not dispose objects multiple times", Justification = "http://stackoverflow.com/questions/1065168/does-disposing-streamreader-close-the-stream")]
-        public IBuildServerCredentials GetBuildServerCredentials(IBuildServerAdapter buildServerAdapter, bool useStoredCredentialsIfExisting)
+        public IBuildServerCredentials? GetBuildServerCredentials(IBuildServerAdapter buildServerAdapter, bool useStoredCredentialsIfExisting)
         {
             lock (_buildServerCredentialsLock)
             {
-                IBuildServerCredentials buildServerCredentials = new BuildServerCredentials { UseGuestAccess = true };
+                IBuildServerCredentials? buildServerCredentials = new BuildServerCredentials { UseGuestAccess = true };
                 var foundInConfig = false;
 
                 const string CredentialsConfigName = "Credentials";
@@ -134,29 +154,27 @@ namespace GitUI.BuildServerIntegration
                         {
                             byte[] unprotectedData = ProtectedData.Unprotect(protectedData, null,
                                 DataProtectionScope.CurrentUser);
-                            using (var memoryStream = new MemoryStream(unprotectedData))
+                            using MemoryStream memoryStream = new(unprotectedData);
+                            ConfigFile credentialsConfig = new("", false);
+
+                            using (var textReader = new StreamReader(memoryStream, Encoding.UTF8))
                             {
-                                var credentialsConfig = new ConfigFile("", false);
+                                credentialsConfig.LoadFromString(textReader.ReadToEnd());
+                            }
 
-                                using (var textReader = new StreamReader(memoryStream, Encoding.UTF8))
+                            var section = credentialsConfig.FindConfigSection(CredentialsConfigName);
+
+                            if (section is not null)
+                            {
+                                buildServerCredentials.UseGuestAccess = section.GetValueAsBool(UseGuestAccessKey,
+                                    true);
+                                buildServerCredentials.Username = section.GetValue(UsernameKey);
+                                buildServerCredentials.Password = section.GetValue(PasswordKey);
+                                foundInConfig = true;
+
+                                if (useStoredCredentialsIfExisting)
                                 {
-                                    credentialsConfig.LoadFromString(textReader.ReadToEnd());
-                                }
-
-                                var section = credentialsConfig.FindConfigSection(CredentialsConfigName);
-
-                                if (section != null)
-                                {
-                                    buildServerCredentials.UseGuestAccess = section.GetValueAsBool(UseGuestAccessKey,
-                                        true);
-                                    buildServerCredentials.Username = section.GetValue(UsernameKey);
-                                    buildServerCredentials.Password = section.GetValue(PasswordKey);
-                                    foundInConfig = true;
-
-                                    if (useStoredCredentialsIfExisting)
-                                    {
-                                        return buildServerCredentials;
-                                    }
+                                    return buildServerCredentials;
                                 }
                             }
                         }
@@ -176,9 +194,9 @@ namespace GitUI.BuildServerIntegration
                 {
                     buildServerCredentials = ThreadHelper.JoinableTaskFactory.Run(() => ShowBuildServerCredentialsFormAsync(buildServerAdapter.UniqueKey, buildServerCredentials));
 
-                    if (buildServerCredentials != null)
+                    if (buildServerCredentials is not null)
                     {
-                        var credentialsConfig = new ConfigFile("", true);
+                        ConfigFile credentialsConfig = new("", true);
 
                         var section = credentialsConfig.FindOrCreateConfigSection(CredentialsConfigName);
 
@@ -186,19 +204,15 @@ namespace GitUI.BuildServerIntegration
                         section.SetValue(UsernameKey, buildServerCredentials.Username);
                         section.SetValue(PasswordKey, buildServerCredentials.Password);
 
-                        using (var stream = GetBuildServerOptionsIsolatedStorageStream(buildServerAdapter, FileAccess.Write, FileShare.None))
+                        using var stream = GetBuildServerOptionsIsolatedStorageStream(buildServerAdapter, FileAccess.Write, FileShare.None);
+                        using MemoryStream memoryStream = new();
+                        using (var textWriter = new StreamWriter(memoryStream, Encoding.UTF8))
                         {
-                            using (var memoryStream = new MemoryStream())
-                            {
-                                using (var textWriter = new StreamWriter(memoryStream, Encoding.UTF8))
-                                {
-                                    textWriter.Write(credentialsConfig.GetAsString());
-                                }
-
-                                var protectedData = ProtectedData.Protect(memoryStream.ToArray(), null, DataProtectionScope.CurrentUser);
-                                stream.Write(protectedData, 0, protectedData.Length);
-                            }
+                            textWriter.Write(credentialsConfig.GetAsString());
                         }
+
+                        var protectedData = ProtectedData.Protect(memoryStream.ToArray(), null, DataProtectionScope.CurrentUser);
+                        stream.Write(protectedData, 0, protectedData.Length);
 
                         return buildServerCredentials;
                     }
@@ -212,12 +226,12 @@ namespace GitUI.BuildServerIntegration
         {
             var (repoProject, repoName) = _repoNameExtractor.Get();
 
-            if (repoProject.IsNotNullOrWhitespace())
+            if (!string.IsNullOrWhiteSpace(repoProject))
             {
                 projectNames = projectNames.Replace("{cRepoProject}", repoProject);
             }
 
-            if (repoName.IsNotNullOrWhitespace())
+            if (!string.IsNullOrWhiteSpace(repoName))
             {
                 projectNames = projectNames.Replace("{cRepoShortName}", repoName);
             }
@@ -225,18 +239,16 @@ namespace GitUI.BuildServerIntegration
             return projectNames;
         }
 
-        private async Task<IBuildServerCredentials> ShowBuildServerCredentialsFormAsync(string buildServerUniqueKey, IBuildServerCredentials buildServerCredentials)
+        private async Task<IBuildServerCredentials?> ShowBuildServerCredentialsFormAsync(string buildServerUniqueKey, IBuildServerCredentials buildServerCredentials)
         {
             await _revisionGrid.SwitchToMainThreadAsync();
 
-            using (var form = new FormBuildServerCredentials(buildServerUniqueKey))
-            {
-                form.BuildServerCredentials = buildServerCredentials;
+            using FormBuildServerCredentials form = new(buildServerUniqueKey);
+            form.BuildServerCredentials = buildServerCredentials;
 
-                if (form.ShowDialog(_revisionGrid) == DialogResult.OK)
-                {
-                    return buildServerCredentials;
-                }
+            if (form.ShowDialog(_revisionGrid) == DialogResult.OK)
+            {
+                return buildServerCredentials;
             }
 
             return null;
@@ -244,7 +256,7 @@ namespace GitUI.BuildServerIntegration
 
         private void OnBuildInfoUpdate(BuildInfo buildInfo)
         {
-            if (_buildStatusCancellationToken == null)
+            if (_buildStatusCancellationToken is null)
             {
                 return;
             }
@@ -260,12 +272,12 @@ namespace GitUI.BuildServerIntegration
 
                 var revision = _revisionGridView.GetRevision(index.Value);
 
-                if (revision == null)
+                if (revision is null)
                 {
                     continue;
                 }
 
-                if (revision.BuildStatus == null || buildInfo.StartDate >= revision.BuildStatus.StartDate)
+                if (revision.BuildStatus is null || buildInfo.StartDate >= revision.BuildStatus.StartDate)
                 {
                     revision.BuildStatus = buildInfo;
 
@@ -280,19 +292,19 @@ namespace GitUI.BuildServerIntegration
             }
         }
 
-        [ItemCanBeNull]
-        private async Task<IBuildServerAdapter> GetBuildServerAdapterAsync()
+        private async Task<IBuildServerAdapter?> GetBuildServerAdapterAsync()
         {
             await TaskScheduler.Default;
 
-            var buildServerSettings = _module().EffectiveSettings.BuildServer;
+            IBuildServerSettings buildServerSettings = _module().GetEffectiveSettings()
+                .BuildServer();
 
-            if (!buildServerSettings.EnableIntegration.ValueOrDefault)
+            if (!buildServerSettings.EnableIntegration)
             {
                 return null;
             }
 
-            var buildServerType = buildServerSettings.Type.ValueOrDefault;
+            var buildServerType = buildServerSettings.Type;
             if (string.IsNullOrEmpty(buildServerType))
             {
                 return null;
@@ -301,12 +313,12 @@ namespace GitUI.BuildServerIntegration
             var exports = ManagedExtensibility.GetExports<IBuildServerAdapter, IBuildServerTypeMetadata>();
             var export = exports.SingleOrDefault(x => x.Metadata.BuildServerType == buildServerType);
 
-            if (export != null)
+            if (export is not null)
             {
                 try
                 {
                     var canBeLoaded = export.Metadata.CanBeLoaded;
-                    if (!canBeLoaded.IsNullOrEmpty())
+                    if (!string.IsNullOrEmpty(canBeLoaded))
                     {
                         Debug.Write(export.Metadata.BuildServerType + " adapter could not be loaded: " + canBeLoaded);
                         return null;
@@ -314,7 +326,15 @@ namespace GitUI.BuildServerIntegration
 
                     var buildServerAdapter = export.Value;
 
-                    buildServerAdapter.Initialize(this, buildServerSettings.TypeSettings, objectId => _revisionGrid.GetRevision(objectId) != null);
+                    buildServerAdapter.Initialize(this, _module().GetEffectiveSettings().ByPath(buildServerSettings.Type!),
+                        () =>
+                        {
+                            // To run the `StartSettingsDialog()` in the UI Thread
+                            _revisionGrid.Invoke((Action)(() =>
+                            {
+                                _revisionGrid.UICommands.StartSettingsDialog(typeof(BuildServerIntegrationSettingsPage));
+                            }));
+                        }, objectId => _revisionGrid.GetRevision(objectId) is not null);
                     return buildServerAdapter;
                 }
                 catch (InvalidOperationException ex)

@@ -1,12 +1,13 @@
 using System;
+using System.Diagnostics.Contracts;
 using System.Drawing;
 using System.Drawing.Drawing2D;
 using System.Windows.Forms;
-using GitCommands;
 using GitExtUtils.GitUI;
+using GitExtUtils.GitUI.Theming;
+using GitUI.Theming;
 using GitUI.UserControls.RevisionGrid;
 using GitUIPluginInterfaces;
-using JetBrains.Annotations;
 
 namespace GitUI
 {
@@ -15,13 +16,13 @@ namespace GitUI
         private static readonly float[] _dashPattern = { 4, 4 };
         private static readonly PointF[] _arrowPoints = new PointF[4];
 
-        public static void DrawRef(bool isRowSelected, Font font, ref int offset, string name, Color headColor, RefArrowType arrowType, in Rectangle bounds, Graphics graphics, bool dashedLine = false, bool fill = false)
+        public static void DrawRef(bool isRowSelected, Font font, ref int offset, string name, Color headColor, RefArrowType arrowType, in Rectangle bounds, Graphics graphics, bool dashedLine = false)
         {
             var paddingLeftRight = DpiUtil.Scale(4);
             var paddingTopBottom = DpiUtil.Scale(2);
             var marginRight = DpiUtil.Scale(7);
 
-            var textColor = fill ? headColor : Lerp(headColor, Color.White, 0.5f);
+            var textColor = ColorHelper.Lerp(headColor, Color.Black, 0.25F);
 
             var textSize = TextRenderer.MeasureText(graphics, name, font, Size.Empty, TextFormatFlags.NoPadding);
 
@@ -30,7 +31,7 @@ namespace GitUI
             var backgroundHeight = textSize.Height + paddingTopBottom + paddingTopBottom - 1;
             var outerMarginTopBottom = (bounds.Height - backgroundHeight) / 2;
 
-            var rect = new Rectangle(
+            Rectangle rect = new(
                 bounds.X + offset,
                 bounds.Y + outerMarginTopBottom,
                 Math.Min(bounds.Width - offset, textSize.Width + arrowWidth + paddingLeftRight + paddingLeftRight - 1),
@@ -46,9 +47,9 @@ namespace GitUI
                 graphics,
                 headColor,
                 rect,
-                radius: 3, arrowType, dashedLine, fill);
+                radius: 3, arrowType, dashedLine);
 
-            var textBounds = new Rectangle(
+            Rectangle textBounds = new(
                 rect.X + arrowWidth + paddingLeftRight,
                 rect.Y + paddingTopBottom - 1,
                 Math.Min(bounds.Width - offset - paddingLeftRight - paddingLeftRight, textSize.Width),
@@ -59,46 +60,33 @@ namespace GitUI
             offset += rect.Width + marginRight;
         }
 
-        private static void DrawRefBackground(bool isRowSelected, Graphics graphics, Color color, Rectangle bounds, int radius, RefArrowType arrowType, bool dashedLine, bool fill)
+        private static void DrawRefBackground(bool isRowSelected, Graphics graphics, Color color, Rectangle bounds, int radius, RefArrowType arrowType, bool dashedLine)
         {
             var oldMode = graphics.SmoothingMode;
             graphics.SmoothingMode = SmoothingMode.AntiAlias;
-            bool light = ColorHelper.IsLightTheme();
 
             try
             {
-                using (var path = CreateRoundRectPath(bounds, radius))
+                using var path = CreateRoundRectPath(bounds, radius);
+
+                if (isRowSelected)
                 {
-                    if (fill)
-                    {
-                        var color1 = Lerp(color, light ? Color.White : Color.Black, 0.92F);
-                        var color2 = Lerp(color1, light ? Color.White : Color.DarkSlateBlue, light ? 0.9F : 0.3F);
-                        using (var brush = new LinearGradientBrush(bounds, color1, color2, angle: 90))
-                        {
-                            graphics.FillPath(brush, path);
-                        }
-                    }
-                    else if (isRowSelected)
-                    {
-                        graphics.FillPath(light ? Brushes.White : Brushes.Black, path);
-                    }
+                    graphics.FillPath(SystemBrushes.Window, path);
+                }
 
-                    // frame
-                    using (var pen = new Pen(Lerp(color, light ? Color.White : Color.Black, light ? 0.83F : 0.7F)))
-                    {
-                        if (dashedLine)
-                        {
-                            pen.DashPattern = _dashPattern;
-                        }
+                // frame
+                using Pen pen = new(ColorHelper.Lerp(color, SystemColors.Window, 0.5F));
+                if (dashedLine)
+                {
+                    pen.DashPattern = _dashPattern;
+                }
 
-                        graphics.DrawPath(pen, path);
-                    }
+                graphics.DrawPath(pen, path);
 
-                    // arrow if the head is the current branch
-                    if (arrowType != RefArrowType.None)
-                    {
-                        DrawArrow(graphics, bounds.X, bounds.Y, bounds.Height, color, filled: arrowType == RefArrowType.Filled);
-                    }
+                // arrow if the head is the current branch
+                if (arrowType != RefArrowType.None)
+                {
+                    DrawArrow(graphics, bounds.X, bounds.Y, bounds.Height, color, filled: arrowType == RefArrowType.Filled);
                 }
             }
             finally
@@ -131,20 +119,20 @@ namespace GitUI
         {
             if (gitRef.IsTag)
             {
-                return AppSettings.TagColor;
+                return AppColor.Tag.GetThemeColor();
             }
 
             if (gitRef.IsHead)
             {
-                return AppSettings.BranchColor;
+                return AppColor.Branch.GetThemeColor();
             }
 
             if (gitRef.IsRemote)
             {
-                return AppSettings.RemoteBranchColor;
+                return AppColor.RemoteBranch.GetThemeColor();
             }
 
-            return AppSettings.OtherTagColor;
+            return AppColor.OtherTag.GetThemeColor();
         }
 
         private static void DrawArrow(Graphics graphics, float x, float y, float rowHeight, Color color, bool filled)
@@ -167,17 +155,13 @@ namespace GitUI
 
             if (filled)
             {
-                using (var brush = new SolidBrush(color))
-                {
-                    graphics.FillPolygon(brush, _arrowPoints);
-                }
+                using SolidBrush brush = new(color);
+                graphics.FillPolygon(brush, _arrowPoints);
             }
             else
             {
-                using (var pen = new Pen(color))
-                {
-                    graphics.DrawPolygon(pen, _arrowPoints);
-                }
+                using Pen pen = new(color);
+                graphics.DrawPolygon(pen, _arrowPoints);
             }
         }
 
@@ -188,7 +172,7 @@ namespace GitUI
             var right = left + rect.Width;
             var bottom = top + rect.Height;
 
-            var path = new GraphicsPath();
+            GraphicsPath path = new();
             path.AddArc(left, top, radius, radius, startAngle: 180, sweepAngle: 90);
             path.AddArc(right - radius, top, radius, radius, 270, 90);
             path.AddArc(right - radius, bottom - radius, radius, radius, 0, 90);
@@ -196,30 +180,6 @@ namespace GitUI
             path.CloseFigure();
 
             return path;
-        }
-
-        private static Color Lerp(Color colour, Color to, float amount)
-        {
-            // start colours as lerp-able floats
-            float sr = colour.R, sg = colour.G, sb = colour.B;
-
-            // end colours as lerp-able floats
-            float er = to.R, eg = to.G, eb = to.B;
-
-            // lerp the colours to get the difference
-            byte r = (byte)Lerp(sr, er),
-                g = (byte)Lerp(sg, eg),
-                b = (byte)Lerp(sb, eb);
-
-            // return the new colour
-            return Color.FromArgb(r, g, b);
-
-            float Lerp(float start, float end)
-            {
-                var difference = end - start;
-                var adjusted = difference * amount;
-                return start + adjusted;
-            }
         }
     }
 }

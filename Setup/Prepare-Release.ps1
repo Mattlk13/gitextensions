@@ -4,82 +4,59 @@
 
 [CmdletBinding()]
 Param(
-    [Parameter(Mandatory=$True, Position=1)]
-    [string] $oldVersion,
-    [Parameter(Mandatory=$True, Position=2)]
-    [string] $newVersion,
     #[Parameter(Mandatory=$True, Position=3)]
     [string] $milestones
 )
 
 function Generate-Changelog {
-	[CmdletBinding()]
-	Param(
-		[int[]] $milestones
-	)
+    [CmdletBinding()]
+    Param(
+        [int[]] $milestones
+    )
 
-	$baseUri = "https://api.github.com/repos/gitextensions/gitextensions"
+    $baseUri = "https://api.github.com/repos/gitextensions/gitextensions"
 
-	$changelogFile = "Changelog.md";
-	$totalIssues = @();
+    $changelogFile = "Changelog.md";
+    $totalIssues = @();
 
-	$milestones | ForEach-Object {
+    $milestones | ForEach-Object {
         $milestoneNumber = $_;
 
         Write-Host "Preparing changelog for milestone: $milestoneNumber";
 
-		[Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
-		$milestone = Invoke-RestMethod -Method Get -Uri $baseUri/milestones/$milestoneNumber
-		$milestoneTitle = $milestone.title;
-		$milestoneDue = if ($milestone.due_on -eq $null) { "no due date" } else { Get-Date $milestone.due_on -Format "dd MMM yyyy" };
-		$totalIssueCount = $milestone.closed_issues
+        [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
+        $milestone = Invoke-RestMethod -Method Get -Uri $baseUri/milestones/$milestoneNumber
+        $milestoneTitle = $milestone.title;
+        $milestoneDue = if ($milestone.due_on -eq $null) { "no due date" } else { Get-Date $milestone.due_on -Format "dd MMM yyyy" };
+        $totalIssueCount = $milestone.closed_issues
 
-		$pageIndex = 1;
-		while ($totalIssueCount -gt 0) {
-			$issues = Invoke-RestMethod -Method Get -Uri "$baseUri/issues?page=$pageIndex&per_page=100&milestone=$($milestone.number)&state=closed" #-Verbose
-			$totalIssues += $issues;
+        $pageIndex = 1;
+        while ($totalIssueCount -gt 0) {
+            $issues = Invoke-RestMethod -Method Get -Uri "$baseUri/issues?page=$pageIndex&per_page=100&milestone=$($milestone.number)&state=closed" #-Verbose
+            $totalIssues += $issues;
 
-			$totalIssueCount -= $issues.Count;
-			$pageIndex++;
-		}
-	}
+            $totalIssueCount -= $issues.Count;
+            $pageIndex++;
+        }
+    }
 
-	$pullrequests = @();
-	$issues = @();
-	$issueLinks = @();
+    $issues = @();
+    $issueLinks = @();
 
-	$totalIssues | Sort-Object number -Descending | ForEach-Object {
-		$issue = $_;
+    $totalIssues | Sort-Object number -Descending | ForEach-Object {
+        $issue = $_;
+        $issues += $issue;
+        $issueLinks += "[$($issue.number)]:$($issue.html_url)"
+    }
 
-		if ($issue.pull_request -ne $null) {
-			$issue | Add-Member customTitle "PR";
-		}
-		else {
-			$issue | Add-Member customTitle "Issue";
-		}
-
-		if ($issue.labels.name -like '*bug*') {
-			$issues += $issue;
-		}
-		else {
-			$pullrequests += $issue;
-		}
-		$issueLinks += "[$($issue.number)]:$($issue.html_url)"
-	}
-
-	"### Version $milestoneTitle ($milestoneDue)" | Out-File $changelogFile -Encoding utf8
-	"`r`n#### Features:" | Out-File $changelogFile -Append -Encoding utf8
-	$pullrequests | ForEach-Object {
-		$issue = $_;
-		"* $($issue.title) - $($issue.customTitle) [$($issue.number)]" | Out-File $changelogFile -Append -Encoding utf8
-	}
-	"`r`n#### Fixes:" | Out-File $changelogFile -Append -Encoding utf8
-	$issues | ForEach-Object {
-		$issue = $_;
-		"* $($issue.title) - $($issue.customTitle) [$($issue.number)]" | Out-File $changelogFile -Append -Encoding utf8
-	}
-	"`r`n" | Out-File $changelogFile -Append -Encoding utf8
-	$issueLinks | Out-File $changelogFile -Append -Encoding utf8
+    "### Version $milestoneTitle ($milestoneDue)" | Out-File $changelogFile -Encoding utf8
+    "`r`n#### Changes:" | Out-File $changelogFile -Append -Encoding utf8
+    $issues | ForEach-Object {
+        $issue = $_;
+        "* [#$($issue.number)] $($issue.title)" | Out-File $changelogFile -Append -Encoding utf8
+    }
+    "`r`n" | Out-File $changelogFile -Append -Encoding utf8
+    $issueLinks | Out-File $changelogFile -Append -Encoding utf8
 }
 
 function Update-Contributors {
@@ -146,42 +123,6 @@ try {
     Write-Host Generate the changelog
     Write-Host ----------------------------------------------------------------------
     Generate-Changelog -milestones $milestoneNumbers
-
-    #Write-Host ----------------------------------------------------------------------
-    #Write-Host Download PluginManager
-    #Write-Host ----------------------------------------------------------------------
-    #.\Download-PluginManager.ps1 -ExtractRootPath '..\Plugins\GitExtensions.PluginManager'
-
-    Write-Host ----------------------------------------------------------------------
-    Write-Host Compile and package
-    Write-Host ----------------------------------------------------------------------
-    # preparing the build artifacts
-    python set_version_to.py -v $newVersion -t $newVersion-beta1
-
-    $env:SKIP_PAUSE=1
-    
-    # restore packages and rebuild everything
-    ..\.nuget\nuget install -OutputDirectory ..\packages
-    pushd ..\
-    msbuild /t:Restore
-    msbuild /t:Rebuild /p:Configuration=Release
-    popd
-
-    .\BuildInstallers.cmd
-
-    # Set IsPortable in config to true
-    .\Set-Portable.ps1 -IsPortable
-    Write-Host ----------------------------------------------------------------------
-    Write-Host Make Portable Archive
-    Write-Host -------------------------------------------------------------------
-    .\MakePortableArchive.cmd Release $newVersion-beta1
-    
-    # Restore IsPortable in config
-    .\Set-Portable.ps1
-
-    # cleanup
-    Remove-Item -Force -Recurse GitExtensions-pdbs
-    Remove-Item -Force -Recurse GitExtensions
 
 }
 catch {

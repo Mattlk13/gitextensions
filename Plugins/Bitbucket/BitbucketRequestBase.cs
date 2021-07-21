@@ -2,19 +2,19 @@
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
-using JetBrains.Annotations;
+using Microsoft;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using RestSharp;
 using RestSharp.Authenticators;
 
-namespace Bitbucket
+namespace GitExtensions.Plugins.Bitbucket
 {
     internal class BitbucketResponse<T>
     {
         public bool Success { get; set; }
-        public IEnumerable<string> Messages { get; set; }
-        public T Result { get; set; }
+        public IEnumerable<string>? Messages { get; set; }
+        public T? Result { get; set; }
     }
 
     internal abstract class BitbucketRequestBase<T>
@@ -33,29 +33,26 @@ namespace Bitbucket
                 System.Net.ServicePointManager.ServerCertificateValidationCallback = delegate { return true; };
             }
 
-            var client = new RestClient
+            Validates.NotNull(Settings.BitbucketUrl);
+            Validates.NotNull(Settings.Username);
+            Validates.NotNull(Settings.Password);
+
+            RestClient client = new()
             {
                 BaseUrl = new System.Uri(Settings.BitbucketUrl),
                 Authenticator = new HttpBasicAuthenticator(Settings.Username, Settings.Password)
             };
 
-            var request = new RestRequest(ApiUrl, RequestMethod);
-            if (RequestBody != null)
+            RestRequest request = new(ApiUrl, RequestMethod);
+            if (RequestBody is not null)
             {
-                if (RequestBody is string)
-                {
-                    request.AddParameter("application/json", RequestBody, ParameterType.RequestBody);
-                }
-                else
-                {
-                    request.AddBody(RequestBody);
-                }
+                request.AddJsonBody(RequestBody);
             }
 
             // XSRF check fails when approving/creating
             request.AddHeader("X-Atlassian-Token", "no-check");
 
-            var response = await client.ExecuteTaskAsync(request).ConfigureAwait(false);
+            var response = await client.ExecuteAsync(request).ConfigureAwait(false);
             if (response.ResponseStatus != ResponseStatus.Completed)
             {
                 return new BitbucketResponse<T>
@@ -77,8 +74,7 @@ namespace Bitbucket
             };
         }
 
-        [CanBeNull]
-        protected abstract object RequestBody { get; }
+        protected abstract object? RequestBody { get; }
         protected abstract Method RequestMethod { get; }
         protected abstract string ApiUrl { get; }
         protected abstract T ParseResponse(JObject json);
@@ -94,19 +90,19 @@ namespace Bitbucket
             catch (JsonReaderException)
             {
                 MessageBox.Show(jsonString, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
-                var errorResponse = new BitbucketResponse<T> { Success = false };
+                BitbucketResponse<T> errorResponse = new() { Success = false };
                 return errorResponse;
             }
 
-            if (json["errors"] != null)
+            if (json["errors"] is not null)
             {
-                var messages = new List<string>();
-                var errorResponse = new BitbucketResponse<T> { Success = false };
+                List<string> messages = new();
+                BitbucketResponse<T> errorResponse = new() { Success = false };
                 foreach (var error in json["errors"])
                 {
-                    var sb = new StringBuilder();
+                    StringBuilder sb = new();
                     sb.AppendLine(error["message"].ToString());
-                    if (error["reviewerErrors"] != null)
+                    if (error["reviewerErrors"] is not null)
                     {
                         sb.AppendLine();
                         foreach (var reviewerError in error["reviewerErrors"])
@@ -122,7 +118,7 @@ namespace Bitbucket
                 return errorResponse;
             }
 
-            if (json["message"] != null)
+            if (json["message"] is not null)
             {
                 return new BitbucketResponse<T> { Success = false, Messages = new[] { json["message"].ToString() } };
             }

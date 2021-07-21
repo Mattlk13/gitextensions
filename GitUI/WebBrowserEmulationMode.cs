@@ -1,4 +1,5 @@
 ﻿using System.ComponentModel;
+using GitExtUtils;
 using Microsoft.Win32;
 
 namespace GitUI
@@ -24,7 +25,14 @@ namespace GitUI
 
             if (TryGetBrowserEmulationMode(out var emulationMode))
             {
-                Registry.SetValue(featureControlRegKey + "FEATURE_BROWSER_EMULATION", appName, emulationMode, RegistryValueKind.DWord);
+                try
+                {
+                    Registry.SetValue(featureControlRegKey + "FEATURE_BROWSER_EMULATION", appName, emulationMode, RegistryValueKind.DWord);
+                }
+                catch (System.UnauthorizedAccessException)
+                {
+                    // Don't fail when user have no rights to update the registry...
+                }
             }
         }
 
@@ -42,33 +50,26 @@ namespace GitUI
                     System.Security.AccessControl.RegistryRights.QueryValues))
                 {
                     var version = ieKey.GetValue("svcVersion");
-                    if (version == null)
+                    if (version is null)
                     {
                         version = ieKey.GetValue("Version");
-                        if (version == null)
+                        if (version is null)
                         {
                             return false;
                         }
                     }
 
-                    int.TryParse(version.ToString().Split('.')[0], out browserVersion);
+                    int.TryParse(version.ToString().LazySplit('.').First(), out browserVersion);
                 }
 
-                switch (browserVersion)
+                emulationMode = browserVersion switch
                 {
-                    case 7:
-                        emulationMode = 7000; // Webpages containing standards-based !DOCTYPE directives are displayed in IE7 Standards mode.
-                        break;
-                    case 8:
-                        emulationMode = 8000; // Webpages containing standards-based !DOCTYPE directives are displayed in IE8 mode.
-                        break;
-                    case 9:
-                        emulationMode = 9000; // Internet Explorer 9. Webpages containing standards-based !DOCTYPE directives are displayed in IE9 mode.
-                        break;
-                    case 10:
-                        emulationMode = 10000; // Internet Explorer 10.
-                        break;
-                }
+                    7 => 7000, // Webpages containing standards-based !DOCTYPE directives are displayed in IE7 Standards mode.
+                    8 => 8000, // Webpages containing standards-based !DOCTYPE directives are displayed in IE8 mode.
+                    9 => 9000, // Internet Explorer 9. Webpages containing standards-based !DOCTYPE directives are displayed in IE9 mode.
+                    10 => 10000, // Internet Explorer 10.
+                    _ => emulationMode
+                };
 
                 return true;
             }

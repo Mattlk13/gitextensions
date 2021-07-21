@@ -3,9 +3,9 @@ using System.IO;
 using System.Linq;
 using System.Windows.Forms;
 using GitCommands;
+using GitCommands.Git.Commands;
 using GitCommands.Utils;
-using JetBrains.Annotations;
-using Microsoft.WindowsAPICodePack.Dialogs;
+using GitUI.HelperDialogs;
 using ResourceManager;
 
 namespace GitUI.CommandsDialogs
@@ -13,8 +13,8 @@ namespace GitUI.CommandsDialogs
     public partial class FormCleanupRepository : GitModuleForm
     {
         private readonly TranslationString _reallyCleanupQuestion =
-            new TranslationString("Are you sure you want to cleanup the repository?");
-        private readonly TranslationString _reallyCleanupQuestionCaption = new TranslationString("Cleanup");
+            new("Are you sure you want to cleanup the repository?");
+        private readonly TranslationString _reallyCleanupQuestionCaption = new("Cleanup");
 
         [Obsolete("For VS designer and translation test only. Do not remove.")]
         private FormCleanupRepository()
@@ -28,12 +28,12 @@ namespace GitUI.CommandsDialogs
             InitializeComponent();
             InitializeComplete();
             PreviewOutput.ReadOnly = true;
-            checkBoxPathFilter_CheckedChanged(null, null);
+            checkBoxPathFilter_CheckedChanged(this, EventArgs.Empty);
         }
 
-        public void SetPathArgument(string path)
+        public void SetPathArgument(string? path)
         {
-            if (path.IsNullOrEmpty())
+            if (string.IsNullOrEmpty(path))
             {
                 checkBoxPathFilter.Checked = false;
                 textBoxPaths.Text = "";
@@ -48,7 +48,7 @@ namespace GitUI.CommandsDialogs
         private void Preview_Click(object sender, EventArgs e)
         {
             var cleanUpCmd = GitCommandHelpers.CleanCmd(GetCleanMode(), dryRun: true, directories: RemoveDirectories.Checked, paths: GetPathArgumentFromGui());
-            string cmdOutput = FormProcess.ReadDialog(this, cleanUpCmd);
+            string cmdOutput = FormProcess.ReadDialog(this, process: null, arguments: cleanUpCmd, Module.WorkingDir, input: null, useDialogSettings: true);
             PreviewOutput.Text = EnvUtils.ReplaceLinuxNewLinesDependingOnPlatform(cmdOutput);
         }
 
@@ -57,7 +57,7 @@ namespace GitUI.CommandsDialogs
             if (MessageBox.Show(this, _reallyCleanupQuestion.Text, _reallyCleanupQuestionCaption.Text, MessageBoxButtons.YesNo, MessageBoxIcon.Question) == DialogResult.Yes)
             {
                 var cleanUpCmd = GitCommandHelpers.CleanCmd(GetCleanMode(), dryRun: false, directories: RemoveDirectories.Checked, paths: GetPathArgumentFromGui());
-                string cmdOutput = FormProcess.ReadDialog(this, cleanUpCmd);
+                string cmdOutput = FormProcess.ReadDialog(this, process: null, arguments: cleanUpCmd, Module.WorkingDir, input: null, useDialogSettings: true);
                 PreviewOutput.Text = EnvUtils.ReplaceLinuxNewLinesDependingOnPlatform(cmdOutput);
             }
         }
@@ -82,8 +82,7 @@ namespace GitUI.CommandsDialogs
             throw new NotSupportedException($"Unknown value for {nameof(CleanMode)}.");
         }
 
-        [CanBeNull]
-        private string GetPathArgumentFromGui()
+        private string? GetPathArgumentFromGui()
         {
             if (!checkBoxPathFilter.Checked)
             {
@@ -93,10 +92,10 @@ namespace GitUI.CommandsDialogs
             // 1. get all lines from text box which are not empty
             // 2. wrap lines with ""
             // 3. join together with space as separator
-            return string.Join(" ", textBoxPaths.Lines.Where(a => !a.IsNullOrEmpty()).Select(a => string.Format("\"{0}\"", a)));
+            return string.Join(" ", textBoxPaths.Lines.Where(a => !string.IsNullOrEmpty(a)).Select(a => string.Format("\"{0}\"", a)));
         }
 
-        private void Cancel_Click(object sender, EventArgs e)
+        private void Close_Click(object sender, EventArgs e)
         {
             Close();
         }
@@ -110,31 +109,19 @@ namespace GitUI.CommandsDialogs
 
         private void AddPath_Click(object sender, EventArgs e)
         {
-            var dialog = new CommonOpenFileDialog
+            FolderBrowserDialog dialog = new()
             {
-                InitialDirectory = Module.WorkingDir,
-                EnsurePathExists = true,
-                EnsureFileExists = false,
-                IsFolderPicker = true,
-                ShowHiddenItems = false,
-                Multiselect = true,
-                AddToMostRecentlyUsedList = false,
+                SelectedPath = Module.WorkingDir,
             };
 
-            var result = dialog.ShowDialog();
-            if (result == CommonFileDialogResult.Ok)
+            var result = dialog.ShowDialog(this);
+
+            string subFoldersToClean;
+            if (result == DialogResult.OK
+                && (subFoldersToClean = dialog.SelectedPath).StartsWith(Module.WorkingDir)
+                && Directory.Exists(subFoldersToClean)
+                && !subFoldersToClean.Equals(Module.WorkingDirGitDir.TrimEnd(Path.DirectorySeparatorChar)))
             {
-                var subFoldersToClean = dialog.FileNames
-                    .Where(d => d.StartsWith(Module.WorkingDir)
-                                && Directory.Exists(d)
-                                && !d.Equals(Module.WorkingDirGitDir.TrimEnd(Path.DirectorySeparatorChar)))
-                    .ToList();
-
-                if (!subFoldersToClean.Any())
-                {
-                    return;
-                }
-
                 checkBoxPathFilter.Checked = true;
                 textBoxPaths.Enabled = true;
                 if (textBoxPaths.Text.Length != 0)

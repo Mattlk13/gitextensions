@@ -16,6 +16,7 @@ namespace GitUI.CommandsDialogs.SettingsDialog.Pages
             InitializeComponent();
             label1.Font = FontUtil.MainInstructionFont;
             label1.ForeColor = FontUtil.MainInstructionColor;
+            Text = "Choose language";
             InitializeComplete();
         }
 
@@ -23,12 +24,13 @@ namespace GitUI.CommandsDialogs.SettingsDialog.Pages
         {
             base.OnLoad(e);
 
-            var translations = new List<string>(Translator.GetAllTranslations());
+            List<string> translations = new(Translator.GetAllTranslations());
             translations.Sort();
             translations.Insert(0, "English");
 
-            var imageList = new ImageList
+            ImageList imageList = new()
             {
+                ColorDepth = ColorDepth.Depth32Bit,
                 ImageSize = DpiUtil.Scale(new Size(150, 75)),
             };
 

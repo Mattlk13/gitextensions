@@ -8,8 +8,8 @@ namespace GitUI.Help
 {
     public partial class HelpImageDisplayUserControl : GitExtensionsControl
     {
-        private Image _image1;
-        private Image _image2;
+        private Image? _image1;
+        private Image? _image2;
         private bool _isExpanded;
 
         ////public const string fastForwardHoverText = "Hover to see scenario when fast forward is possible.";
@@ -23,7 +23,7 @@ namespace GitUI.Help
         }
 
         /// <summary>
-        /// NOTE: will also be called if designer code calls "this.helpImageDisplayUserControl1.ShowImage2OnHover = true;"
+        /// NOTE: will also be called if designer code calls "this.helpImageDisplayUserControl1.ShowImage2OnHover = true;".
         /// </summary>
         private void HelpImageDisplayUserControl_Load(object sender, EventArgs e)
         {
@@ -61,7 +61,7 @@ namespace GitUI.Help
             }
         }
 
-        public string UniqueIsExpandedSettingsId { get; set; }
+        public string? UniqueIsExpandedSettingsId { get; set; }
 
         private void UpdateIsExpandedState()
         {
@@ -89,7 +89,7 @@ namespace GitUI.Help
             UpdateControlSize();
         }
 
-        public Image Image1
+        public Image? Image1
         {
             get { return _image1; }
             set
@@ -103,7 +103,7 @@ namespace GitUI.Help
             }
         }
 
-        public Image Image2
+        public Image? Image2
         {
             get { return _image2; }
             set
@@ -118,7 +118,7 @@ namespace GitUI.Help
         }
 
         /// <summary>
-        /// see also IsOnHoverShowImage2NoticeText
+        /// see also IsOnHoverShowImage2NoticeText.
         /// </summary>
         public bool IsOnHoverShowImage2
         {
@@ -135,7 +135,7 @@ namespace GitUI.Help
         }
 
         /// <summary>
-        /// only shown when IsOnHoverShowImage2 is true
+        /// only shown when IsOnHoverShowImage2 is true.
         /// </summary>
         public string IsOnHoverShowImage2NoticeText
         {
@@ -171,11 +171,11 @@ namespace GitUI.Help
             Size size;
             if (IsExpanded)
             {
-                if (_image1 != null && _image2 == null)
+                if (_image1 is not null && _image2 is null)
                 {
-                    size = Image1.Size;
+                    size = _image1.Size;
                 }
-                else if (_image1 != null && Image2 != null)
+                else if (_image1 is not null && _image2 is not null)
                 {
                     int w = Math.Max(_image1.Size.Width, _image2.Width);
                     int h = Math.Max(_image1.Size.Height, _image2.Height);
@@ -198,9 +198,9 @@ namespace GitUI.Help
 
             // apply size to control
             var form = TopLevelControl as Form;
-            var s = new Size();
-            var ms = new Size();
-            if (form != null)
+            Size s = new();
+            Size ms = new();
+            if (form is not null)
             {
                 s = form.Size;
                 s.Width -= Size.Width;
@@ -214,7 +214,7 @@ namespace GitUI.Help
 
             Size = size;
             MinimumSize = size;
-            if (form != null)
+            if (form is not null)
             {
                 s.Width += Size.Width;
                 form.Size = s;

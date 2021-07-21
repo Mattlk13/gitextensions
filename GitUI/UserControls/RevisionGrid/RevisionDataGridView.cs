@@ -5,14 +5,17 @@ using System.Diagnostics;
 using System.Drawing;
 using System.Linq;
 using System.Threading;
+using System.Threading.Tasks;
 using System.Windows.Forms;
 using GitCommands;
 using GitExtUtils;
 using GitExtUtils.GitUI;
+using GitExtUtils.GitUI.Theming;
+using GitUI.Theming;
 using GitUI.UserControls.RevisionGrid.Columns;
 using GitUI.UserControls.RevisionGrid.Graph;
 using GitUIPluginInterfaces;
-using JetBrains.Annotations;
+using Microsoft.VisualStudio.Threading;
 
 namespace GitUI.UserControls.RevisionGrid
 {
@@ -27,40 +30,43 @@ namespace GitUI.UserControls.RevisionGrid
 
     public sealed class RevisionDataGridView : DataGridView
     {
-        private static readonly SolidBrush _alternatingRowBackgroundBrush = new SolidBrush(
-            ColorHelper.MakeColorDarker(SystemColors.Window, 0.025)); // 0.018
+        private readonly SolidBrush _alternatingRowBackgroundBrush;
+        private readonly SolidBrush _authoredHighlightBrush;
 
-        internal RevisionGraph _revisionGraph = new RevisionGraph();
+        internal RevisionGraph _revisionGraph = new();
 
-        private readonly List<ColumnProvider> _columnProviders = new List<ColumnProvider>();
-        private readonly AutoResetEvent _backgroundEvent = new AutoResetEvent(false);
-        private Thread _backgroundThread;
-        private volatile bool _shouldRun = LicenseManager.UsageMode != LicenseUsageMode.Designtime;
+        private readonly List<ColumnProvider> _columnProviders = new();
+        private readonly CancellationTokenSequence _backgroundCancellationSequence;
+        private readonly AsyncQueue<(Func<CancellationToken, Task> backgroundOperation, CancellationToken cancellationToken)> _backgroundQueue =
+            new();
+        private CancellationToken _backgroundCancellationToken;
+        private JoinableTask? _backgroundProcessingTask;
         private int _backgroundScrollTo;
 
         private int _rowHeight; // Height of elements in the cache. Is equal to the control's row height.
         private VisibleRowRange _visibleRowRange;
 
-        private Font _normalFont;
-        private Font _boldFont;
-        private Font _monospaceFont;
+        private readonly Font _normalFont;
+        private readonly Font _boldFont;
+        private readonly Font _monospaceFont;
 
         public bool UpdatingVisibleRows { get; private set; }
 
         public RevisionDataGridView()
         {
-            _backgroundThread = new Thread(BackgroundThreadEntry)
-            {
-                IsBackground = true,
-                Name = "RevisionDataGridView.backgroundThread"
-            };
-            _backgroundThread.Start();
+            _backgroundCancellationSequence = new CancellationTokenSequence();
+            _backgroundCancellationToken = _backgroundCancellationSequence.Next();
+            StartBackgroundProcessingTask(_backgroundCancellationToken);
 
-            NormalFont = AppSettings.Font;
+            _normalFont = AppSettings.Font;
+            _boldFont = new Font(AppSettings.Font, FontStyle.Bold);
             _monospaceFont = AppSettings.MonospaceFont;
 
             InitializeComponent();
             DoubleBuffered = true;
+
+            _alternatingRowBackgroundBrush = new SolidBrush(KnownColor.Window.MakeBackgroundDarkerBy(0.025)); // 0.018
+            _authoredHighlightBrush = new SolidBrush(AppColor.AuthoredHighlight.GetThemeColor());
 
             UpdateRowHeight();
 
@@ -74,19 +80,20 @@ namespace GitUI.UserControls.RevisionGrid
             };
             Scroll += delegate { UpdateVisibleRowRange(); };
             Resize += delegate { UpdateVisibleRowRange(); };
+            GotFocus += (_, _) => InvalidateSelectedRows();
+            LostFocus += (_, _) => InvalidateSelectedRows();
             CellPainting += OnCellPainting;
             CellFormatting += (_, e) =>
             {
                 if (Columns[e.ColumnIndex].Tag is ColumnProvider provider)
                 {
                     var revision = GetRevision(e.RowIndex);
-                    if (revision != null)
+                    if (revision is not null)
                     {
                         provider.OnCellFormatting(e, revision);
                     }
                 }
             };
-            RowPrePaint += OnRowPrePaint;
 
             _revisionGraph.Updated += () =>
             {
@@ -111,18 +118,6 @@ namespace GitUI.UserControls.RevisionGrid
             Clear();
 
             return;
-
-            void OnRowPrePaint(object sender, DataGridViewRowPrePaintEventArgs e)
-            {
-                if (e.PaintParts.HasFlag(DataGridViewPaintParts.Background) &&
-                    e.RowBounds.Width > 0 &&
-                    e.RowBounds.Height > 0)
-                {
-                    // Draw row background
-                    var backBrush = GetBackground(e.State, e.RowIndex, null);
-                    e.Graphics.FillRectangle(backBrush, e.RowBounds);
-                }
-            }
 
             void InitializeComponent()
             {
@@ -151,59 +146,45 @@ namespace GitUI.UserControls.RevisionGrid
                 ((ISupportInitialize)this).EndInit();
                 ResumeLayout(false);
             }
+
+            void InvalidateSelectedRows()
+            {
+                for (int index = 0; index < SelectedRows.Count; ++index)
+                {
+                    InvalidateRow(SelectedRows[index].Index);
+                }
+            }
         }
 
-        [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Reliability", "CA2002:DoNotLockOnObjectsWithWeakIdentity", Justification = "It looks like such lock was made intentionally but it is better to rewrite this")]
         protected override void Dispose(bool disposing)
         {
-            _shouldRun = false;
-
             if (disposing)
             {
-                _backgroundEvent?.Dispose();
+                // Make sure to mark the background queue as complete before disposing the cancellation token sequence.
+                _backgroundQueue.Complete();
+                _backgroundCancellationSequence.Dispose();
+                _backgroundProcessingTask?.Join();
             }
 
             base.Dispose(disposing);
         }
 
-        internal Font NormalFont
-        {
-            get => _normalFont;
-            set
-            {
-                _normalFont = value;
-                _boldFont = new Font(value, FontStyle.Bold);
-            }
-        }
-
-        internal AuthorRevisionHighlighting AuthorHighlighting { get; set; }
+        internal AuthorRevisionHighlighting? AuthorHighlighting { get; set; }
 
         // Contains the object Id's that will be selected as soon as all of them have been loaded.
         // The object Id's are in the order in which they were originally selected.
-        public IReadOnlyList<ObjectId> ToBeSelectedObjectIds { get; set; } = new List<ObjectId>();
+        public IReadOnlyList<ObjectId> ToBeSelectedObjectIds { get; set; } = Array.Empty<ObjectId>();
 
-        // The ToBeSelectedObjectIds's should be converted to indexes.
-        // Since revisions are read in order, this list stores those indexes along with information on the order in which they were selected.
-        private List<RowIndexToBeSelectedWithOrderInfo> ToBeSelectedRowIndexes { get; set; } = new List<RowIndexToBeSelectedWithOrderInfo>();
-
-        private class RowIndexToBeSelectedWithOrderInfo
-        {
-            public int RowIndex { get; set; }
-
-            // Order in which the row should be selected.
-            public int SelectionOrder { get; set; }
-        }
+        private int _loadedToBeSelectedRevisionsCount = 0;
 
         public bool HasSelection()
         {
-            return ToBeSelectedObjectIds.Any() || ToBeSelectedRowIndexes.Any() || SelectedRows.Count > 0;
+            return ToBeSelectedObjectIds.Any() || SelectedRows.Count > 0;
         }
 
-        [CanBeNull]
-        [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Reliability", "CA2002:DoNotLockOnObjectsWithWeakIdentity")]
         [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         [Browsable(false)]
-        public IReadOnlyList<ObjectId> SelectedObjectIds
+        public IReadOnlyList<ObjectId>? SelectedObjectIds
         {
             get
             {
@@ -218,7 +199,7 @@ namespace GitUI.UserControls.RevisionGrid
                 {
                     var row = _revisionGraph.GetNodeForRow(SelectedRows[i].Index);
 
-                    if (row != null && row.GitRevision != null)
+                    if (row is not null && row.GitRevision is not null)
                     {
                         // NOTE returned collection has reverse order of SelectedRows
                         data[SelectedRows.Count - 1 - i] = row.GitRevision.ObjectId;
@@ -240,26 +221,45 @@ namespace GitUI.UserControls.RevisionGrid
 
         private Color GetForeground(DataGridViewElementStates state, int rowIndex)
         {
-            if (state.HasFlag(DataGridViewElementStates.Selected))
+            bool isNonRelativeGray = AppSettings.RevisionGraphDrawNonRelativesTextGray && !RowIsRelative(rowIndex);
+            bool isSelectedAndFocused = state.HasFlag(DataGridViewElementStates.Selected) && Focused;
+            return (isNonRelativeGray, isSelectedAndFocused) switch
             {
-                return SystemColors.HighlightText;
-            }
+                (isNonRelativeGray: false, isSelectedAndFocused: false) => SystemColors.ControlText,
+                (isNonRelativeGray: false, isSelectedAndFocused: true) => SystemColors.HighlightText,
+                (isNonRelativeGray: true, isSelectedAndFocused: false) => SystemColors.GrayText,
 
-            return AppSettings.RevisionGraphDrawNonRelativesTextGray && !RowIsRelative(rowIndex)
-                ? Color.Gray
-                : ColorHelper.IsLightTheme() ? Color.Black : Color.LightGray;
+                // (isGray: true, isSelected: true)
+                _ => getHighlightedGrayTextColor()
+            };
         }
 
-        private Brush GetBackground(DataGridViewElementStates state, int rowIndex, GitRevision revision)
+        private Color GetCommitBodyForeground(DataGridViewElementStates state, int rowIndex)
+        {
+            bool isNonRelativeGray = AppSettings.RevisionGraphDrawNonRelativesTextGray && !RowIsRelative(rowIndex);
+            bool isSelected = state.HasFlag(DataGridViewElementStates.Selected);
+
+            return (isNonRelativeGray, isSelected) switch
+            {
+                (isNonRelativeGray: false, isSelected: false) => SystemColors.GrayText,
+                (isNonRelativeGray: false, isSelected: true) => getHighlightedGrayTextColor(),
+                (isNonRelativeGray: true, isSelected: false) => getGrayTextColor(degreeOfGrayness: 1.4f),
+
+                // (isGray: true, isSelected: true)
+                _ => getHighlightedGrayTextColor(degreeOfGrayness: 1.4f)
+            };
+        }
+
+        private Brush GetBackground(DataGridViewElementStates state, int rowIndex, GitRevision? revision)
         {
             if (state.HasFlag(DataGridViewElementStates.Selected))
             {
-                return SystemBrushes.Highlight;
+                return Focused ? SystemBrushes.Highlight : OtherColors.InactiveSelectionHighlightBrush;
             }
 
-            if (AppSettings.HighlightAuthoredRevisions && revision != null && !revision.IsArtificial && AuthorHighlighting.IsHighlighted(revision))
+            if (AppSettings.HighlightAuthoredRevisions && revision is not null && !revision.IsArtificial && AuthorHighlighting?.IsHighlighted(revision) != false)
             {
-                return new SolidBrush(AppSettings.AuthoredRevisionsHighlightColor);
+                return _authoredHighlightBrush;
             }
 
             if (rowIndex % 2 == 0 && AppSettings.RevisionGraphDrawAlternateBackColor)
@@ -279,21 +279,24 @@ namespace GitUI.UserControls.RevisionGrid
             if (e.RowIndex < 0 ||
                 e.RowIndex >= RowCount ||
                 !e.State.HasFlag(DataGridViewElementStates.Visible) ||
-                revision == null)
+                revision is null)
             {
                 return;
             }
 
+            Brush backBrush = GetBackground(e.State, e.RowIndex, revision);
+            e.Graphics.FillRectangle(backBrush, e.CellBounds);
+
             if (Columns[e.ColumnIndex].Tag is ColumnProvider provider)
             {
-                var backBrush = GetBackground(e.State, e.RowIndex, revision);
-                var foreColor = GetForeground(e.State, e.RowIndex);
+                Color foreColor = GetForeground(e.State, e.RowIndex);
+                Color commitBodyForeColor = GetCommitBodyForeground(e.State, e.RowIndex);
+                CellStyle cellStyle = new(backBrush, foreColor, commitBodyForeColor, _normalFont, _boldFont, _monospaceFont);
 
-                e.Graphics.FillRectangle(backBrush, e.CellBounds);
-                provider.OnCellPainting(e, revision, _rowHeight, new CellStyle(backBrush, foreColor, _normalFont, _boldFont, _monospaceFont));
-
-                e.Handled = true;
+                provider.OnCellPainting(e, revision, _rowHeight, cellStyle);
             }
+
+            e.Handled = true;
         }
 
         public void Add(GitRevision revision, RevisionNodeFlags types = RevisionNodeFlags.None)
@@ -302,30 +305,24 @@ namespace GitUI.UserControls.RevisionGrid
 
             if (ToBeSelectedObjectIds.Contains(revision.ObjectId))
             {
-                var rowIndexToBeSelectedWithOrderInfo = new RowIndexToBeSelectedWithOrderInfo
-                {
-                    RowIndex = _revisionGraph.Count - 1,
-                    SelectionOrder = ToBeSelectedObjectIds.IndexOf(o => o == revision.ObjectId)
-                };
-
-                ToBeSelectedRowIndexes.Add(rowIndexToBeSelectedWithOrderInfo);
+                ++_loadedToBeSelectedRevisionsCount;
             }
 
             UpdateVisibleRowRange();
         }
 
-        [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Reliability", "CA2002:DoNotLockOnObjectsWithWeakIdentity", Justification = "It looks like such lock was made intentionally but it is better to rewrite this")]
         public void Clear()
         {
             _backgroundScrollTo = 0;
 
-            // Force the background thread to be killed, we need to be sure no background processes are running. Not the best practice, but safe.
-            _backgroundThread.Abort();
+            // Cancel all outstanding background operations, and provide a new cancellation token for future work.
+            var cancellationToken = _backgroundCancellationToken = _backgroundCancellationSequence.Next();
+            _backgroundProcessingTask?.Join();
 
             // Set rowcount to 0 first, to ensure it is not possible to select or redraw, since we are about te delete the data
             SetRowCount(0);
             _revisionGraph.Clear();
-            ToBeSelectedRowIndexes = new List<RowIndexToBeSelectedWithOrderInfo>();
+            _loadedToBeSelectedRevisionsCount = 0;
 
             // The graphdata is stored in one of the columnproviders, clear this last
             foreach (var columnProvider in _columnProviders)
@@ -337,12 +334,30 @@ namespace GitUI.UserControls.RevisionGrid
             UpdateVisibleRowRange();
             Invalidate(invalidateChildren: true);
 
-            _backgroundThread = new Thread(BackgroundThreadEntry)
+            StartBackgroundProcessingTask(cancellationToken);
+        }
+
+        public void LoadingCompleted()
+        {
+            foreach (ColumnProvider columnProvider in _columnProviders)
             {
-                IsBackground = true,
-                Name = "RevisionDataGridView.backgroundThread"
-            };
-            _backgroundThread.Start();
+                columnProvider.LoadingCompleted();
+            }
+        }
+
+        /// <summary>
+        /// Checks whether the given hash is present in the graph.
+        /// </summary>
+        /// <param name="objectId">The hash to find.</param>
+        /// <returns><see langword="true"/>, if the given hash if found; otherwise <see langword="false"/>.</returns>
+        /// <exception cref="ArgumentNullException"><paramref name="objectId"/> is <see langword="null"/>.</exception>
+        public bool Contains(ObjectId objectId) => _revisionGraph.Contains(objectId);
+
+        private void StartBackgroundProcessingTask(CancellationToken cancellationToken)
+        {
+            // Start the background processing via JoinableTaskContext.Factory to avoid tracking the long-running
+            // operation in JoinPendingOperationsAsync.
+            _backgroundProcessingTask = ThreadHelper.JoinableTaskContext.Factory.RunAsync(() => RunBackgroundAsync(cancellationToken));
         }
 
         public bool RowIsRelative(int rowIndex)
@@ -350,13 +365,11 @@ namespace GitUI.UserControls.RevisionGrid
             return _revisionGraph.IsRowRelative(rowIndex);
         }
 
-        [CanBeNull]
-        public GitRevision GetRevision(int rowIndex)
+        public GitRevision? GetRevision(int rowIndex)
         {
             return _revisionGraph.GetNodeForRow(rowIndex)?.GitRevision;
         }
 
-        [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Reliability", "CA2002:DoNotLockOnObjectsWithWeakIdentity", Justification = "It looks like such lock was made intentionally but it is better to rewrite this")]
         private void SetRowCount(int count)
         {
             if (InvokeRequired)
@@ -377,7 +390,7 @@ namespace GitUI.UserControls.RevisionGrid
 
             try
             {
-                if (CurrentCell == null)
+                if (CurrentCell is null)
                 {
                     RowCount = count;
                     CurrentCell = null;
@@ -396,35 +409,33 @@ namespace GitUI.UserControls.RevisionGrid
         private void SelectRowsIfReady(int rowCount)
         {
             // Wait till we have all the row indexes to be selected.
-            if (!ToBeSelectedRowIndexes.Any() || ToBeSelectedRowIndexes.Count < ToBeSelectedObjectIds.Count)
+            if (_loadedToBeSelectedRevisionsCount == 0 || _loadedToBeSelectedRevisionsCount < ToBeSelectedObjectIds.Count)
             {
                 return;
             }
 
-            if (rowCount > ToBeSelectedRowIndexes.Max(ri => ri.RowIndex))
+            foreach (var objectId in ToBeSelectedObjectIds)
             {
                 try
                 {
-                    var rowIndicesToBeSelectedInOriginalOrder = ToBeSelectedRowIndexes.OrderBy(ri => ri.SelectionOrder).Select(ri => ri.RowIndex);
-
-                    foreach (var rowIndexToBeSelected in rowIndicesToBeSelectedInOriginalOrder)
+                    if (!_revisionGraph.TryGetRowIndex(objectId, out int rowIndexToBeSelected) || rowIndexToBeSelected >= rowCount)
                     {
-                        Rows[rowIndexToBeSelected].Selected = true;
-
-                        if (CurrentCell == null)
-                        {
-                            CurrentCell = Rows[rowIndexToBeSelected].Cells[1];
-                        }
+                        return;
                     }
 
-                    // The rows to be selected have just been selected. Prevent from selecting them again.
-                    ToBeSelectedRowIndexes.Clear();
+                    Rows[rowIndexToBeSelected].Selected = true;
+
+                    CurrentCell ??= Rows[rowIndexToBeSelected].Cells[1];
                 }
                 catch (ArgumentOutOfRangeException)
                 {
                     // Not worth crashing for. Ignore exception.
                 }
             }
+
+            // The rows to be selected have just been selected. Prevent from selecting them again.
+            _loadedToBeSelectedRevisionsCount = 0;
+            ToBeSelectedObjectIds = Array.Empty<ObjectId>();
         }
 
         private void SetRowCountAndSelectRowsIfReady(int rowCount)
@@ -433,70 +444,74 @@ namespace GitUI.UserControls.RevisionGrid
             SelectRowsIfReady(rowCount);
         }
 
-        [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Reliability", "CA2002:DoNotLockOnObjectsWithWeakIdentity", Justification = "It looks like such lock was made intentionally but it is better to rewrite this")]
-        private void BackgroundThreadEntry()
+        private async Task RunBackgroundAsync(CancellationToken cancellationToken)
         {
-            bool keepRunning = false;
-            while (_shouldRun)
+            if (LicenseManager.UsageMode == LicenseUsageMode.Designtime)
             {
-                if (!_shouldRun)
-                {
-                    return;
-                }
+                // Don't run background operations in the designer.
+                return;
+            }
 
-                if (keepRunning || _backgroundEvent.WaitOne(200))
-                {
-                    keepRunning = false;
+            await TaskScheduler.Default;
 
-                    if (!_shouldRun)
+            while (true)
+            {
+                if (cancellationToken.IsCancellationRequested)
+                {
+                    // The background thread is requesting shutdown. Return immediately unless the work queue is marked
+                    // as completed (meaning the background thread will not be restarted) and still contains work items.
+                    if (!_backgroundQueue.IsCompleted || _backgroundQueue.IsEmpty)
                     {
                         return;
                     }
+                }
 
-                    if (AppSettings.ShowRevisionGridGraphColumn)
+                try
+                {
+                    CancellationToken timeoutToken = CancellationToken.None;
+                    Func<CancellationToken, Task> backgroundOperation;
+                    CancellationToken backgroundOperationCancellation;
+                    try
                     {
-                        int scrollTo = _backgroundScrollTo;
-
-                        int curCount = _revisionGraph.GetCachedCount();
-
-                        UpdateGraph(curCount, scrollTo);
-                        keepRunning = curCount < scrollTo;
+                        using CancellationTokenSource timeoutTokenSource = new(TimeSpan.FromMilliseconds(200));
+                        using var linkedCancellation = timeoutTokenSource.Token.CombineWith(cancellationToken);
+                        timeoutToken = timeoutTokenSource.Token;
+                        (backgroundOperation, backgroundOperationCancellation) = await _backgroundQueue.DequeueAsync(linkedCancellation.Token);
                     }
-                    else
+                    catch (OperationCanceledException) when (timeoutToken.IsCancellationRequested && !cancellationToken.IsCancellationRequested)
                     {
-                        UpdateGraph(_revisionGraph.Count, _revisionGraph.Count);
+                        // No work was received from the queue within the timeout.
+                        if (RowCount < _revisionGraph.Count)
+                        {
+                            this.InvokeAsync(() => { SetRowCountAndSelectRowsIfReady(_revisionGraph.Count); }).FileAndForget();
+                        }
+
+                        continue;
                     }
 
-                    if (!keepRunning)
+                    if (backgroundOperationCancellation.IsCancellationRequested)
                     {
-                        this.InvokeAsync(NotifyProvidersVisibleRowRangeChanged).FileAndForget();
+                        continue;
+                    }
+
+                    try
+                    {
+                        await backgroundOperation(backgroundOperationCancellation);
+                    }
+                    catch (OperationCanceledException) when (backgroundOperationCancellation.IsCancellationRequested)
+                    {
+                        // Normal cancellation of background work
                     }
                 }
-                else
+                catch (OperationCanceledException) when (_backgroundQueue.IsCompleted && _backgroundQueue.IsEmpty)
                 {
-                    if (RowCount < _revisionGraph.Count)
-                    {
-                        this.InvokeAsync(() => { SetRowCountAndSelectRowsIfReady(_revisionGraph.Count); }).FileAndForget();
-                    }
+                    // Normal completion of background work
+                    return;
                 }
-            }
-
-            void UpdateGraph(int fromIndex, in int toIndex)
-            {
-                // Cache the next item
-                _revisionGraph.CacheTo(toIndex, Math.Min(fromIndex + 1500, toIndex));
-
-                var rowIndex = _revisionGraph.GetCachedCount();
-
-                this.InvokeAsync(UpdateRowCount, toIndex).FileAndForget();
-                return;
-
-                void UpdateRowCount(int row)
+                catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
                 {
-                    if (RowCount < _revisionGraph.Count)
-                    {
-                        SetRowCountAndSelectRowsIfReady(_revisionGraph.Count);
-                    }
+                    // Normal cancellation of background queue during clear
+                    return;
                 }
             }
         }
@@ -520,10 +535,52 @@ namespace GitUI.UserControls.RevisionGrid
                     if (_backgroundScrollTo != newBackgroundScrollTo)
                     {
                         _backgroundScrollTo = newBackgroundScrollTo;
-                        _backgroundEvent.Set();
+                        _backgroundQueue.Enqueue((BackgroundUpdateAsync, _backgroundCancellationToken));
                     }
 
                     this.InvokeAsync(NotifyProvidersVisibleRowRangeChanged).FileAndForget();
+                }
+            }
+        }
+
+        private Task BackgroundUpdateAsync(CancellationToken cancellationToken)
+        {
+            if (AppSettings.ShowRevisionGridGraphColumn)
+            {
+                int scrollTo;
+                int curCount;
+                do
+                {
+                    scrollTo = _backgroundScrollTo;
+                    curCount = _revisionGraph.GetCachedCount();
+                    UpdateGraph(curCount, scrollTo);
+                }
+                while (curCount < scrollTo);
+            }
+            else
+            {
+                UpdateGraph(_revisionGraph.Count, _revisionGraph.Count);
+            }
+
+            this.InvokeAsync(NotifyProvidersVisibleRowRangeChanged).FileAndForget();
+            return Task.CompletedTask;
+
+            void UpdateGraph(int fromIndex, int toIndex)
+            {
+                // Cache the next item
+                _revisionGraph.CacheTo(toIndex, Math.Min(fromIndex + 1500, toIndex));
+
+                var rowIndex = _revisionGraph.GetCachedCount();
+
+                this.InvokeAsync(UpdateRowCount, toIndex).FileAndForget();
+                return;
+
+                void UpdateRowCount(int row)
+                {
+                    if (RowCount < _revisionGraph.Count)
+                    {
+                        SetRowCountAndSelectRowsIfReady(_revisionGraph.Count);
+                    }
                 }
             }
         }
@@ -557,12 +614,10 @@ namespace GitUI.UserControls.RevisionGrid
         private void UpdateRowHeight()
         {
             // TODO allow custom grid row spacing
-            using (var g = Graphics.FromHwnd(Handle))
-            {
-                _rowHeight = (int)g.MeasureString("By", _normalFont).Height + DpiUtil.Scale(9);
-                //// + AppSettings.GridRowSpacing
-                RowTemplate.Height = _rowHeight;
-            }
+            using var g = Graphics.FromHwnd(Handle);
+            _rowHeight = (int)g.MeasureString("By", _normalFont).Height + DpiUtil.Scale(9);
+            //// + AppSettings.GridRowSpacing
+            RowTemplate.Height = _rowHeight;
         }
 
         public bool IsRevisionRelative(ObjectId objectId)
@@ -570,15 +625,14 @@ namespace GitUI.UserControls.RevisionGrid
             return _revisionGraph.IsRevisionRelative(objectId);
         }
 
-        [CanBeNull]
-        public GitRevision GetRevision(ObjectId objectId)
+        public GitRevision? GetRevision(ObjectId objectId)
         {
             return _revisionGraph.TryGetNode(objectId, out var node) ? node.GitRevision : null;
         }
 
-        public int? TryGetRevisionIndex([CanBeNull] ObjectId objectId)
+        public int? TryGetRevisionIndex(ObjectId? objectId)
         {
-            return objectId != null && _revisionGraph.TryGetRowIndex(objectId, out var index) ? (int?)index : null;
+            return objectId is not null && _revisionGraph.TryGetRowIndex(objectId, out var index) ? index : null;
         }
 
         public IReadOnlyList<ObjectId> GetRevisionChildren(ObjectId objectId)
@@ -588,7 +642,7 @@ namespace GitUI.UserControls.RevisionGrid
             // With lock, loading the commit info slows down terribly.
             if (_revisionGraph.TryGetNode(objectId, out var node))
             {
-                var children = node.Children.Select(d => d.GitRevision.ObjectId).ToList();
+                var children = node.Children.Select(d => d.GitRevision!.ObjectId).ToList();
                 children.Reverse();
                 return children;
             }
@@ -620,7 +674,7 @@ namespace GitUI.UserControls.RevisionGrid
                     break;
                 case Keys.Control | Keys.C:
                     var selectedRevisions = SelectedObjectIds;
-                    if (selectedRevisions != null && selectedRevisions.Count != 0)
+                    if (selectedRevisions is not null && selectedRevisions.Count != 0)
                     {
                         ClipboardUtil.TrySetText(string.Join(Environment.NewLine, selectedRevisions));
                     }
@@ -662,19 +716,27 @@ namespace GitUI.UserControls.RevisionGrid
                 int currentIndex = HorizontalScrollingOffset;
                 int scrollLines = DpiUtil.Scale(32);
 
-                if (e.Delta > 0)
+                HorizontalScrollingOffset = e.Delta switch
                 {
-                    HorizontalScrollingOffset = Math.Max(0, currentIndex - scrollLines);
-                }
-                else if (e.Delta < 0)
-                {
-                    HorizontalScrollingOffset = currentIndex + scrollLines;
-                }
+                    > 0 => Math.Max(0, currentIndex - scrollLines),
+                    < 0 => currentIndex + scrollLines,
+                    _ => HorizontalScrollingOffset
+                };
             }
             else
             {
                 base.OnMouseWheel(e);
             }
         }
+
+        private static Color getHighlightedGrayTextColor(float degreeOfGrayness = 1f) =>
+            ColorHelper.GetHighlightGrayTextColor(
+                backgroundColorName: KnownColor.Control,
+                textColorName: KnownColor.ControlText,
+                highlightColorName: KnownColor.Highlight,
+                degreeOfGrayness);
+
+        private static Color getGrayTextColor(float degreeOfGrayness = 1f) =>
+            ColorHelper.GetGrayTextColor(textColorName: KnownColor.ControlText, degreeOfGrayness);
     }
 }

@@ -1,6 +1,6 @@
 ﻿namespace GitUIPluginInterfaces
 {
-    public interface IGitRef : IGitItem
+    public interface IGitRef : INamedGitItem
     {
         string CompleteName { get; }
         bool IsBisect { get; }
@@ -39,5 +39,13 @@
         /// the revision graph.
         /// </summary>
         string GetMergeWith(ISettingsValueGetter configFile);
+
+        /// <summary>
+        /// Return if the current `GitRef` is tracking another `GitRef` as a remote.
+        /// </summary>
+        /// <param name="remote">the expected remote ref tracked</param>
+        /// <returns>true if the current ref is tracking the expected remote ref
+        /// false otherwise</returns>
+        bool IsTrackingRemote(IGitRef? remote);
     }
 }

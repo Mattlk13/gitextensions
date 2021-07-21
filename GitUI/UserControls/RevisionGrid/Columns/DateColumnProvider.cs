@@ -1,7 +1,9 @@
 ﻿using System;
+using System.Diagnostics.CodeAnalysis;
 using System.Windows.Forms;
 using GitCommands;
 using GitExtUtils.GitUI;
+using GitUIPluginInterfaces;
 using ResourceManager;
 
 namespace GitUI.UserControls.RevisionGrid.Columns
@@ -58,7 +60,7 @@ namespace GitUI.UserControls.RevisionGrid.Columns
             }
         }
 
-        public override bool TryGetToolTip(DataGridViewCellMouseEventArgs e, GitRevision revision, out string toolTip)
+        public override bool TryGetToolTip(DataGridViewCellMouseEventArgs e, GitRevision revision, [NotNullWhen(returnValue: true)] out string? toolTip)
         {
             if (revision.ObjectId.IsArtificial)
             {

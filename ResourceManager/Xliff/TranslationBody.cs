@@ -32,13 +32,13 @@ namespace ResourceManager.Xliff
                 throw new InvalidOperationException($"Cannot add {nameof(TranslationItem)} without name");
             }
 
-            TranslationItem ti = GetTranslationItem(translationItem.Name, translationItem.Property);
-            if (ti == null)
+            TranslationItem? ti = GetTranslationItem(translationItem.Name, translationItem.Property);
+            if (ti is null)
             {
                 if (translationItem.Property == "ToolTipText")
                 {
                     ti = GetTranslationItem(translationItem.Name, "Text");
-                    if (ti == null || translationItem.Value != ti.Value)
+                    if (ti is null || translationItem.Source != ti.Source)
                     {
                         TranslationItems.Add(translationItem);
                     }
@@ -54,9 +54,9 @@ namespace ResourceManager.Xliff
             }
         }
 
-        public TranslationItem GetTranslationItem(string name, string property)
+        public TranslationItem? GetTranslationItem(string name, string? property)
         {
-            return TranslationItems.Find(t => t.Name.TrimStart('_') == name.TrimStart('_') && t.Property == property);
+            return TranslationItems.Find(t => t.Name is not null && t.Name.TrimStart('_') == name.TrimStart('_') && t.Property == property);
         }
     }
 }

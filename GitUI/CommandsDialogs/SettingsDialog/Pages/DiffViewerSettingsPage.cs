@@ -9,6 +9,10 @@ namespace GitUI.CommandsDialogs.SettingsDialog.Pages
             InitializeComponent();
             Text = "Diff Viewer";
             InitializeComplete();
+
+            chkShowDiffForAllParents.Text = TranslatedStrings.ShowDiffForAllParentsText;
+            chkShowDiffForAllParents.ToolTipText = TranslatedStrings.ShowDiffForAllParentsTooltip;
+            chkContScrollToNextFileOnlyWithAlt.Text = TranslatedStrings.ContScrollToNextFileOnlyWithAlt;
         }
 
         protected override void SettingsToPage()
@@ -18,8 +22,11 @@ namespace GitUI.CommandsDialogs.SettingsDialog.Pages
             chkRememberShowEntireFilePreference.Checked = AppSettings.RememberShowEntireFilePreference;
             chkRememberShowNonPrintingCharsPreference.Checked = AppSettings.RememberShowNonPrintingCharsPreference;
             chkRememberNumberOfContextLines.Checked = AppSettings.RememberNumberOfContextLines;
+            chkRememberShowSyntaxHighlightingInDiff.Checked = AppSettings.RememberShowSyntaxHighlightingInDiff;
             chkOpenSubmoduleDiffInSeparateWindow.Checked = AppSettings.OpenSubmoduleDiffInSeparateWindow;
+            chkContScrollToNextFileOnlyWithAlt.Checked = AppSettings.AutomaticContinuousScroll;
             chkShowDiffForAllParents.Checked = AppSettings.ShowDiffForAllParents;
+            chkShowAllCustomDiffTools.Checked = AppSettings.ShowAvailableDiffTools;
             VerticalRulerPosition.Value = AppSettings.DiffVerticalRulerPosition;
         }
 
@@ -30,8 +37,11 @@ namespace GitUI.CommandsDialogs.SettingsDialog.Pages
             AppSettings.RememberShowEntireFilePreference = chkRememberShowEntireFilePreference.Checked;
             AppSettings.RememberShowNonPrintingCharsPreference = chkRememberShowNonPrintingCharsPreference.Checked;
             AppSettings.RememberNumberOfContextLines = chkRememberNumberOfContextLines.Checked;
+            AppSettings.RememberShowSyntaxHighlightingInDiff = chkRememberShowSyntaxHighlightingInDiff.Checked;
             AppSettings.OpenSubmoduleDiffInSeparateWindow = chkOpenSubmoduleDiffInSeparateWindow.Checked;
+            AppSettings.AutomaticContinuousScroll = chkContScrollToNextFileOnlyWithAlt.Checked;
             AppSettings.ShowDiffForAllParents = chkShowDiffForAllParents.Checked;
+            AppSettings.ShowAvailableDiffTools = chkShowAllCustomDiffTools.Checked;
             AppSettings.DiffVerticalRulerPosition = (int)VerticalRulerPosition.Value;
         }
 

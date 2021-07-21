@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Diagnostics;
+using GitExtUtils;
 using GitUIPluginInterfaces;
-using JetBrains.Annotations;
 
 namespace GitCommands.Git
 {
@@ -12,7 +12,7 @@ namespace GitCommands.Git
         /// </summary>
         /// <param name="firstRevision">The first revision, "A"</param>
         /// <param name="secondRevision">The second "current" revision, "B"</param>
-        ArgumentString Get(string firstRevision, string secondRevision);
+        ArgumentString Get(string? firstRevision, string? secondRevision);
 
         /// <summary>
         /// options to git-diff from GE arguments, including artificial commits
@@ -22,7 +22,7 @@ namespace GitCommands.Git
         /// <param name="fileName">The file to compare</param>
         /// <param name="oldFileName">The old name of the file</param>
         /// <param name="isTracked">The file is tracked</param>
-        ArgumentString Get(string firstRevision, string secondRevision, string fileName, string oldFileName, bool isTracked);
+        ArgumentString Get(string? firstRevision, string? secondRevision, string? fileName, string? oldFileName, bool isTracked);
     }
 
     /// <summary>
@@ -39,7 +39,7 @@ namespace GitCommands.Git
         /// </summary>
         /// <param name="firstRevision">The first revision</param>
         /// <param name="secondRevision">The second "current" revision</param>
-        public ArgumentString Get(string firstRevision, string secondRevision)
+        public ArgumentString Get(string? firstRevision, string? secondRevision)
         {
             return GetInternal(firstRevision, secondRevision);
         }
@@ -52,12 +52,12 @@ namespace GitCommands.Git
         /// <param name="fileName">The file to compare</param>
         /// <param name="oldFileName">The old name of the file</param>
         /// <param name="isTracked">The file is tracked</param>
-        public ArgumentString Get(string firstRevision, string secondRevision, string fileName, string oldFileName, bool isTracked)
+        public ArgumentString Get(string? firstRevision, string? secondRevision, string? fileName, string? oldFileName, bool isTracked)
         {
             return GetInternal(firstRevision, secondRevision, fileName, oldFileName, isTracked);
         }
 
-        private ArgumentString GetInternal([CanBeNull] string firstRevision, [CanBeNull] string secondRevision, string fileName = null, string oldFileName = null, bool isTracked = true)
+        private ArgumentString GetInternal(string? firstRevision, string? secondRevision, string? fileName = null, string? oldFileName = null, bool isTracked = true)
         {
             // Combined Diff artificial commit should not be included in diffs
             if (firstRevision == GitRevision.CombinedDiffGuid || secondRevision == GitRevision.CombinedDiffGuid)
@@ -67,28 +67,28 @@ namespace GitCommands.Git
                     firstRevision + ", " + secondRevision);
             }
 
-            var extra = new ArgumentBuilder();
+            ArgumentBuilder extra = new();
             firstRevision = ArtificialToDiffOptions(firstRevision);
             secondRevision = ArtificialToDiffOptions(secondRevision);
 
             // Note: As artificial are options, diff unstage..unstage and
             // stage..stage will show output, different from e.g. HEAD..HEAD
             // Diff-to-itself is not always disabled or is transient why this is not handled as error in release builds
-            Debug.Assert(!(firstRevision == secondRevision && (firstRevision.IsNullOrEmpty() || firstRevision == StagedOpt)),
+            Debug.Assert(!(firstRevision == secondRevision && (string.IsNullOrEmpty(firstRevision) || firstRevision == StagedOpt)),
                 "Unexpectedly two identical artificial revisions to diff: " + firstRevision +
                 ". This will be displayed as diff to HEAD, not an identical diff.");
 
             // As empty (unstaged) and --cached (staged) are options (not revisions),
             // order must be preserved with -R
-            if (firstRevision != secondRevision && (firstRevision.IsNullOrEmpty() ||
-                               (firstRevision == StagedOpt && !secondRevision.IsNullOrEmpty())))
+            if (firstRevision != secondRevision && (string.IsNullOrEmpty(firstRevision) ||
+                               (firstRevision == StagedOpt && !string.IsNullOrEmpty(secondRevision))))
             {
                 extra.Add("-R");
             }
 
             // Special case: Remove options comparing worktree-index
-            if ((firstRevision.IsNullOrEmpty() && secondRevision == StagedOpt) ||
-                (firstRevision == StagedOpt && secondRevision.IsNullOrEmpty()))
+            if ((string.IsNullOrEmpty(firstRevision) && secondRevision == StagedOpt) ||
+                (firstRevision == StagedOpt && string.IsNullOrEmpty(secondRevision)))
             {
                 firstRevision = secondRevision = "";
             }
@@ -100,7 +100,7 @@ namespace GitCommands.Git
                 secondRevision = "";
             }
 
-            if (fileName.IsNullOrWhiteSpace())
+            if (string.IsNullOrWhiteSpace(fileName))
             {
                 extra.Add(firstRevision);
                 extra.Add(secondRevision);
@@ -134,8 +134,7 @@ namespace GitCommands.Git
         /// Artificial "commits" are options, handle aliases too
         /// (order and handling of empty arguments is not handled here)
         /// </summary>
-        [CanBeNull]
-        private static string ArtificialToDiffOptions([CanBeNull] string rev)
+        private static string ArtificialToDiffOptions(string? rev)
         {
             switch (rev)
             {

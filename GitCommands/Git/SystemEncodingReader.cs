@@ -1,6 +1,7 @@
 using System;
 using System.Diagnostics;
 using System.Text;
+using GitExtUtils;
 using GitUIPluginInterfaces;
 
 namespace GitCommands.Git
@@ -18,7 +19,7 @@ namespace GitCommands.Git
     {
         private readonly IGitModule _module;
 
-        public SystemEncodingReader(IGitModule module)
+        public SystemEncodingReader(IGitModule? module)
         {
             _module = module ?? new GitModule("");
         }
@@ -41,14 +42,14 @@ namespace GitCommands.Git
                 // git config --get with a malformed key (no section) returns:
                 // "error: key does not contain a section: <key>"
                 const string controlStr = "ą"; // "a caudata"
-                var arguments = new GitArgumentBuilder("config")
+                GitArgumentBuilder arguments = new("config")
                 {
                     "--get",
                     controlStr
                 };
 
-                string s = _module.GitExecutable.GetOutput(arguments, outputEncoding: Encoding.UTF8);
-                if (s != null && s.IndexOf(controlStr) != -1)
+                string? s = _module.GitExecutable.GetOutput(arguments, outputEncoding: Encoding.UTF8);
+                if (s is not null && s.IndexOf(controlStr) != -1)
                 {
                     systemEncoding = new UTF8Encoding(false);
                 }

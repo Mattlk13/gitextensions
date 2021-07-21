@@ -3,15 +3,14 @@ using GitCommands.Gpg;
 using GitCommands.Utils;
 using GitExtUtils.GitUI;
 using GitUI.Properties;
-using JetBrains.Annotations;
 using ResourceManager;
 
 namespace GitUI.CommandsDialogs
 {
     public partial class RevisionGpgInfoControl : GitModuleControl
     {
-        private readonly TranslationString _commitNotSigned = new TranslationString("Commit is not signed");
-        private readonly TranslationString _tagNotSigned = new TranslationString("Tag is not signed");
+        private readonly TranslationString _commitNotSigned = new("Commit is not signed");
+        private readonly TranslationString _tagNotSigned = new("Tag is not signed");
 
         public RevisionGpgInfoControl()
         {
@@ -21,10 +20,10 @@ namespace GitUI.CommandsDialogs
             DisplayGpgInfo(null);
         }
 
-        public void DisplayGpgInfo([CanBeNull] GpgInfo info)
+        public void DisplayGpgInfo(GpgInfo? info)
         {
             // No Commit Signature and No Tag Signature
-            if (info == null)
+            if (info is null)
             {
                 commitSignPicture.Visible = false;
                 txtCommitGpgInfo.Text = _commitNotSigned.Text;

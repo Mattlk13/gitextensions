@@ -13,7 +13,7 @@
         /// <param name="disposing">true if managed resources should be disposed; otherwise, false.</param>
         protected override void Dispose(bool disposing)
         {
-            if (disposing && (components != null))
+            if (disposing && (components is not null))
             {
                 components.Dispose();
             }
@@ -155,7 +155,6 @@
             this.Name = "FormFixHome";
             this.Padding = new System.Windows.Forms.Padding(8);
             this.StartPosition = System.Windows.Forms.FormStartPosition.CenterParent;
-            this.Text = "Home";
             this.groupBox8.ResumeLayout(false);
             this.groupBox8.PerformLayout();
             this.flowLayoutPanel1.ResumeLayout(false);

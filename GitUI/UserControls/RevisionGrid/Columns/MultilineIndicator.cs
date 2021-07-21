@@ -1,14 +1,14 @@
 ﻿using System.Drawing;
 using System.Windows.Forms;
-using GitCommands;
 using GitExtUtils.GitUI;
+using GitUIPluginInterfaces;
 
 namespace GitUI.UserControls.RevisionGrid.Columns
 {
     internal readonly struct MultilineIndicator
     {
-        private static readonly Brush _indicatorForeBrush = new SolidBrush(Color.FromArgb(128, Color.Black));
-        private static readonly Brush _indicatorBackBrush = new SolidBrush(Color.FromArgb(32, Color.Black));
+        private static readonly Brush _indicatorForeBrush = new SolidBrush(Color.FromArgb(128, SystemColors.WindowText));
+        private static readonly Brush _indicatorBackBrush = new SolidBrush(Color.FromArgb(32, SystemColors.WindowText));
 
         private const int DotCount = 3;
 
@@ -59,7 +59,7 @@ namespace GitUI.UserControls.RevisionGrid.Columns
                 return;
             }
 
-            var indicatorRect = new Rectangle(
+            Rectangle indicatorRect = new(
                 _e.CellBounds.Right - marginX - _indicatorRectWidth,
                 _e.CellBounds.Y + ((_e.CellBounds.Height - _indicatorRectHeight) / 2),
                 _indicatorRectWidth,

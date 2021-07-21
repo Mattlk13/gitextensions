@@ -13,7 +13,7 @@
         /// <param name="disposing">true if managed resources should be disposed; otherwise, false.</param>
         protected override void Dispose(bool disposing)
         {
-            if (disposing && (components != null))
+            if (disposing && (components is not null))
             {
                 components.Dispose();
             }
@@ -89,7 +89,7 @@
             // 
             this.lblContribute.AutoSize = true;
             this.lblContribute.Font = new System.Drawing.Font("Segoe UI", 14.25F);
-            this.lblContribute.ForeColor = System.Drawing.Color.Gray;
+            this.lblContribute.ForeColor = System.Drawing.SystemColors.GrayText;
             this.lblContribute.Location = new System.Drawing.Point(22, 20);
             this.lblContribute.Margin = new System.Windows.Forms.Padding(2, 0, 2, 8);
             this.lblContribute.Name = "lblContribute";

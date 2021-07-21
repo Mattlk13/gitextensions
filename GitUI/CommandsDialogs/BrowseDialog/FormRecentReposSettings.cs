@@ -1,16 +1,18 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.ComponentModel;
+using System.Diagnostics.CodeAnalysis;
 using System.Drawing;
 using System.Windows.Forms;
 using GitCommands;
 using GitCommands.UserRepositoryHistory;
+using Microsoft;
 
 namespace GitUI.CommandsDialogs.BrowseDialog
 {
     public partial class FormRecentReposSettings : GitExtensionsForm
     {
-        private IList<Repository> _repositoryHistory;
+        private IList<Repository>? _repositoryHistory;
 
         public FormRecentReposSettings()
             : base(true)
@@ -64,6 +66,8 @@ namespace GitUI.CommandsDialogs.BrowseDialog
 
         private void SaveSettings()
         {
+            Validates.NotNull(_repositoryHistory);
+
             AppSettings.ShorteningRecentRepoPathStrategy = GetShorteningStrategy();
             AppSettings.SortMostRecentRepos = sortMostRecentRepos.Checked;
             AppSettings.SortLessRecentRepos = sortLessRecentRepos.Checked;
@@ -96,13 +100,15 @@ namespace GitUI.CommandsDialogs.BrowseDialog
 
         private void RefreshRepos()
         {
+            Validates.NotNull(_repositoryHistory);
+
             MostRecentLB.Items.Clear();
             LessRecentLB.Items.Clear();
 
-            var mostRecentRepos = new List<RecentRepoInfo>();
-            var lessRecentRepos = new List<RecentRepoInfo>();
+            List<RecentRepoInfo> mostRecentRepos = new();
+            List<RecentRepoInfo> lessRecentRepos = new();
 
-            var splitter = new RecentRepoSplitter
+            RecentRepoSplitter splitter = new()
             {
                 MaxRecentRepositories = (int)_NO_TRANSLATE_maxRecentRepositories.Value,
                 ShorteningStrategy = GetShorteningStrategy(),
@@ -183,17 +189,20 @@ namespace GitUI.CommandsDialogs.BrowseDialog
 
         private void contextMenuStrip1_Opening(object sender, CancelEventArgs e)
         {
-            e.Cancel = !GetSelectedRepo(sender, out var repo);
-
-            if (!e.Cancel)
+            if (GetSelectedRepo(sender, out var repo))
             {
+                e.Cancel = false;
                 anchorToMostToolStripMenuItem.Enabled = repo.Repo.Anchor != Repository.RepositoryAnchor.MostRecent;
                 anchorToLessToolStripMenuItem.Enabled = repo.Repo.Anchor != Repository.RepositoryAnchor.LessRecent;
                 removeAnchorToolStripMenuItem.Enabled = repo.Repo.Anchor != Repository.RepositoryAnchor.None;
             }
+            else
+            {
+                e.Cancel = true;
+            }
         }
 
-        private bool GetSelectedRepo(object sender, out RecentRepoInfo repo)
+        private bool GetSelectedRepo(object? sender, [NotNullWhen(returnValue: true)] out RecentRepoInfo? repo)
         {
             if (sender is ContextMenuStrip strip)
             {
@@ -208,7 +217,7 @@ namespace GitUI.CommandsDialogs.BrowseDialog
                 sender = null;
             }
 
-            ListView lb;
+            ListView? lb;
             if (sender == MostRecentLB)
             {
                 lb = MostRecentLB;
@@ -228,7 +237,7 @@ namespace GitUI.CommandsDialogs.BrowseDialog
                 repo = lb.SelectedItems[0].Tag as RecentRepoInfo;
             }
 
-            return repo != null;
+            return repo is not null;
         }
 
         private void anchorToMostToolStripMenuItem_Click(object sender, EventArgs e)
@@ -280,7 +289,7 @@ namespace GitUI.CommandsDialogs.BrowseDialog
 
             var rowBounds = e.Bounds;
             int leftMargin = e.Item.GetBounds(ItemBoundsPortion.Label).Left;
-            var bounds = new Rectangle(leftMargin, rowBounds.Top, rowBounds.Width - leftMargin, rowBounds.Height);
+            Rectangle bounds = new(leftMargin, rowBounds.Top, rowBounds.Width - leftMargin, rowBounds.Height);
 
             e.Graphics.FillRectangle(SystemBrushes.Window, bounds);
             TextRenderer.DrawText(e.Graphics, e.Item.Text, listView.Font, bounds, SystemColors.ControlText,

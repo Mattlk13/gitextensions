@@ -16,7 +16,7 @@ namespace GitUI.CommandsDialogs
         /// <param name="disposing">true if managed resources should be disposed; otherwise, false.</param>
         protected override void Dispose(bool disposing)
         {
-            if (disposing && (components != null))
+            if (disposing && (components is not null))
             {
                 components.Dispose();
             }
@@ -221,8 +221,8 @@ namespace GitUI.CommandsDialogs
             this.SizeGripStyle = System.Windows.Forms.SizeGripStyle.Show;
             this.StartPosition = System.Windows.Forms.FormStartPosition.CenterParent;
             this.Text = "Settings";
-            this.Load += new System.EventHandler(this.FormSettings_Load);
             this.Shown += new System.EventHandler(this.FormSettings_Shown);
+            this.FormClosing += new System.Windows.Forms.FormClosingEventHandler(this.FormSettings_FormClosing);
             ((System.ComponentModel.ISupportInitialize)(this.pictureBox2)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.repositoryBindingSource)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.scriptInfoBindingSource)).EndInit();

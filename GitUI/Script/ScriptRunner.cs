@@ -1,17 +1,20 @@
 ﻿using System;
-using System.Diagnostics;
 using System.Linq;
 using System.Windows.Forms;
 using GitCommands;
+using GitExtUtils;
+using GitUI.HelperDialogs;
+using GitUI.NBugReports;
 using GitUIPluginInterfaces;
+using Microsoft;
 
 namespace GitUI.Script
 {
     /// <summary>Runs scripts.</summary>
     public static class ScriptRunner
     {
-        /// <summary>Tries to run scripts identified by a <paramref name="command"/></summary>
-        public static CommandStatus ExecuteScriptCommand(IWin32Window owner, GitModule module, int command, IGitUICommands uiCommands, RevisionGridControl revisionGrid = null)
+        /// <summary>Tries to run scripts identified by a <paramref name="command"/>.</summary>
+        public static CommandStatus ExecuteScriptCommand(IWin32Window owner, GitModule module, int command, IGitUICommands uiCommands, RevisionGridControl? revisionGrid)
         {
             var anyScriptExecuted = false;
             var needsGridRefresh = false;
@@ -29,66 +32,66 @@ namespace GitUI.Script
             return new CommandStatus(anyScriptExecuted, needsGridRefresh);
         }
 
-        public static CommandStatus RunScript(IWin32Window owner, GitModule module, string scriptKey, IGitUICommands uiCommands, RevisionGridControl revisionGrid)
+        public static CommandStatus RunScript(IWin32Window owner, IGitModule module, string? scriptKey, IGitUICommands uiCommands, RevisionGridControl? revisionGrid)
+        {
+            try
+            {
+                return RunScriptInternal(owner, module, scriptKey, uiCommands, revisionGrid);
+            }
+            catch (ExternalOperationException ex) when (ex is not UserExternalOperationException)
+            {
+                throw new UserExternalOperationException($"{TranslatedStrings.ScriptErrorFailedToExecute}: '{scriptKey}'", ex);
+            }
+        }
+
+        private static CommandStatus RunScriptInternal(IWin32Window owner, IGitModule module, string? scriptKey, IGitUICommands uiCommands, RevisionGridControl? revisionGrid)
         {
             if (string.IsNullOrEmpty(scriptKey))
             {
                 return false;
             }
 
-            var script = ScriptManager.GetScript(scriptKey);
-
-            if (script == null)
+            ScriptInfo? scriptInfo = ScriptManager.GetScript(scriptKey);
+            if (scriptInfo is null)
             {
-                MessageBox.Show(owner, "Cannot find script: " + scriptKey, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                throw new UserExternalOperationException($"{TranslatedStrings.ScriptErrorCantFind}: '{scriptKey}'",
+                    new ExternalOperationException(workingDirectory: module.WorkingDir));
+            }
+
+            if (string.IsNullOrEmpty(scriptInfo.Command))
+            {
                 return false;
             }
 
-            if (string.IsNullOrEmpty(script.Command))
+            string? arguments = scriptInfo.Arguments;
+            if (!string.IsNullOrEmpty(arguments) && revisionGrid is null)
             {
-                return false;
-            }
-
-            string argument = script.Arguments;
-            foreach (string option in ScriptOptionsParser.Options)
-            {
-                if (string.IsNullOrEmpty(argument) || !argument.Contains(option))
+                string? optionDependingOnSelectedRevision
+                    = ScriptOptionsParser.Options.FirstOrDefault(option => ScriptOptionsParser.DependsOnSelectedRevision(option)
+                                                                        && ScriptOptionsParser.Contains(arguments, option));
+                if (optionDependingOnSelectedRevision is not null)
                 {
-                    continue;
+                    throw new UserExternalOperationException($"{TranslatedStrings.ScriptText}: '{scriptKey}'{Environment.NewLine}'{optionDependingOnSelectedRevision}' {TranslatedStrings.ScriptErrorOptionWithoutRevisionGridText}",
+                        new ExternalOperationException(scriptInfo.Command, arguments, module.WorkingDir));
                 }
-
-                if (!option.StartsWith("s"))
-                {
-                    continue;
-                }
-
-                if (revisionGrid != null)
-                {
-                    continue;
-                }
-
-                MessageBox.Show(owner,
-                    $"Option {option} is only supported when started from revision grid.",
-                    "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
-                return false;
             }
 
-            return RunScript(owner, module, script, uiCommands, revisionGrid);
-        }
-
-        private static CommandStatus RunScript(IWin32Window owner, GitModule module, ScriptInfo scriptInfo, IGitUICommands uiCommands, RevisionGridControl revisionGrid)
-        {
-            if (scriptInfo.AskConfirmation && MessageBox.Show(owner, $"Do you want to execute '{scriptInfo.Name}'?", "Script", MessageBoxButtons.YesNo, MessageBoxIcon.Question) == DialogResult.No)
+            if (scriptInfo.AskConfirmation &&
+                MessageBox.Show(owner, $"{TranslatedStrings.ScriptConfirmExecute}: '{scriptInfo.Name}'?", TranslatedStrings.ScriptText,
+                                MessageBoxButtons.YesNo, MessageBoxIcon.Question) == DialogResult.No)
             {
                 return false;
             }
 
-            string originalCommand = scriptInfo.Command;
-            (string argument, bool abort) = ScriptOptionsParser.Parse(scriptInfo.Arguments, module, owner, revisionGrid);
+            string? originalCommand = scriptInfo.Command;
+            (string? argument, bool abort) = ScriptOptionsParser.Parse(scriptInfo.Arguments, module, owner, revisionGrid);
             if (abort)
             {
-                return false;
+                throw new UserExternalOperationException($"{TranslatedStrings.ScriptText}: '{scriptKey}'{Environment.NewLine}{TranslatedStrings.ScriptErrorOptionWithoutRevisionText}",
+                    new ExternalOperationException(scriptInfo.Command, arguments, module.WorkingDir));
             }
+
+            Validates.NotNull(argument);
 
             string command = OverrideCommandWhenNecessary(originalCommand);
             command = ExpandCommandVariables(command, module);
@@ -96,18 +99,25 @@ namespace GitUI.Script
             if (scriptInfo.IsPowerShell)
             {
                 PowerShellHelper.RunPowerShell(command, argument, module.WorkingDir, scriptInfo.RunInBackground);
-                return new CommandStatus(true, false);
+
+                // 'RunPowerShell' always runs the script detached (yet).
+                // Hence currently, it does not make sense to set 'needsGridRefresh' to '!scriptInfo.RunInBackground'.
+                return new CommandStatus(executed: true, needsGridRefresh: false);
             }
 
             if (command.StartsWith(PluginPrefix))
             {
-                command = command.Replace(PluginPrefix, "");
-                foreach (var plugin in PluginRegistry.Plugins)
+                command = command.Replace(PluginPrefix, string.Empty);
+
+                lock (PluginRegistry.Plugins)
                 {
-                    if (plugin.Description.ToLower().Equals(command, StringComparison.CurrentCultureIgnoreCase))
+                    foreach (var plugin in PluginRegistry.Plugins)
                     {
-                        var eventArgs = new GitUIEventArgs(owner, uiCommands);
-                        return new CommandStatus(true, plugin.Execute(eventArgs));
+                        if (string.Equals(plugin.Name, command, StringComparison.CurrentCultureIgnoreCase))
+                        {
+                            GitUIEventArgs eventArgs = new(owner, uiCommands);
+                            return new CommandStatus(executed: true, needsGridRefresh: plugin.Execute(eventArgs));
+                        }
                     }
                 }
 
@@ -116,45 +126,52 @@ namespace GitUI.Script
 
             if (command.StartsWith(NavigateToPrefix))
             {
-                if (revisionGrid == null)
+                if (revisionGrid is null)
                 {
                     return false;
                 }
 
                 command = command.Replace(NavigateToPrefix, string.Empty);
-                if (!command.IsNullOrEmpty())
+                if (!string.IsNullOrEmpty(command))
                 {
-                    var revisionRef = new Executable(command, module.WorkingDir).GetOutputLines(argument).FirstOrDefault();
+                    string revisionRef = new Executable(command, module.WorkingDir).GetOutputLines(argument).FirstOrDefault();
 
-                    if (revisionRef != null)
+                    if (revisionRef is not null)
                     {
                         revisionGrid.GoToRef(revisionRef, true);
                     }
                 }
 
-                return new CommandStatus(true, false);
+                return new CommandStatus(executed: true, needsGridRefresh: false);
             }
 
             if (!scriptInfo.RunInBackground)
             {
-                FormProcess.ShowStandardProcessDialog(owner, command, argument, module.WorkingDir, null, true);
+                bool success = FormProcess.ShowDialog(owner, command, argument, module.WorkingDir, null, true);
+                if (!success)
+                {
+                    return false;
+                }
             }
             else
             {
                 if (originalCommand.Equals("{openurl}", StringComparison.CurrentCultureIgnoreCase))
                 {
-                    Process.Start(argument);
+                    OsShellUtil.OpenUrlInDefaultBrowser(argument);
                 }
                 else
                 {
-                    new Executable(command, module.WorkingDir).Start(argument);
+                    // It is totally valid to have a command without an argument, e.g.:
+                    //    Command  : myscript.cmd
+                    //    Arguments: <blank>
+                    new Executable(command, module.WorkingDir).Start(argument ?? string.Empty);
                 }
             }
 
-            return new CommandStatus(true, !scriptInfo.RunInBackground);
+            return new CommandStatus(executed: true, needsGridRefresh: !scriptInfo.RunInBackground);
         }
 
-        private static string ExpandCommandVariables(string originalCommand, GitModule module)
+        private static string ExpandCommandVariables(string originalCommand, IGitModule module)
         {
             return originalCommand.Replace("{WorkingDir}", module.WorkingDir);
         }

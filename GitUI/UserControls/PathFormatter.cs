@@ -6,7 +6,7 @@ using System.Text;
 using System.Windows.Forms;
 using GitCommands;
 using GitCommands.Utils;
-using JetBrains.Annotations;
+using GitExtUtils;
 
 namespace GitUI
 {
@@ -28,11 +28,11 @@ namespace GitUI
             _font = font ?? throw new ArgumentNullException(nameof(font));
         }
 
-        public (string Prefix, string Text, string Suffix, int Width) FormatTextForDrawing(int maxWidth, string name, string oldName)
+        public (string? prefix, string? text, string? suffix, int width) FormatTextForDrawing(int maxWidth, string name, string? oldName)
         {
-            string prefix = null;
-            string text = string.Empty;
-            string suffix = null;
+            string? prefix = null;
+            string? text = string.Empty;
+            string? suffix = null;
             int width = 0;
 
             switch (AppSettings.TruncatePathMethod)
@@ -49,7 +49,7 @@ namespace GitUI
                     return (prefix, text, suffix, width);
 
                 default:
-                    int maxStep = oldName == null
+                    int maxStep = oldName is null
                         ? name.Length
                         : Math.Max(name.Length, oldName.Length) * 2;
 
@@ -74,23 +74,22 @@ namespace GitUI
             }
         }
 
-        [CanBeNull]
-        public static (string Text, string Suffix) FormatTextForFileNameOnly(string name, string oldName)
+        public static (string text, string? suffix) FormatTextForFileNameOnly(string name, string? oldName)
         {
             name = name.TrimEnd(PathUtil.PosixDirectorySeparatorChar);
             var fileName = Path.GetFileName(name);
             var oldFileName = Path.GetFileName(oldName);
-            string suffix = fileName == oldFileName ? null : FormatOldName(oldFileName);
+            string? suffix = fileName == oldFileName ? null : FormatOldName(oldFileName);
             return (fileName, suffix);
         }
 
-        public Size MeasureString(string prefix, string text, string suffix)
+        public Size MeasureString(string? prefix, string? text, string? suffix)
         {
-            string str = prefix.Combine(string.Empty, text).Combine(string.Empty, suffix);
+            string? str = prefix.Combine(string.Empty, text).Combine(string.Empty, suffix);
             return MeasureString(str, withPadding: true);
         }
 
-        public Size MeasureString(string str, bool withPadding = false)
+        public Size MeasureString(string? str, bool withPadding = false)
         {
             var formatFlags = FilePathStringFormat;
             if (!withPadding)
@@ -109,23 +108,23 @@ namespace GitUI
         public void DrawString(string str, Rectangle rect, Color color) =>
             TextRenderer.DrawText(_graphics, str, _font, rect, color, FilePathStringFormat);
 
-        private static (string Prefix, string Text, string Suffix) FormatString(string name, string oldName, int step, bool isNameTruncated)
+        private static (string? prefix, string? text, string? suffix) FormatString(string name, string? oldName, int step, bool isNameTruncated)
         {
-            if (oldName != null)
+            if (oldName is not null)
             {
                 int numberOfTruncatedChars = step / 2;
                 int nameTruncatedChars = isNameTruncated ? step - numberOfTruncatedChars : numberOfTruncatedChars;
                 int oldNameTruncatedChars = step - nameTruncatedChars;
 
                 var (path, filename) = SplitPathName(TruncatePath(name, name.Length - oldNameTruncatedChars));
-                string suffix = FormatOldName(TruncatePath(oldName, oldName.Length - oldNameTruncatedChars));
+                string? suffix = FormatOldName(TruncatePath(oldName, oldName.Length - oldNameTruncatedChars));
                 return (path, filename, suffix);
             }
 
             var (prefix, text) = SplitPathName(TruncatePath(name, name.Length - step));
             return (prefix, text, null);
 
-            string TruncatePath(string path, int length)
+            static string TruncatePath(string path, int length)
             {
                 if (path.Length == length)
                 {
@@ -142,7 +141,7 @@ namespace GitUI
 
                 if (truncatePathMethod == TruncatePathMethod.Compact && EnvUtils.RunningOnWindows())
                 {
-                    var result = new StringBuilder(length);
+                    StringBuilder result = new(length);
                     NativeMethods.PathCompactPathEx(result, path, length, 0);
                     return result.ToString();
                 }
@@ -156,14 +155,14 @@ namespace GitUI
             }
         }
 
-        private static string FormatOldName(string oldName)
+        private static string? FormatOldName(string oldName)
         {
             return string.IsNullOrEmpty(oldName) ? null : " (" + oldName + ")";
         }
 
-        private static (string Path, string FileName) SplitPathName(string name)
+        private static (string? path, string? fileName) SplitPathName(string? name)
         {
-            if (name == null)
+            if (name is null)
             {
                 return (null, null);
             }
@@ -185,10 +184,10 @@ namespace GitUI
             TextFormatFlags.VerticalCenter |
             TextFormatFlags.TextBoxControl;
 
-        internal class TestAccessor
+        internal readonly struct TestAccessor
         {
-            internal static string FormatOldName(string oldName) => PathFormatter.FormatOldName(oldName);
-            internal static (string Path, string FileName) SplitPathName(string name) => PathFormatter.SplitPathName(name);
+            internal static string? FormatOldName(string oldName) => PathFormatter.FormatOldName(oldName);
+            internal static (string? path, string? fileName) SplitPathName(string name) => PathFormatter.SplitPathName(name);
         }
     }
 }

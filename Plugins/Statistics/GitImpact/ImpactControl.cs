@@ -5,13 +5,12 @@ using System.Drawing;
 using System.Drawing.Drawing2D;
 using System.Linq;
 using System.Windows.Forms;
-using GitCommands.Statistics;
 using GitExtUtils.GitUI;
 using GitUIPluginInterfaces;
 
-namespace GitImpact
+namespace GitExtensions.Plugins.GitImpact
 {
-    public class ImpactControl : UserControl
+    public partial class ImpactControl : UserControl
     {
         private static readonly int BlockWidth = DpiUtil.Scale(60);
         private static readonly int TransitionWidth = DpiUtil.Scale(50);
@@ -19,32 +18,30 @@ namespace GitImpact
         private const int LinesFontSize = 10;
         private const int WeekFontSize = 8;
 
-        private readonly object _dataLock = new object();
+        private readonly object _dataLock = new();
 
-        private ImpactLoader _impactLoader;
+        private ImpactLoader? _impactLoader;
 
         // <Author, <Commits, Added Lines, Deleted Lines>>
-        private Dictionary<string, ImpactLoader.DataPoint> _authors;
+        private readonly Dictionary<string, ImpactLoader.DataPoint> _authors = new();
 
         // <First weekday of commit date, <Author, <Commits, Added Lines, Deleted Lines>>>
-        private SortedDictionary<DateTime, Dictionary<string, ImpactLoader.DataPoint>> _impact;
+        private SortedDictionary<DateTime, Dictionary<string, ImpactLoader.DataPoint>> _impact = new();
 
         // List of authors that determines the drawing order
-        private List<string> _authorStack;
+        private readonly List<string> _authorStack = new();
 
         // The paths for each author
-        private Dictionary<string, GraphicsPath> _paths;
+        private readonly Dictionary<string, GraphicsPath> _paths = new();
 
         // The brush for each author
-        private Dictionary<string, SolidBrush> _brushes;
+        private readonly Dictionary<string, SolidBrush> _brushes = new();
 
         // The changed-lines-labels for each author
-        private Dictionary<string, List<(PointF point, int size)>> _lineLabels;
+        private readonly Dictionary<string, List<(PointF point, int size)>> _lineLabels = new();
 
         // The week-labels
-        private List<(PointF point, DateTime date)> _weekLabels;
-
-        private HScrollBar _scrollBar;
+        private readonly List<(PointF point, DateTime date)> _weekLabels = new();
 
         public ImpactControl()
         {
@@ -74,14 +71,14 @@ namespace GitImpact
         {
             lock (_dataLock)
             {
-                _authors = new Dictionary<string, ImpactLoader.DataPoint>();
-                _impact = new SortedDictionary<DateTime, Dictionary<string, ImpactLoader.DataPoint>>();
+                _authors.Clear();
+                _impact.Clear();
 
-                _authorStack = new List<string>();
-                _paths = new Dictionary<string, GraphicsPath>();
-                _brushes = new Dictionary<string, SolidBrush>();
-                _lineLabels = new Dictionary<string, List<(PointF, int)>>();
-                _weekLabels = new List<(PointF, DateTime)>();
+                _authorStack.Clear();
+                _paths.Clear();
+                _brushes.Clear();
+                _lineLabels.Clear();
+                _weekLabels.Clear();
             }
         }
 
@@ -156,7 +153,7 @@ namespace GitImpact
 
         public void UpdateData()
         {
-            if (_impactLoader != null)
+            if (_impactLoader is not null)
             {
                 _impactLoader.ShowSubmodules = _showSubmodules;
                 _impactLoader.Execute();
@@ -175,29 +172,6 @@ namespace GitImpact
                 Clear();
                 UpdateData();
             }
-        }
-
-        private void InitializeComponent()
-        {
-            SuspendLayout();
-
-            _scrollBar = new HScrollBar
-            {
-                Dock = DockStyle.Bottom,
-                LargeChange = 0,
-                Location = new Point(0, 133),
-                Maximum = 0,
-                Name = "_scrollBar",
-                SmallChange = 0,
-                TabIndex = 0
-            };
-            _scrollBar.Scroll += OnScroll;
-
-            Controls.Add(_scrollBar);
-            Name = "ImpactControl";
-            Paint += OnPaint;
-            Resize += OnResize;
-            ResumeLayout(false);
         }
 
         private int GetGraphWidth()
@@ -226,7 +200,7 @@ namespace GitImpact
         private void OnPaint(object sender, PaintEventArgs e)
         {
             // White background
-            e.Graphics.Clear(Color.White);
+            e.Graphics.Clear(SystemColors.Window);
             UpdateScrollbar();
             lock (_dataLock)
             {
@@ -256,7 +230,7 @@ namespace GitImpact
                 string selectedAuthor = _authorStack[_authorStack.Count - 1];
                 if (_brushes.ContainsKey(selectedAuthor) && _paths.ContainsKey(selectedAuthor))
                 {
-                    e.Graphics.DrawPath(new Pen(Color.Black, 2), _paths[selectedAuthor]);
+                    e.Graphics.DrawPath(new Pen(SystemColors.WindowText, 2), _paths[selectedAuthor]);
                 }
 
                 foreach (var author in _authorStack)
@@ -277,16 +251,14 @@ namespace GitImpact
                     return;
                 }
 
-                using (var font = new Font("Arial", LinesFontSize))
-                {
-                    Brush brush = Brushes.White;
+                using Font font = new("Arial", LinesFontSize);
+                Brush brush = Brushes.White;
 
-                    foreach (var (point, size) in _lineLabels[author])
-                    {
-                        SizeF sz = g.MeasureString(size.ToString(), font);
-                        var pt = new PointF(point.X - (sz.Width / 2), point.Y - (sz.Height / 2));
-                        g.DrawString(size.ToString(), font, brush, pt);
-                    }
+                foreach (var (point, size) in _lineLabels[author])
+                {
+                    SizeF sz = g.MeasureString(size.ToString(), font);
+                    PointF pt = new(point.X - (sz.Width / 2), point.Y - (sz.Height / 2));
+                    g.DrawString(size.ToString(), font, brush, pt);
                 }
             }
         }
@@ -295,16 +267,14 @@ namespace GitImpact
         {
             lock (_dataLock)
             {
-                using (var font = new Font("Arial", WeekFontSize))
-                {
-                    Brush brush = Brushes.Gray;
+                using Font font = new("Arial", WeekFontSize);
+                Brush brush = Brushes.Gray;
 
-                    foreach (var (point, date) in _weekLabels)
-                    {
-                        SizeF sz = g.MeasureString(date.ToString("dd. MMM yy"), font);
-                        var pt = new PointF(point.X - (sz.Width / 2), point.Y + (sz.Height / 2));
-                        g.DrawString(date.ToString("dd. MMM yy"), font, brush, pt);
-                    }
+                foreach (var (point, date) in _weekLabels)
+                {
+                    SizeF sz = g.MeasureString(date.ToString("dd. MMM yy"), font);
+                    PointF pt = new(point.X - (sz.Width / 2), point.Y + (sz.Height / 2));
+                    g.DrawString(date.ToString("dd. MMM yy"), font, brush, pt);
                 }
             }
         }
@@ -320,7 +290,7 @@ namespace GitImpact
         {
             int h_max = 0;
             int x = 0;
-            var author_points_dict = new Dictionary<string, List<(Rectangle, int changeCount)>>();
+            Dictionary<string, List<(Rectangle, int changeCount)>> author_points_dict = new();
 
             lock (_dataLock)
             {
@@ -337,7 +307,7 @@ namespace GitImpact
                     {
                         // Calculate week-author-rectangle
                         int height = Math.Max(1, (int)Math.Round(Math.Pow(Math.Log(data.ChangedLines), 1.5) * 4));
-                        var rc = new Rectangle(x, y, BlockWidth, height);
+                        Rectangle rc = new(x, y, BlockWidth, height);
 
                         // Add rectangle to temporary list
                         if (!author_points_dict.ContainsKey(author))
@@ -376,7 +346,7 @@ namespace GitImpact
                 {
                     var (point, date) = _weekLabels[i];
 
-                    var adjustedPoint = new PointF(point.X, point.Y * (float)height_factor);
+                    PointF adjustedPoint = new(point.X, point.Y * (float)height_factor);
 
                     _weekLabels[i] = (adjustedPoint, date);
                 }
@@ -395,7 +365,7 @@ namespace GitImpact
                     {
                         var (unscaledRect, num) = points[i];
 
-                        var rect = new Rectangle(unscaledRect.Left, (int)(unscaledRect.Top * height_factor),
+                        Rectangle rect = new(unscaledRect.Left, (int)(unscaledRect.Top * height_factor),
                             unscaledRect.Width, Math.Max(1, (int)(unscaledRect.Height * height_factor)));
 
                         points[i] = (rect, num);
@@ -408,7 +378,7 @@ namespace GitImpact
 
                         if (rect.Height > LinesFontSize * 1.5)
                         {
-                            var adjustedPoint = new PointF(rect.Left + (BlockWidth / 2), rect.Top + (rect.Height / 2));
+                            PointF adjustedPoint = new(rect.Left + (BlockWidth / 2), rect.Top + (rect.Height / 2));
 
                             _lineLabels[author].Add((adjustedPoint, num));
                         }

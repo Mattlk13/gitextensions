@@ -1,8 +1,7 @@
-using System.Drawing;
+using System.Diagnostics.CodeAnalysis;
 using System.Windows.Forms;
-using GitCommands;
 using GitExtUtils.GitUI;
-using JetBrains.Annotations;
+using GitUIPluginInterfaces;
 
 namespace GitUI.UserControls.RevisionGrid.Columns
 {
@@ -14,7 +13,7 @@ namespace GitUI.UserControls.RevisionGrid.Columns
         public int ColumnLeftMargin { get; } = DpiUtil.Scale(6);
 
         /// <summary>The DataGrid column object that models this column.</summary>
-        public DataGridViewColumn Column { get; protected set; }
+        public DataGridViewColumn Column { get; protected set; } = null!;
 
         /// <summary>The display friendly name of this column.</summary>
         public string Name { get; }
@@ -25,16 +24,20 @@ namespace GitUI.UserControls.RevisionGrid.Columns
 
         public int Index => Column.Index;
 
+        public virtual void Clear()
+        {
+        }
+
+        public virtual void LoadingCompleted()
+        {
+        }
+
         /// <summary>Renders the content of a cell in this column.</summary>
         public abstract void OnCellPainting(DataGridViewCellPaintingEventArgs e, GitRevision revision, int rowHeight, in CellStyle style);
 
         /// <summary>Formats the textual representation of a cell in this column.</summary>
         /// <remarks>Implementations may set <c>e.Value</c> to the required string, and then set <c>e.FormattingApplied</c> to <c>true</c>.</remarks>
         public virtual void OnCellFormatting(DataGridViewCellFormattingEventArgs e, GitRevision revision)
-        {
-        }
-
-        public virtual void Clear()
         {
         }
 
@@ -48,9 +51,7 @@ namespace GitUI.UserControls.RevisionGrid.Columns
 
         /// <summary>Attempts to get custom tool tip text for a cell in this column.</summary>
         /// <remarks>Returning <c>false</c> here will not stop a tool tip being automatically displayed for truncated text.</remarks>
-        [ContractAnnotation("=>false,toolTip:null")]
-        [ContractAnnotation("=>true,toolTip:notnull")]
-        public virtual bool TryGetToolTip(DataGridViewCellMouseEventArgs e, GitRevision revision, [CanBeNull] out string toolTip)
+        public virtual bool TryGetToolTip(DataGridViewCellMouseEventArgs e, GitRevision revision, [NotNullWhen(returnValue: true)] out string? toolTip)
         {
             toolTip = default;
             return false;

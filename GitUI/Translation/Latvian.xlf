@@ -1,4 +1,4 @@
-<?xml version="1.0" ?><xliff GitExVersion="3.1.0" version="1.0" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+<?xml version="1.0" ?><xliff GitExVersion="" version="1.0" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
   <file datatype="plaintext" original="AdvancedSettingsPage" source-language="en" target-language="lv">
     <body>
       <trans-unit id="$this.Text">
@@ -31,6 +31,11 @@
         <target>Automātiski normalizēt zara nosaukumu</target>
         
       </trans-unit>
+      <trans-unit id="chkAutoNormaliseBranchName.ToolTipText">
+        <source>Controls whether branch name should be automatically normalised as per git branch naming rules.
+If enabled, any illegal symbols will be replaced with the replacement symbol of your choice.</source>
+        
+      </trans-unit>
       <trans-unit id="chkCheckForRCVersions.Text">
         <source>Check for release candidate versions</source>
         <target>Pārbaudīt, vai nav izlaistu kandidātu versiju</target>
@@ -48,6 +53,15 @@
       <trans-unit id="chkConsoleEmulator.Text">
         <source>Use Console Emulator for console output in command dialogs</source>
         <target>Konsoles izvadei komandu dialogos izmantot konsoles emulatoru</target>
+        
+      </trans-unit>
+      <trans-unit id="chkConsoleEmulator.ToolTipText">
+        <source>Controls how console programs output is displayed in command progress dialogs, like Clone or Pull.
+
+If yes, embeds the fully functional console emulator. This is experimental and might have side-effects.
+If no, redirects select strings from stdout/stderr into an edit box. This is the classic mode.
+
+Turn off if you experience problems with the console emulator.</source>
         
       </trans-unit>
       <trans-unit id="chkDontSHowHelpImages.Text">
@@ -139,6 +153,10 @@ This action will be performed without warning while checking out branch.</source
         <target>Izskats</target>
         
       </trans-unit>
+      <trans-unit id="AvatarProvider.Text">
+        <source>Gravatar</source>
+        
+      </trans-unit>
       <trans-unit id="ClearImageCache.Text">
         <source>Clear image cache</source>
         <target>Notīrīt attēlu kešatmiņu</target>
@@ -153,6 +171,10 @@ This action will be performed without warning while checking out branch.</source
         <target>Rādīt autora avatāru izpildes informācijas skatā</target>
         
       </trans-unit>
+      <trans-unit id="_authorDateSortWarningTooltip.Text">
+        <source>Sorting by author date may delay rendering of the revision graph.</source>
+        
+      </trans-unit>
       <trans-unit id="_noDictFile.Text">
         <source>None</source>
         <target>Neviens</target>
@@ -165,7 +187,7 @@ This action will be performed without warning while checking out branch.</source
       </trans-unit>
       <trans-unit id="_noImageServiceTooltip.Text">
         <source>A default image, if an email address has no matching Gravatar image.
-See http://en.gravatar.com/site/implement/images/ for more details.</source>
+See http://en.gravatar.com/site/implement/images#default-image for more details.</source>
         
       </trans-unit>
       <trans-unit id="chkEnableAutoScale.Text">
@@ -181,6 +203,14 @@ See http://en.gravatar.com/site/implement/images/ for more details.</source>
       <trans-unit id="chkShowRelativeDate.Text">
         <source>Show relative date instead of full date</source>
         <target>Rādīt relatīvo datumu, nevis pilnu datumu</target>
+        
+      </trans-unit>
+      <trans-unit id="chkShowRepoCurrentBranch.Text">
+        <source>Show current branch names in the dashboard and the recent repositories dropdown menu</source>
+        
+      </trans-unit>
+      <trans-unit id="chkSortByAuthorDate.Text">
+        <source>Sort by author date</source>
         
       </trans-unit>
       <trans-unit id="downloadDictionary.Text">
@@ -208,6 +238,18 @@ See http://en.gravatar.com/site/implement/images/ for more details.</source>
         <target>Palīdzības tulkošana</target>
         
       </trans-unit>
+      <trans-unit id="lblAvatarProvider.Text">
+        <source>Avatar provider</source>
+        
+      </trans-unit>
+      <trans-unit id="lblBranchesOrder.Text">
+        <source>Order branches</source>
+        
+      </trans-unit>
+      <trans-unit id="lblBranchesSortBy.Text">
+        <source>Sort branches by</source>
+        
+      </trans-unit>
       <trans-unit id="lblCacheDays.Text">
         <source>Cache images (days)</source>
         <target>Kešatmiņas attēli (dienas)</target>
@@ -219,8 +261,7 @@ See http://en.gravatar.com/site/implement/images/ for more details.</source>
         
       </trans-unit>
       <trans-unit id="lblNoImageService.Text">
-        <source>No image service</source>
-        <target>Nav attēlu pakalpojuma</target>
+        <source>Fallback generated avatar style</source>
         
       </trans-unit>
       <trans-unit id="lblSpellingDictionary.Text">
@@ -257,14 +298,17 @@ See http://en.gravatar.com/site/implement/images/ for more details.</source>
   </file>
   <file datatype="plaintext" original="AvatarControl" source-language="en" target-language="lv">
     <body>
+      <trans-unit id="avatarProviderToolStripMenuItem.Text">
+        <source>Avatar provider</source>
+        
+      </trans-unit>
       <trans-unit id="clearImagecacheToolStripMenuItem.Text">
         <source>Clear image cache</source>
         <target>Notīrīt attēlu kešatmiņu</target>
         
       </trans-unit>
-      <trans-unit id="defaultImageToolStripMenuItem.Text">
-        <source>Default image</source>
-        <target>Noklusējuma attēls</target>
+      <trans-unit id="fallbackAvatarStyleToolStripMenuItem.Text">
+        <source>Fallback generated avatar style</source>
         
       </trans-unit>
       <trans-unit id="registerGravatarToolStripMenuItem.Text">
@@ -283,6 +327,10 @@ See http://en.gravatar.com/site/implement/images/ for more details.</source>
       <trans-unit id="blamePreviousRevisionToolStripMenuItem.Text">
         <source>Blame previous revision</source>
         <target>Vainot iepriekšējo pārskatīšanu</target>
+        
+      </trans-unit>
+      <trans-unit id="blameRevisionToolStripMenuItem.Text">
+        <source>Blame this revision</source>
         
       </trans-unit>
       <trans-unit id="commitHashToolStripMenuItem.Text">
@@ -359,6 +407,109 @@ See http://en.gravatar.com/site/implement/images/ for more details.</source>
       <trans-unit id="label1.Text">
         <source>Select branch</source>
         <target>Atlasīt zaru</target>
+        
+      </trans-unit>
+    </body>
+  </file>
+  <file datatype="plaintext" original="BugReportForm" source-language="en" target-language="lv">
+    <body>
+      <trans-unit id="_noReproStepsSuppliedErrorMessage.Text">
+        <source>Please provide as much as information as possible to help the developers solve this issue.</source>
+        
+      </trans-unit>
+      <trans-unit id="_submitGitHubMessage.Text">
+        <source>Give as much as information as possible please to help the developers solve this issue. Otherwise, your issue ticket may be closed without any follow-up from the developers.
+
+Because of this, make sure to fill in all the fields in the report template please.
+
+Send report anyway?</source>
+        
+      </trans-unit>
+      <trans-unit id="_title.Text">
+        <source>Error Report</source>
+        
+      </trans-unit>
+      <trans-unit id="_toolTipCopy.Text">
+        <source>Copy the issue details into clipboard</source>
+        
+      </trans-unit>
+      <trans-unit id="_toolTipQuit.Text">
+        <source>Quit application without reporting the issue</source>
+        
+      </trans-unit>
+      <trans-unit id="_toolTipSendQuit.Text">
+        <source>Report the issue to GitHub and quit application.
+A valid GitHub account is required</source>
+        
+      </trans-unit>
+      <trans-unit id="applicationLabel.Text">
+        <source>Application:</source>
+        
+      </trans-unit>
+      <trans-unit id="btnCopy.Text">
+        <source>&amp;Copy</source>
+        
+      </trans-unit>
+      <trans-unit id="contentsLabel.Text">
+        <source>Double-click an item to open it with the associated program.</source>
+        
+      </trans-unit>
+      <trans-unit id="dateTimeLabel.Text">
+        <source>Date/Time:</source>
+        
+      </trans-unit>
+      <trans-unit id="descriptionColumnHeader.Text">
+        <source>Description</source>
+        
+      </trans-unit>
+      <trans-unit id="errorDescriptionLabel.Text">
+        <source>Please add a brief description (in English) of how we can reproduce the error:</source>
+        
+      </trans-unit>
+      <trans-unit id="exceptionTabPage.Text">
+        <source>Exception</source>
+        
+      </trans-unit>
+      <trans-unit id="exceptionTypeLabel.Text">
+        <source>Exception Type:</source>
+        
+      </trans-unit>
+      <trans-unit id="generalTabPage.Text">
+        <source>General</source>
+        <target>Vispārīgs</target>
+        
+      </trans-unit>
+      <trans-unit id="nameColumnHeader.Text">
+        <source>Name</source>
+        <target>Vārds</target>
+        
+      </trans-unit>
+      <trans-unit id="previewLabel.Text">
+        <source>Preview:</source>
+        
+      </trans-unit>
+      <trans-unit id="quitButton.Text">
+        <source>&amp;Quit</source>
+        
+      </trans-unit>
+      <trans-unit id="reportContentsTabPage.Text">
+        <source>Report Contents</source>
+        
+      </trans-unit>
+      <trans-unit id="sendAndQuitButton.Text">
+        <source>&amp;Send and Quit</source>
+        
+      </trans-unit>
+      <trans-unit id="sizeColumnHeader.Text">
+        <source>Size</source>
+        
+      </trans-unit>
+      <trans-unit id="targetSiteLabel.Text">
+        <source>Target Site:</source>
+        
+      </trans-unit>
+      <trans-unit id="warningLabel.Text">
+        <source>The application has crashed and it will now be terminated. If you click Quit, the application will close immediately. If you click Send and Quit, the application will close and a bug report will be sent.</source>
         
       </trans-unit>
     </body>
@@ -458,8 +609,7 @@ See http://en.gravatar.com/site/implement/images/ for more details.</source>
         
       </trans-unit>
       <trans-unit id="_adviceDiffToolConfiguration.Text">
-        <source>You should configure a diff tool to show file diff in external program (kdiff3 for example).</source>
-        <target>Ir jākonfigurē diff rīks, lai parādītu failu diff ārējā programmā (piemēram, kdiff3).</target>
+        <source>You should configure a diff tool to show file diff in external program.</source>
         
       </trans-unit>
       <trans-unit id="_cantRegisterShellExtension.Text">
@@ -468,8 +618,7 @@ See http://en.gravatar.com/site/implement/images/ for more details.</source>
         
       </trans-unit>
       <trans-unit id="_configureMergeTool.Text">
-        <source>You need to configure merge tool in order to solve merge conflicts (kdiff3 for example).</source>
-        <target>Lai atrisinātu sapludināšanas konfliktus, ir jākonfigurē sapludināšanas rīks (piemēram, kdiff3).</target>
+        <source>You need to configure merge tool in order to solve merge conflicts.</source>
         
       </trans-unit>
       <trans-unit id="_customMergeToolXConfigured.Text">
@@ -511,32 +660,6 @@ See http://en.gravatar.com/site/implement/images/ for more details.</source>
         <target>Datorā atrasts git {0}.</target>
         
       </trans-unit>
-      <trans-unit id="_kdiff3NotFoundAuto.Text">
-        <source>Path to kdiff3 could not be found automatically.
-Please make sure KDiff3 is installed or set path manually.</source>
-        <target>Ceļu uz kdiff3 nevarēja atrast automātiski. Lūdzu, pārliecinieties, vai KDiff3 ir instalēts, vai iestatiet ceļu manuāli.</target>
-        
-      </trans-unit>
-      <trans-unit id="_kdiffAsDiffConfigured.Text">
-        <source>KDiff3 is configured as difftool.</source>
-        <target>Kdiff3 ir konfigurēts kā difftool.</target>
-        
-      </trans-unit>
-      <trans-unit id="_kdiffAsDiffConfiguredButNotFound.Text">
-        <source>KDiff3 is configured as difftool, but the path to kdiff.exe is not configured.</source>
-        <target>Kdiff3 ir konfigurēts kā difftool, bet ceļš uz kdiff.exe nav konfigurēts.</target>
-        
-      </trans-unit>
-      <trans-unit id="_kdiffAsMergeConfigured.Text">
-        <source>KDiff3 is configured as mergetool.</source>
-        <target>Kdiff3 ir konfigurēts kā mergetool.</target>
-        
-      </trans-unit>
-      <trans-unit id="_kdiffAsMergeConfiguredButNotFound.Text">
-        <source>KDiff3 is configured as mergetool, but the path to kdiff.exe is not configured.</source>
-        <target>Kdiff3 ir konfigurēts kā mergetool, bet ceļš uz kdiff.exe nav konfigurēts.</target>
-        
-      </trans-unit>
       <trans-unit id="_languageConfigured.Text">
         <source>The configured language is {0}.</source>
         <target>Konfigurētā valoda ir {0}.</target>
@@ -573,12 +696,6 @@ Please make sure there are linux tools installed (through Git for Windows or cyg
         <target>{0} ir konfigurēts kā mergetool, šis ir pielāgots mergetool rīks, un tā konfigurēšanai ir nepieciešams pielāgots cmd.</target>
         
       </trans-unit>
-      <trans-unit id="_noDiffToolConfigured.Text">
-        <source>There is no difftool configured. Do you want to configure kdiff3 as your difftool?
-Select no if you want to configure a different difftool yourself.</source>
-        <target>Nav konfigurēts neviens difftool. Vai vēlaties konfigurēt kdiff3 kā savu difftool? Atlasiet no, ja vēlaties pats konfigurēt citu difftool.</target>
-        
-      </trans-unit>
       <trans-unit id="_noDiffToolConfiguredCaption.Text">
         <source>Difftool</source>
         <target>Difftool</target>
@@ -592,17 +709,6 @@ Select no if you want to configure a different difftool yourself.</source>
       <trans-unit id="_noLanguageConfigured.Text">
         <source>There is no language configured for Git Extensions.</source>
         <target>Git paplašinājumiem nav konfigurēta neviena valoda.</target>
-        
-      </trans-unit>
-      <trans-unit id="_noMergeToolConfigured.Text">
-        <source>There is no mergetool configured. Do you want to configure kdiff3 as your mergetool?
-Select no if you want to configure a different mergetool yourself.</source>
-        <target>Nav konfigurēts neviens mergetool. Vai vēlaties konfigurēt kdiff3 kā savu sapludināšanas rīku? Atlasiet no, ja vēlaties pats konfigurēt citu mergetool.</target>
-        
-      </trans-unit>
-      <trans-unit id="_noMergeToolConfiguredCaption.Text">
-        <source>Mergetool</source>
-        <target>Mergetools</target>
         
       </trans-unit>
       <trans-unit id="_notRecommendedGitVersion.Text">
@@ -708,6 +814,10 @@ Please make sure git (Git for Windows or cygwin) is installed or set the correct
         <target>Krāsas</target>
         
       </trans-unit>
+      <trans-unit id="DefaultThemeName.Text">
+        <source>default</source>
+        
+      </trans-unit>
       <trans-unit id="DrawNonRelativesGray.Text">
         <source>Draw non relatives graph gray</source>
         <target>Zīmēt ne radinieku grafu pelēks</target>
@@ -718,9 +828,17 @@ Please make sure git (Git for Windows or cygwin) is installed or set the correct
         <target>Zīmēt neradinieku tekstu pelēkā krāsā</target>
         
       </trans-unit>
+      <trans-unit id="FormatUserDefinedThemeName.Text">
+        <source>{0}, user-defined</source>
+        
+      </trans-unit>
       <trans-unit id="MulticolorBranches.Text">
         <source>Multicolor branches</source>
         <target>Daudzkrāsu zari</target>
+        
+      </trans-unit>
+      <trans-unit id="chkColorblind.Text">
+        <source>Colorblind</source>
         
       </trans-unit>
       <trans-unit id="chkDrawAlternateBackColor.Text">
@@ -732,9 +850,8 @@ Please make sure git (Git for Windows or cygwin) is installed or set the correct
         <source>Highlight authored revisions</source>
         
       </trans-unit>
-      <trans-unit id="gbDiffView.Text">
-        <source>Difference view</source>
-        <target>Atšķirības skats</target>
+      <trans-unit id="chkUseSystemVisualStyle.Text">
+        <source>Use system-defined visual style (looks bad with dark colors)</source>
         
       </trans-unit>
       <trans-unit id="gbRevisionGraph.Text">
@@ -742,53 +859,24 @@ Please make sure git (Git for Windows or cygwin) is installed or set the correct
         <target>Pārskatīšanas grafiks</target>
         
       </trans-unit>
-      <trans-unit id="lblColorBranchLocal.Text">
-        <source>Color branch</source>
-        <target>Krāsu zars</target>
+      <trans-unit id="gbTheme.Text">
+        <source>Theme</source>
         
       </trans-unit>
-      <trans-unit id="lblColorBranchRemote.Text">
-        <source>Color remote branch</source>
-        <target>Krāsu attālais zars</target>
+      <trans-unit id="lblRestartNeeded.Text">
+        <source>Restart required to apply changes</source>
         
       </trans-unit>
-      <trans-unit id="lblColorHighlightAuthored.Text">
-        <source>Color authored revisions</source>
+      <trans-unit id="sbOpenThemeFolder.Text">
+        <source>Open theme folder</source>
         
       </trans-unit>
-      <trans-unit id="lblColorHilghlightLineAdded.Text">
-        <source>Color added line highlighting</source>
-        <target>Krāsu pievienotās līnijas iezīmēšana</target>
+      <trans-unit id="tsmiApplicationFolder.Text">
+        <source>Application folder</source>
         
       </trans-unit>
-      <trans-unit id="lblColorHilghlightLineRemoved.Text">
-        <source>Color removed line highlighting</source>
-        <target>Nokrāsotas līnijas iezīmēšana</target>
-        
-      </trans-unit>
-      <trans-unit id="lblColorLabel.Text">
-        <source>Color other label</source>
-        <target>Krāsas cita etiķete</target>
-        
-      </trans-unit>
-      <trans-unit id="lblColorLineAdded.Text">
-        <source>Color added line</source>
-        <target>Krāsa pievienota rindiņa</target>
-        
-      </trans-unit>
-      <trans-unit id="lblColorLineRemoved.Text">
-        <source>Color removed line</source>
-        <target>No krāsas noņemta līnija</target>
-        
-      </trans-unit>
-      <trans-unit id="lblColorSection.Text">
-        <source>Color section</source>
-        <target>Krāsu sekcija</target>
-        
-      </trans-unit>
-      <trans-unit id="lblColorTag.Text">
-        <source>Color tag</source>
-        <target>Krāsas tags</target>
+      <trans-unit id="tsmiUserFolder.Text">
+        <source>User folder</source>
         
       </trans-unit>
     </body>
@@ -805,13 +893,13 @@ Please make sure git (Git for Windows or cygwin) is installed or set the correct
         <target>Atcerēties izvēles rūtiņu 'Amend do' izpildes formā tuvu</target>
         
       </trans-unit>
-      <trans-unit id="chkAddNewlineToCommitMessageWhenMissing.Text">
-        <source>Ensure the second line of commit message is empty</source>
-        <target>Pārliecinieties, vai otrā izpildes ziņojuma rindiņa ir tukša</target>
-        
-      </trans-unit>
       <trans-unit id="chkAutocomplete.Text">
         <source>Provide auto-completion in commit dialog</source>
+        
+      </trans-unit>
+      <trans-unit id="chkEnsureCommitMessageSecondLineEmpty.Text">
+        <source>Ensure the second line of commit message is empty</source>
+        <target>Pārliecinieties, vai otrā izpildes ziņojuma rindiņa ir tukša</target>
         
       </trans-unit>
       <trans-unit id="chkShowCommitAndPush.Text">
@@ -861,26 +949,6 @@ Please make sure git (Git for Windows or cygwin) is installed or set the correct
     <body>
       <trans-unit id="_brokenRefs.Text">
         <source>The repository refs seem to be broken:</source>
-        
-      </trans-unit>
-      <trans-unit id="_containedInBranches.Text">
-        <source>Contained in branches:</source>
-        <target>Atrodas filiālēs:</target>
-        
-      </trans-unit>
-      <trans-unit id="_containedInNoBranch.Text">
-        <source>Contained in no branch</source>
-        <target>Atrodas bez filiāles</target>
-        
-      </trans-unit>
-      <trans-unit id="_containedInNoTag.Text">
-        <source>Contained in no tag</source>
-        <target>Iekļauts bez taga</target>
-        
-      </trans-unit>
-      <trans-unit id="_containedInTags.Text">
-        <source>Contained in tags:</source>
-        <target>Iekļauti tagos:</target>
         
       </trans-unit>
       <trans-unit id="_copyLink.Text">
@@ -1069,6 +1137,10 @@ Please make sure git (Git for Windows or cygwin) is installed or set the correct
         <target>Apstiprināt otro reizi, lai pārtrauktu sapludināšanu</target>
         
       </trans-unit>
+      <trans-unit id="chkSwitchWorktree.Text">
+        <source>Switch Worktree</source>
+        
+      </trans-unit>
       <trans-unit id="chkUndoLastCommitConfirmation.Text">
         <source>Undo last commit</source>
         <target>Atsaukt pēdējo nodošanu</target>
@@ -1082,6 +1154,29 @@ Please make sure git (Git for Windows or cygwin) is installed or set the correct
       <trans-unit id="gbConfirmations.Text">
         <source>Don't ask to confirm to (use with caution)</source>
         <target>Neprasīt apstiprinājumu (lietot piesardzīgi)</target>
+        
+      </trans-unit>
+    </body>
+  </file>
+  <file datatype="plaintext" original="ConsoleStyleSettingsPage" source-language="en" target-language="lv">
+    <body>
+      <trans-unit id="$this.Text">
+        <source>Console style</source>
+        <target>Konsoles stils</target>
+        
+      </trans-unit>
+      <trans-unit id="groupBoxConsoleSettings.Text">
+        <source>Console settings (restart required)</source>
+        
+      </trans-unit>
+      <trans-unit id="label1.Text">
+        <source>Console style</source>
+        <target>Konsoles stils</target>
+        
+      </trans-unit>
+      <trans-unit id="label3.Text">
+        <source>Font size</source>
+        <target>Fonta lielums</target>
         
       </trans-unit>
     </body>
@@ -1145,11 +1240,6 @@ Please make sure git (Git for Windows or cygwin) is installed or set the correct
       <trans-unit id="_strDone.Text">
         <source>Done</source>
         <target>Gatavs</target>
-        
-      </trans-unit>
-      <trans-unit id="_strError.Text">
-        <source>Error</source>
-        <target>Kļūda</target>
         
       </trans-unit>
       <trans-unit id="_strFailedToCreatePullRequest.Text">
@@ -1246,11 +1336,6 @@ Please make sure git (Git for Windows or cygwin) is installed or set the correct
         <target>Atvērt repozitoriju</target>
         
       </trans-unit>
-      <trans-unit id="_showCurrentBranch.Text">
-        <source>Show current branch</source>
-        <target>Rādīt pašreizējo atzaru</target>
-        
-      </trans-unit>
       <trans-unit id="_translate.Text">
         <source>Translate</source>
         <target>Tulkot</target>
@@ -1285,6 +1370,26 @@ Please make sure git (Git for Windows or cygwin) is installed or set the correct
         <target>Iegūt attālos zarus tieši no tālvadības pults</target>
         
       </trans-unit>
+      <trans-unit id="chkUseSSL.Text">
+        <source>Use SSL/TLS</source>
+        <target>Izmantot SSL/TLS</target>
+        
+      </trans-unit>
+      <trans-unit id="groupBoxEmailSettings.Text">
+        <source>Email settings for sending patches</source>
+        <target>Epasta iestatījumi ielāpu sūtīšanai</target>
+        
+      </trans-unit>
+      <trans-unit id="lblSmtpServerName.Text">
+        <source>SMTP server name</source>
+        <target>SMTP servera nosaukums</target>
+        
+      </trans-unit>
+      <trans-unit id="lblSmtpServerPort.Text">
+        <source>Port</source>
+        <target>Osta</target>
+        
+      </trans-unit>
       <trans-unit id="mergeWindowGroup.Text">
         <source>Merge window</source>
         <target>Sapludināšanas logs</target>
@@ -1297,6 +1402,10 @@ Please make sure git (Git for Windows or cygwin) is installed or set the correct
       <trans-unit id="$this.Text">
         <source>Diff Viewer</source>
         <target>Diff skatītājs</target>
+        
+      </trans-unit>
+      <trans-unit id="chkContScrollToNextFileOnlyWithAlt.Text">
+        <source>Enable automatic continuous scroll (without ALT button)</source>
         
       </trans-unit>
       <trans-unit id="chkOmitUninterestingDiff.Text">
@@ -1329,9 +1438,26 @@ Please make sure git (Git for Windows or cygwin) is installed or set the correct
         <target>Iegaumējiet opciju Rādīt nedrukājamās rakstzīmes</target>
         
       </trans-unit>
+      <trans-unit id="chkRememberShowSyntaxHighlightingInDiff.Text">
+        <source>Remember the 'Show syntax highlighting' preference</source>
+        
+      </trans-unit>
       <trans-unit id="chkShowDiffForAllParents.Text">
         <source>Show file differences for all parents in browse dialog</source>
         <target>Rādīt failu atšķirības visiem vecākiem pārlūkošanas dialogā</target>
+        
+      </trans-unit>
+      <trans-unit id="chkShowDiffForAllParents.ToolTipText">
+        <source>Show all differences between the selected commits, not limiting to only one difference.
+
+- For a single selected commit, show the difference with its parent commit.
+- For a single selected merge commit, show the difference with all parents.
+- For two selected commits with a common ancestor (BASE):
+   - Show the difference between the commits.
+   - The difference of unique files from BASE to each of the selected commits.
+   - The difference of common files (identical changes) from BASE to the commits.
+- For multiple selected commits (up to four), show the difference for all the first selected with the last selected commit.
+- For more than four selected commits, show the difference from the first to the last selected commit.</source>
         
       </trans-unit>
       <trans-unit id="label1.Text">
@@ -1425,11 +1551,6 @@ Please make sure git (Git for Windows or cygwin) is installed or set the correct
   </file>
   <file datatype="plaintext" original="FileStatusList" source-language="en" target-language="lv">
     <body>
-      <trans-unit id="CombinedDiff.Text">
-        <source>Combined Diff</source>
-        <target>Kombinētais Diff</target>
-        
-      </trans-unit>
       <trans-unit id="FilterWatermarkLabel.Text">
         <source>Filter files using a regular expression...</source>
         
@@ -1437,11 +1558,6 @@ Please make sure git (Git for Windows or cygwin) is installed or set the correct
       <trans-unit id="NoFiles.Text">
         <source>No changes</source>
         <target>Bez izmaiņām</target>
-        
-      </trans-unit>
-      <trans-unit id="_diffWithParent.Text">
-        <source>Diff with:</source>
-        <target>Diff ar:</target>
         
       </trans-unit>
       <trans-unit id="_openSubmoduleMenuItem.Text">
@@ -1462,14 +1578,17 @@ Please make sure git (Git for Windows or cygwin) is installed or set the correct
   </file>
   <file datatype="plaintext" original="FileViewer" source-language="en" target-language="lv">
     <body>
+      <trans-unit id="_cannotViewImage.Text">
+        <source>Cannot view image {0}</source>
+        
+      </trans-unit>
       <trans-unit id="_largeFileSizeWarning.Text">
         <source>This file is {0:N1} MB. Showing large files can be slow. Click to show anyway.</source>
         <target>Šis fails ir {0: N1} MB. Lielu failu rādīšana var būt lēna. Noklikšķiniet, lai tik un tā parādītu.</target>
         
       </trans-unit>
-      <trans-unit id="cherrypickSelectedLinesToolStripMenuItem.Text">
-        <source>Cherry pick selected lines</source>
-        <target>Ķiršu savākšanas atlasītās rindas</target>
+      <trans-unit id="automaticContinuousScrollToolStripMenuItem.Text">
+        <source>Enable automatic continuous scroll (without ALT button)</source>
         
       </trans-unit>
       <trans-unit id="copyNewVersionToolStripMenuItem.Text">
@@ -1558,9 +1677,9 @@ Please make sure git (Git for Windows or cygwin) is installed or set the correct
         <target>Iepriekšējās izmaiņas</target>
         
       </trans-unit>
-      <trans-unit id="revertSelectedLinesToolStripMenuItem.Text">
-        <source>Revert selected lines</source>
-        <target>Atgriezt atlasītās rindas</target>
+      <trans-unit id="resetSelectedLinesToolStripMenuItem.Text">
+        <source>Reset selected line(s)</source>
+        <target>Atiestatīt atlasīto (ās) līniju (as)</target>
         
       </trans-unit>
       <trans-unit id="settingsButton.ToolTipText">
@@ -1588,9 +1707,23 @@ Please make sure git (Git for Windows or cygwin) is installed or set the correct
         <target>Rādīt nedrukājamās rakstzīmes</target>
         
       </trans-unit>
+      <trans-unit id="showSyntaxHighlighting.ToolTipText">
+        <source>Show syntax highlighting</source>
+        
+      </trans-unit>
+      <trans-unit id="stageSelectedLinesToolStripMenuItem.Text">
+        <source>Stage selected line(s)</source>
+        <target>Atlasītās ( o) līnijas (u) stadija</target>
+        
+      </trans-unit>
       <trans-unit id="treatAllFilesAsTextToolStripMenuItem.Text">
         <source>Treat all files as text</source>
         <target>Apstrādāt visus failus kā tekstu</target>
+        
+      </trans-unit>
+      <trans-unit id="unstageSelectedLinesToolStripMenuItem.Text">
+        <source>Unstage selected line(s)</source>
+        <target>Noņemt atlasīto ( ās) rindiņu ( es)</target>
         
       </trans-unit>
     </body>
@@ -1744,11 +1877,6 @@ Please make sure git (Git for Windows or cygwin) is installed or set the correct
         <target>Nevarēja ienest lietotāja krātuves!</target>
         
       </trans-unit>
-      <trans-unit id="_strError.Text">
-        <source>Error</source>
-        <target>Kļūda</target>
-        
-      </trans-unit>
       <trans-unit id="_strFailedToFork.Text">
         <source>Failed to fork:</source>
         <target>Neizdevās izveidot dakšu:</target>
@@ -1762,11 +1890,6 @@ Please make sure git (Git for Windows or cygwin) is installed or set the correct
       <trans-unit id="_strLoading.Text">
         <source> : LOADING : </source>
         <target>: ielāde:</target>
-        
-      </trans-unit>
-      <trans-unit id="_strNo.Text">
-        <source>No</source>
-        <target>Nē</target>
         
       </trans-unit>
       <trans-unit id="_strNoHomepageDefined.Text">
@@ -1811,11 +1934,6 @@ You will have push access. {2}</source>
         <target>Noklikšķinās {0} uz {1}. Jums būs tiesības saņemt palīdzību. {2}</target>
         
       </trans-unit>
-      <trans-unit id="_strYes.Text">
-        <source>Yes</source>
-        <target>Jā</target>
-        
-      </trans-unit>
       <trans-unit id="browseForCloneToDirbtn.Text">
         <source>Browse...</source>
         <target>Pārlūkot...</target>
@@ -1836,14 +1954,41 @@ You will have push access. {2}</source>
         <target>Aizvērties</target>
         
       </trans-unit>
-      <trans-unit id="columnHeader2.Text">
+      <trans-unit id="columnHeaderMyReposForks.Text">
+        <source># Forks</source>
+        
+      </trans-unit>
+      <trans-unit id="columnHeaderMyReposIsFork.Text">
+        <source>Is fork</source>
+        <target>Ir dakšiņa</target>
+        
+      </trans-unit>
+      <trans-unit id="columnHeaderMyReposIsPrivate.Text">
         <source>Private</source>
         <target>Privāts</target>
         
       </trans-unit>
-      <trans-unit id="columnHeader6.Text">
+      <trans-unit id="columnHeaderMyReposName.Text">
+        <source>Name</source>
+        <target>Vārds</target>
+        
+      </trans-unit>
+      <trans-unit id="columnHeaderSearchForks.Text">
+        <source># Forks</source>
+        
+      </trans-unit>
+      <trans-unit id="columnHeaderSearchIsFork.Text">
         <source>Is fork</source>
         <target>Ir dakšiņa</target>
+        
+      </trans-unit>
+      <trans-unit id="columnHeaderSearchName.Text">
+        <source>Name</source>
+        <target>Vārds</target>
+        
+      </trans-unit>
+      <trans-unit id="columnHeaderSearchOwner.Text">
+        <source>Owner</source>
         
       </trans-unit>
       <trans-unit id="createDirectoryLbl.Text">
@@ -1881,8 +2026,7 @@ You will have push access. {2}</source>
         
       </trans-unit>
       <trans-unit id="label3.Text">
-        <source>Add remote as:</source>
-        <target>Pievienot attālo kā:</target>
+        <source>Add upstream remote as:</source>
         
       </trans-unit>
       <trans-unit id="myReposPage.Text">
@@ -2120,6 +2264,10 @@ You will have push access. {2}</source>
         <target>Konflikti atrisināti</target>
         
       </trans-unit>
+      <trans-unit id="SignOff.Text">
+        <source>Sign-Off</source>
+        
+      </trans-unit>
       <trans-unit id="Skip.Text">
         <source>Skip patch</source>
         <target>Izlaist ielāpu</target>
@@ -2172,11 +2320,6 @@ You will have push access. {2}</source>
       <trans-unit id="_noRevisionSelected.Text">
         <source>You need to choose a target revision.</source>
         <target>Izvēlieties mērķa versiju.</target>
-        
-      </trans-unit>
-      <trans-unit id="_noRevisionSelectedCaption.Text">
-        <source>Error</source>
-        <target>Kļūda</target>
         
       </trans-unit>
       <trans-unit id="_saveFileDialogCaption.Text">
@@ -2352,11 +2495,6 @@ compare with first:</source>
         <target>Uzstādījumi</target>
         
       </trans-unit>
-      <trans-unit id="GitBash.ToolTipText">
-        <source>Git bash</source>
-        <target>Git bash</target>
-        
-      </trans-unit>
       <trans-unit id="GpgInfoTabPage.Text">
         <source>GPG</source>
         <target>GPG</target>
@@ -2377,9 +2515,26 @@ compare with first:</source>
         <target>Rādīt pirmos vecākus</target>
         
       </trans-unit>
+      <trans-unit id="ToolStripFilters.Text">
+        <source>Filters</source>
+        
+      </trans-unit>
+      <trans-unit id="ToolStripMain.Text">
+        <source>Standard</source>
+        
+      </trans-unit>
+      <trans-unit id="ToolStripScripts.Text">
+        <source>Scripts</source>
+        <target>Skripti</target>
+        
+      </trans-unit>
       <trans-unit id="TreeTabPage.Text">
         <source>File tree</source>
         <target>Datnes koks</target>
+        
+      </trans-unit>
+      <trans-unit id="_addUpstreamRemoteToolStripMenuItem.Text">
+        <source>Add upstream remote</source>
         
       </trans-unit>
       <trans-unit id="_buildReportTabCaption.Text">
@@ -2407,31 +2562,6 @@ compare with first:</source>
         <target>Izveidot vilkšanas pieprasījumus...</target>
         
       </trans-unit>
-      <trans-unit id="_directoryIsNotAValidRepositoryCaption.Text">
-        <source>Open</source>
-        <target>Atvērums</target>
-        
-      </trans-unit>
-      <trans-unit id="_directoryIsNotAValidRepositoryMainInstruction.Text">
-        <source>The selected item is not a valid git repository.</source>
-        <target>Atlasītais vienums nav derīgs krāsu repozitorijs.</target>
-        
-      </trans-unit>
-      <trans-unit id="_directoryIsNotAValidRepositoryRemoveAllCommand.Text">
-        <source>Remove all {0} invalid repositories</source>
-        <target>Noņemt visus {0} nederīgos repozitorijus</target>
-        
-      </trans-unit>
-      <trans-unit id="_directoryIsNotAValidRepositoryRemoveSelectedRepoCommand.Text">
-        <source>Remove the selected invalid repository</source>
-        <target>Noņemt atlasīto nederīgo repozitoriju</target>
-        
-      </trans-unit>
-      <trans-unit id="_errorCaption.Text">
-        <source>Error</source>
-        <target>Kļūda</target>
-        
-      </trans-unit>
       <trans-unit id="_forkCloneRepositoryToolStripMenuItem.Text">
         <source>Fork/Clone repository...</source>
         <target>Dakšas/klona repozitorijs...</target>
@@ -2442,24 +2572,13 @@ compare with first:</source>
         <target>Doties uz superprojektu</target>
         
       </trans-unit>
-      <trans-unit id="_hintUnresolvedMergeConflicts.Text">
-        <source>There are unresolved merge conflicts!</source>
-        <target>Ir neatrisināti sapludināšanas konflikti!</target>
-        
-      </trans-unit>
       <trans-unit id="_indexLockCantDelete.Text">
-        <source>Failed to delete index.lock.</source>
-        <target>Neizdevās izdzēst index.lock.</target>
+        <source>Failed to delete index.lock</source>
         
       </trans-unit>
       <trans-unit id="_loading.Text">
         <source>Loading...</source>
         <target>Notiek ielāde...</target>
-        
-      </trans-unit>
-      <trans-unit id="_noBranchTitle.Text">
-        <source>no branch</source>
-        <target>bez filiāles</target>
         
       </trans-unit>
       <trans-unit id="_noReposHostFound.Text">
@@ -2547,21 +2666,6 @@ Do you want to continue?</source>
         <target>Skatīt izvilkšanas pieprasījumus...</target>
         
       </trans-unit>
-      <trans-unit id="_warningMiddleOfBisect.Text">
-        <source>You are in the middle of a bisect</source>
-        <target>Tu esi biseksuāla</target>
-        
-      </trans-unit>
-      <trans-unit id="_warningMiddleOfPatchApply.Text">
-        <source>You are in the middle of a patch apply</source>
-        <target>Jūs esat plākstera vidū.</target>
-        
-      </trans-unit>
-      <trans-unit id="_warningMiddleOfRebase.Text">
-        <source>You are in the middle of a rebase</source>
-        <target>Jūs atrodaties rebāzes vidū</target>
-        
-      </trans-unit>
       <trans-unit id="aboutToolStripMenuItem.Text">
         <source>About</source>
         <target>Par</target>
@@ -2585,6 +2689,10 @@ Do you want to continue?</source>
       <trans-unit id="branchSelect.Text">
         <source>Branch</source>
         <target>Zars</target>
+        
+      </trans-unit>
+      <trans-unit id="branchSelect.ToolTipText">
+        <source>Change current branch</source>
         
       </trans-unit>
       <trans-unit id="branchToolStripMenuItem.Text">
@@ -2732,14 +2840,26 @@ Do you want to continue?</source>
         <target>Paņemt visu</target>
         
       </trans-unit>
+      <trans-unit id="fetchAllToolStripMenuItem.ToolTipText">
+        <source>Fetch branches and tags from all remote repositories</source>
+        
+      </trans-unit>
       <trans-unit id="fetchPruneAllToolStripMenuItem.Text">
         <source>Fetch and prune all</source>
         <target>Ienest un saplacināt visu</target>
         
       </trans-unit>
+      <trans-unit id="fetchPruneAllToolStripMenuItem.ToolTipText">
+        <source>Fetch branches and tags from all remote repositories also prune deleted refs</source>
+        
+      </trans-unit>
       <trans-unit id="fetchToolStripMenuItem.Text">
         <source>Fetch</source>
         <target>Ienest</target>
+        
+      </trans-unit>
+      <trans-unit id="fetchToolStripMenuItem.ToolTipText">
+        <source>Fetch branches and tags</source>
         
       </trans-unit>
       <trans-unit id="fileExplorerToolStripMenuItem.Text">
@@ -2805,6 +2925,11 @@ Do you want to continue?</source>
       <trans-unit id="manageStashesToolStripMenuItem.Text">
         <source>Manage stashes...</source>
         <target>Pārvaldīt stobrus...</target>
+        
+      </trans-unit>
+      <trans-unit id="manageStashesToolStripMenuItem.ToolTipText">
+        <source>Manage stashes</source>
+        <target>Stobru pārvaldīšana</target>
         
       </trans-unit>
       <trans-unit id="manageSubmodulesToolStripMenuItem.Text">
@@ -2944,9 +3069,18 @@ Do you want to continue?</source>
         <target>Iežogojums</target>
         
       </trans-unit>
+      <trans-unit id="stashChangesToolStripMenuItem.ToolTipText">
+        <source>Stash changes</source>
+        <target>Montāžas izmaiņas</target>
+        
+      </trans-unit>
       <trans-unit id="stashPopToolStripMenuItem.Text">
         <source>Stash pop</source>
         <target>Stash popa</target>
+        
+      </trans-unit>
+      <trans-unit id="stashPopToolStripMenuItem.ToolTipText">
+        <source>Apply and drop single stash</source>
         
       </trans-unit>
       <trans-unit id="stashToolStripMenuItem.Text">
@@ -2977,11 +3111,6 @@ Do you want to continue?</source>
       <trans-unit id="toolStripButtonCommit.Text">
         <source>Commit</source>
         <target>Nodot</target>
-        
-      </trans-unit>
-      <trans-unit id="toolStripButtonLevelUp.Text">
-        <source>Go to superproject</source>
-        <target>Doties uz superprojektu</target>
         
       </trans-unit>
       <trans-unit id="toolStripButtonPull.Text">
@@ -3024,6 +3153,10 @@ Do you want to continue?</source>
         <target>Stobru pārvaldīšana</target>
         
       </trans-unit>
+      <trans-unit id="toolbarsMenuItem.Text">
+        <source>Toolbars</source>
+        
+      </trans-unit>
       <trans-unit id="toolsToolStripMenuItem.Text">
         <source>&amp;Tools</source>
         <target>un rīki</target>
@@ -3049,6 +3182,10 @@ Do you want to continue?</source>
         <target>Notīrīt sarakstu</target>
         
       </trans-unit>
+      <trans-unit id="tsmiTelemetryEnabled.Text">
+        <source>Yes, I allow telemetry</source>
+        
+      </trans-unit>
       <trans-unit id="undoLastCommitToolStripMenuItem.Text">
         <source>Undo last commit</source>
         <target>Atsaukt pēdējo nodošanu</target>
@@ -3062,6 +3199,11 @@ Do you want to continue?</source>
       <trans-unit id="userManualToolStripMenuItem.Text">
         <source>User Manual</source>
         <target>Lietotāja rokasgrāmata</target>
+        
+      </trans-unit>
+      <trans-unit id="userShell.ToolTipText">
+        <source>Git bash</source>
+        <target>Git bash</target>
         
       </trans-unit>
       <trans-unit id="viewToolStripMenuItem.Text">
@@ -3078,52 +3220,27 @@ Do you want to continue?</source>
         <target>Pārlūkot repozitorija logu</target>
         
       </trans-unit>
-      <trans-unit id="ConEmuGB.Text">
-        <source>Console emulator</source>
-        <target>Pults emulators</target>
-        
-      </trans-unit>
-      <trans-unit id="cboTerminal.Item0">
-        <source>bash</source>
-        <target>bize</target>
-        
-      </trans-unit>
-      <trans-unit id="cboTerminal.Item1">
-        <source>cmd</source>
-        <target>kom.</target>
-        
-      </trans-unit>
-      <trans-unit id="cboTerminal.Item2">
-        <source>powershell</source>
-        <target>PowerShell</target>
-        
-      </trans-unit>
       <trans-unit id="chkChowConsoleTab.Text">
-        <source>Show the Console tab (restart required)</source>
+        <source>Show the Console tab</source>
+        <target>Rādīt konsoles cilni</target>
         
       </trans-unit>
       <trans-unit id="chkShowGpgInformation.Text">
-        <source>Show GPG information (a restart is needed to take effect)</source>
+        <source>Show GPG information</source>
+        <target>Rādīt GPG informāciju</target>
         
       </trans-unit>
-      <trans-unit id="groupBoxConsoleSettings.Text">
-        <source>Console settings (a restart is needed to take effect)</source>
-        <target>Konsoles iestatījumi (lai stātos spēkā, ir jārestartē)</target>
+      <trans-unit id="gbGeneral.Text">
+        <source>General</source>
+        <target>Vispārīgs</target>
         
       </trans-unit>
-      <trans-unit id="label1.Text">
-        <source>Console style</source>
-        <target>Konsoles stils</target>
+      <trans-unit id="gbTabs.Text">
+        <source>Tabs (restart required)</source>
         
       </trans-unit>
       <trans-unit id="label2.Text">
-        <source>Shell to run</source>
-        <target>Čaula, ko palaist</target>
-        
-      </trans-unit>
-      <trans-unit id="label3.Text">
-        <source>Font size</source>
-        <target>Fonta lielums</target>
+        <source>Default shell</source>
         
       </trans-unit>
     </body>
@@ -3323,11 +3440,6 @@ Are you sure?</source>
       <trans-unit id="_noneParentSelectedText.Text">
         <source>None parent is selected!</source>
         <target>Neviens no vecākiem nav atlasīts!</target>
-        
-      </trans-unit>
-      <trans-unit id="_noneParentSelectedTextCaption.Text">
-        <source>Error</source>
-        <target>Kļūda</target>
         
       </trans-unit>
       <trans-unit id="checkAddReference.Text">
@@ -3615,22 +3727,22 @@ Do you want to open the new repository &quot;{0}&quot; now?</source>
         <target>Izmantot LFS paplašinājumu</target>
         
       </trans-unit>
+      <trans-unit id="destinationLabel.Text">
+        <source>&amp;Destination:</source>
+        <target>un galamērķis:</target>
+        
+      </trans-unit>
       <trans-unit id="groupBox1.Text">
         <source>Repository type</source>
         <target>Repozitorija tips</target>
         
       </trans-unit>
-      <trans-unit id="label1.Text">
+      <trans-unit id="repositoryLabel.Text">
         <source>Repository to &amp;clone:</source>
         <target>Repozitorijs uz un klonēt:</target>
         
       </trans-unit>
-      <trans-unit id="label2.Text">
-        <source>&amp;Destination:</source>
-        <target>un galamērķis:</target>
-        
-      </trans-unit>
-      <trans-unit id="label3.Text">
+      <trans-unit id="subdirectoryLabel.Text">
         <source>&amp;Subdirectory to create:</source>
         <target>un apakšdirektorijs, kas jāizveido:</target>
         
@@ -3675,8 +3787,7 @@ gitex.cmd / gitex (located in the same folder as GitExtensions.exe):</source>
         
       </trans-unit>
       <trans-unit id="CommitAndPush.Text">
-        <source>C&amp;ommit &amp;&amp; push</source>
-        <target>C &amp; ommit &amp; &amp; push</target>
+        <source>Commit &amp;&amp; &amp;push</source>
         
       </trans-unit>
       <trans-unit id="Ok.Text">
@@ -3685,13 +3796,15 @@ gitex.cmd / gitex (located in the same folder as GitExtensions.exe):</source>
         
       </trans-unit>
       <trans-unit id="Reset.Text">
-        <source>Reset all changes</source>
-        <target>Atiestatīt visas izmaiņas</target>
+        <source>&amp;Reset all changes</source>
         
       </trans-unit>
       <trans-unit id="ResetUnStaged.Text">
-        <source>Reset unstaged changes</source>
-        <target>Atiestatīt neposmu izmaiņas</target>
+        <source>Reset u&amp;nstaged changes</source>
+        
+      </trans-unit>
+      <trans-unit id="ShowOnlyMyMessagesToolStripMenuItem.Text">
+        <source>Show only my messages</source>
         
       </trans-unit>
       <trans-unit id="SolveMergeconflicts.Text">
@@ -3700,8 +3813,7 @@ gitex.cmd / gitex (located in the same folder as GitExtensions.exe):</source>
         
       </trans-unit>
       <trans-unit id="StageInSuperproject.Text">
-        <source>Stage in Superproject</source>
-        <target>Posms Superprojektā</target>
+        <source>Stage &amp;in Superproject</source>
         
       </trans-unit>
       <trans-unit id="_addSelectionToCommitMessage.Text">
@@ -3748,6 +3860,10 @@ Git will never check if the file has changed that will improve status check perf
         <target>Izpildes ziņojums ir pieprasīts izpildes laikā</target>
         
       </trans-unit>
+      <trans-unit id="_commitMessageSettings.Text">
+        <source>Edit commit message templates and settings...</source>
+        
+      </trans-unit>
       <trans-unit id="_commitMsgFirstLineInvalid.Text">
         <source>First line of commit message contains too many characters.
 Do you want to continue?</source>
@@ -3773,11 +3889,6 @@ Do you want to continue?</source>
         <source>Second line of commit message is not empty.
 Do you want to continue?</source>
         <target>Otrā izpildes ziņojuma rindiņa nav tukša. Vai vēlaties turpināt?</target>
-        
-      </trans-unit>
-      <trans-unit id="_commitTemplateSettings.Text">
-        <source>Settings</source>
-        <target>Uzstādījumi</target>
         
       </trans-unit>
       <trans-unit id="_commitValidationCaption.Text">
@@ -3825,11 +3936,6 @@ Do you want to continue?</source>
         <target>Ievadiet izpildes ziņojumu</target>
         
       </trans-unit>
-      <trans-unit id="_error.Text">
-        <source>Error</source>
-        <target>Kļūda</target>
-        
-      </trans-unit>
       <trans-unit id="_formTitle.Text">
         <source>Commit to {0} ({1})</source>
         <target>Veikt {0} ({1})</target>
@@ -3845,6 +3951,11 @@ Do you want to continue?</source>
         <target>Sapludināt konfliktus</target>
         
       </trans-unit>
+      <trans-unit id="_modifyCommitMessageButtonToolTip.Text">
+        <source>If you change the first line of the commit message, git will treat this commit as an ordinary commit,
+i.e. it may no longer be a fixup or an autosquash commit.</source>
+        
+      </trans-unit>
       <trans-unit id="_noFilesStagedAndConfirmAnEmptyMergeCommit.Text">
         <source>There are no files staged for this commit.
 Are you sure you want to commit?</source>
@@ -3854,6 +3965,10 @@ Are you sure you want to commit?</source>
       <trans-unit id="_noFilesStagedAndNothingToCommit.Text">
         <source>There are no files staged for this commit.</source>
         <target>Nav failu, kas būtu novietoti šai izpildei.</target>
+        
+      </trans-unit>
+      <trans-unit id="_noFilesStagedButSuggestToCommitAllFilteredUnstaged.Text">
+        <source>There are no files staged for this commit. Stage and commit the unstaged files that match your filter?</source>
         
       </trans-unit>
       <trans-unit id="_noFilesStagedButSuggestToCommitAllUnstaged.Text">
@@ -3878,44 +3993,14 @@ Do you want to continue?</source>
         <target>Pārslēdzoties uz citu atzaru, šī nodošana netiks pieminēta, un to var zaudēt. Vai vēlaties turpināt?</target>
         
       </trans-unit>
-      <trans-unit id="_notOnBranchButtons.Text">
-        <source>Checkout branch|Create branch|Continue</source>
-        <target>Norēķināšanās zars tim. Izveidojiet filiāli tir. zāl. turpināt</target>
-        
-      </trans-unit>
-      <trans-unit id="_notOnBranchCaption.Text">
-        <source>Not on a branch</source>
-        <target>Nav uz zara</target>
-        
-      </trans-unit>
-      <trans-unit id="_notOnBranchMainInstruction.Text">
-        <source>You are not working on a branch</source>
-        <target>Jūs nestrādājat filiālē</target>
-        
-      </trans-unit>
       <trans-unit id="_onlyStageChunkOfSingleFileError.Text">
         <source>You can only use this option when selecting a single file</source>
         <target>Šo opciju var izmantot tikai, atlasot vienu failu</target>
         
       </trans-unit>
-      <trans-unit id="_resetChangesCaption.Text">
-        <source>Reset changes</source>
-        <target>Atiestatīt izmaiņas</target>
-        
-      </trans-unit>
       <trans-unit id="_resetSelectedChangesText.Text">
         <source>Are you sure you want to reset all selected files?</source>
         <target>Vai tiešām vēlaties atiestatīt visus atlasītos failus?</target>
-        
-      </trans-unit>
-      <trans-unit id="_resetSelectedLines.Text">
-        <source>Reset selected line(s)</source>
-        <target>Atiestatīt atlasīto (ās) līniju (as)</target>
-        
-      </trans-unit>
-      <trans-unit id="_resetSelectedLinesConfirmation.Text">
-        <source>Are you sure you want to reset the changes to the selected lines?</source>
-        <target>Vai tiešām vēlaties atiestatīt izmaiņas atlasītajās rindās?</target>
         
       </trans-unit>
       <trans-unit id="_resetStageChunkOfFileCaption.Text">
@@ -3944,6 +4029,10 @@ Suitable for some config files modified locally.</source>
         <target>Paslēpt jau izsekotus failus, kas mainīsies, bet kurus nevēlaties nodot. Piemērots dažiem konfigurācijas failiem, kas modificēti lokāli.</target>
         
       </trans-unit>
+      <trans-unit id="_stageAll.Text">
+        <source>Stage all</source>
+        
+      </trans-unit>
       <trans-unit id="_stageDetails.Text">
         <source>Stage Details</source>
         <target>Detalizēta informācija par stadiju</target>
@@ -3954,9 +4043,8 @@ Suitable for some config files modified locally.</source>
         <target>Stadijas {0} faili</target>
         
       </trans-unit>
-      <trans-unit id="_stageSelectedLines.Text">
-        <source>Stage selected line(s)</source>
-        <target>Atlasītās ( o) līnijas (u) stadija</target>
+      <trans-unit id="_stageFiltered.Text">
+        <source>Stage filtered</source>
         
       </trans-unit>
       <trans-unit id="_statusBarBranchWithoutRemote.Text">
@@ -3987,9 +4075,12 @@ You can unset the template:
         <target>Veidnes kļūda</target>
         
       </trans-unit>
-      <trans-unit id="_unstageSelectedLines.Text">
-        <source>Unstage selected line(s)</source>
-        <target>Noņemt atlasīto ( ās) rindiņu ( es)</target>
+      <trans-unit id="_unstageAll.Text">
+        <source>Unstage all</source>
+        
+      </trans-unit>
+      <trans-unit id="_unstageFiltered.Text">
+        <source>Unstage filtered</source>
         
       </trans-unit>
       <trans-unit id="_untrackedRemote.Text">
@@ -4061,12 +4152,21 @@ You can unset the template:
         <target>Izpilde un veidnes</target>
         
       </trans-unit>
+      <trans-unit id="commitTemplatesToolStripMenuItem.ToolTipText">
+        <source>Commit templates</source>
+        <target>Piešķirt veidnes</target>
+        
+      </trans-unit>
       <trans-unit id="copyFolderNameMenuItem.Text">
         <source>Copy folder name</source>
         <target>Kopēt mapes nosaukumu</target>
         
       </trans-unit>
       <trans-unit id="createBranchToolStripButton.Text">
+        <source>Create &amp;branch</source>
+        
+      </trans-unit>
+      <trans-unit id="createBranchToolStripButton.ToolTipText">
         <source>Create branch</source>
         <target>Izveidot zaru</target>
         
@@ -4126,6 +4226,10 @@ You can unset the template:
         <target>Interaktīva pievienošana</target>
         
       </trans-unit>
+      <trans-unit id="modifyCommitMessageButton.Text">
+        <source>Modify the commit m&amp;essage</source>
+        
+      </trans-unit>
       <trans-unit id="noVerifyToolStripMenuItem.Text">
         <source>No verify</source>
         <target>Nepārbaudīt</target>
@@ -4144,11 +4248,6 @@ You can unset the template:
       <trans-unit id="openFolderMenuItem.Text">
         <source>Show in folder</source>
         <target>Rādīt mapē</target>
-        
-      </trans-unit>
-      <trans-unit id="openSubmoduleMenuItem.Text">
-        <source>Open with Git Extensions</source>
-        <target>Atvērt, izmantojot Git paplašinājumus</target>
         
       </trans-unit>
       <trans-unit id="openToolStripMenuItem.Text">
@@ -4287,11 +4386,6 @@ You can unset the template:
         <target>Apturēt šī faila izsekošanu</target>
         
       </trans-unit>
-      <trans-unit id="submoduleSummaryMenuItem.Text">
-        <source>View summary</source>
-        <target>Skatīt kopsavilkumu</target>
-        
-      </trans-unit>
       <trans-unit id="toolAuthorLabelItem.Text">
         <source>Author: (Format: &quot;name &lt;mail&gt;&quot;)</source>
         <target>Autors: (Formāts: “vārda &lt;mail&gt;”)</target>
@@ -4300,11 +4394,6 @@ You can unset the template:
       <trans-unit id="toolRefreshItem.Text">
         <source>Refresh</source>
         <target>Atsvaidzināt</target>
-        
-      </trans-unit>
-      <trans-unit id="toolStageAllItem.Text">
-        <source>Stage All</source>
-        <target>Visu posmu</target>
         
       </trans-unit>
       <trans-unit id="toolStageItem.Text">
@@ -4318,13 +4407,7 @@ You can unset the template:
         
       </trans-unit>
       <trans-unit id="toolStripMenuItem3.Text">
-        <source>Options</source>
-        <target>Iespējas</target>
-        
-      </trans-unit>
-      <trans-unit id="toolUnstageAllItem.Text">
-        <source>Unstage All</source>
-        <target>Noņemt visu</target>
+        <source>&amp;Options</source>
         
       </trans-unit>
       <trans-unit id="toolUnstageItem.Text">
@@ -4348,8 +4431,7 @@ You can unset the template:
         
       </trans-unit>
       <trans-unit id="workingToolStripMenuItem.Text">
-        <source>Working directory changes</source>
-        <target>Notiek direktorija maiņa</target>
+        <source>&amp;Working directory changes</source>
         
       </trans-unit>
     </body>
@@ -4366,8 +4448,7 @@ You can unset the template:
   <file datatype="plaintext" original="FormCommitTemplateSettings" source-language="en" target-language="lv">
     <body>
       <trans-unit id="$this.Text">
-        <source>Commit template settings</source>
-        <target>Izpildīt veidnes iestatījumus</target>
+        <source>Commit message settings</source>
         
       </trans-unit>
       <trans-unit id="_emptyTemplate.Text">
@@ -4383,16 +4464,6 @@ You can unset the template:
       <trans-unit id="buttonOk.Text">
         <source>OK</source>
         <target>LABI</target>
-        
-      </trans-unit>
-      <trans-unit id="groupBoxCommitTemplates.Text">
-        <source>Commit templates</source>
-        <target>Piešķirt veidnes</target>
-        
-      </trans-unit>
-      <trans-unit id="groupBoxCommitValidation.Text">
-        <source>Commit validation</source>
-        <target>Veikt validāciju</target>
         
       </trans-unit>
       <trans-unit id="labelAutoWrap.Text">
@@ -4434,6 +4505,16 @@ You can unset the template:
         <target>Atkāpes rindiņas pēc pirmās rindiņas:</target>
         
       </trans-unit>
+      <trans-unit id="tabPage1.Text">
+        <source>Commit templates</source>
+        <target>Piešķirt veidnes</target>
+        
+      </trans-unit>
+      <trans-unit id="tabPage2.Text">
+        <source>Commit validation</source>
+        <target>Veikt validāciju</target>
+        
+      </trans-unit>
     </body>
   </file>
   <file datatype="plaintext" original="FormCompareToBranch" source-language="en" target-language="lv">
@@ -4455,11 +4536,6 @@ You can unset the template:
       <trans-unit id="$this.Text">
         <source>Create branch</source>
         <target>Izveidot zaru</target>
-        
-      </trans-unit>
-      <trans-unit id="CheckoutAfterCreate.Text">
-        <source>Checkout &amp;after create</source>
-        <target>Paņemšana un pēc izveides</target>
         
       </trans-unit>
       <trans-unit id="ClearOrphan.Text">
@@ -4490,6 +4566,11 @@ You can unset the template:
       <trans-unit id="_noRevisionSelected.Text">
         <source>Select 1 revision to create the branch on.</source>
         <target>Atlasiet 1 versiju, lai izveidotu filiāli.</target>
+        
+      </trans-unit>
+      <trans-unit id="chkbxCheckoutAfterCreate.Text">
+        <source>Checkout &amp;after create</source>
+        <target>Paņemšana un pēc izveides</target>
         
       </trans-unit>
       <trans-unit id="groupBox1.Text">
@@ -4859,10 +4940,6 @@ in order to recover the lost commits.</source>
         <target>Atrast</target>
         
       </trans-unit>
-      <trans-unit id="firstParentToLocalToolStripMenuItem.Text">
-        <source>Parent to BASE -&gt; Working directory</source>
-        
-      </trans-unit>
       <trans-unit id="firstToLocalToolStripMenuItem.Text">
         <source>BASE -&gt; Working directory</source>
         
@@ -4884,10 +4961,6 @@ in order to recover the lost commits.</source>
       <trans-unit id="openWithDifftoolToolStripMenuItem.Text">
         <source>Open with difftool</source>
         <target>Atvērt ar difftool</target>
-        
-      </trans-unit>
-      <trans-unit id="selectedParentToLocalToolStripMenuItem.Text">
-        <source>Parent to Compare -&gt; Working directory</source>
         
       </trans-unit>
       <trans-unit id="selectedToLocalToolStripMenuItem.Text">
@@ -4943,11 +5016,6 @@ Click on the button below to get more information about making a donation.</sour
       <trans-unit id="_cannotSaveFile.Text">
         <source>Cannot save file:</source>
         <target>Nevar saglabāt failu:</target>
-        
-      </trans-unit>
-      <trans-unit id="_error.Text">
-        <source>Error</source>
-        <target>Kļūda</target>
         
       </trans-unit>
       <trans-unit id="_saveChanges.Text">
@@ -5016,6 +5084,10 @@ If you are not sure just close this window.</source>
         <target>Izveidot atskaiti</target>
         
       </trans-unit>
+      <trans-unit id="blameSettingsToolStripMenuItem.Text">
+        <source>Blame settings:</source>
+        
+      </trans-unit>
       <trans-unit id="cherryPickThisCommitToolStripMenuItem.Text">
         <source>Cherry pick commit</source>
         <target>Ķiršu savākšana</target>
@@ -5040,6 +5112,14 @@ If you are not sure just close this window.</source>
         <source>Difftool selected &lt; - &gt; local</source>
         
       </trans-unit>
+      <trans-unit id="displayAuthorFirstToolStripMenuItem.Text">
+        <source>Display author first</source>
+        
+      </trans-unit>
+      <trans-unit id="displaySettingsToolStripMenuItem.Text">
+        <source>Display result settings:</source>
+        
+      </trans-unit>
       <trans-unit id="followFileHistoryRenamesToolStripMenuItem.Text">
         <source>Detect and follow - exact renames and copies only</source>
         
@@ -5052,6 +5132,11 @@ If you are not sure just close this window.</source>
       <trans-unit id="fullHistoryToolStripMenuItem.Text">
         <source>Full history</source>
         <target>Pilna vēsture</target>
+        
+      </trans-unit>
+      <trans-unit id="gitcommandLogToolStripMenuItem.ToolTipText">
+        <source>Git command log</source>
+        <target>Git komandu žurnāls</target>
         
       </trans-unit>
       <trans-unit id="ignoreWhitespaceToolStripMenuItem.Text">
@@ -5089,9 +5174,34 @@ If you are not sure just close this window.</source>
         <target>Saglabāt kā</target>
         
       </trans-unit>
+      <trans-unit id="showAuthorAvatarToolStripMenuItem.Text">
+        <source>Show author avatar</source>
+        
+      </trans-unit>
+      <trans-unit id="showAuthorDateToolStripMenuItem.Text">
+        <source>Show author date</source>
+        <target>Rādīt autora datumu</target>
+        
+      </trans-unit>
+      <trans-unit id="showAuthorTimeToolStripMenuItem.Text">
+        <source>Show author time</source>
+        
+      </trans-unit>
+      <trans-unit id="showAuthorToolStripMenuItem.Text">
+        <source>Show author</source>
+        
+      </trans-unit>
       <trans-unit id="showFullHistoryToolStripMenuItem.Text">
         <source>Show Full History</source>
         <target>Rādīt pilnu vēsturi</target>
+        
+      </trans-unit>
+      <trans-unit id="showLineNumbersToolStripMenuItem.Text">
+        <source>Show line numbers</source>
+        
+      </trans-unit>
+      <trans-unit id="showOriginalFilePathToolStripMenuItem.Text">
+        <source>Show original file path</source>
         
       </trans-unit>
       <trans-unit id="simplifyMergesContextMenuItem.Text">
@@ -5263,6 +5373,10 @@ Change the default behaviour only if you experience problems.</source>
       <trans-unit id="_currentBranchText.Text">
         <source>Current branch:</source>
         <target>Pašreizējais atzars:</target>
+        
+      </trans-unit>
+      <trans-unit id="_failCreatePatch.Text">
+        <source>Unable to create patch file(s)</source>
         
       </trans-unit>
       <trans-unit id="_noEmailEnteredText.Text">
@@ -5599,11 +5713,6 @@ _ReSharper*/</source>
         <target>Izveidot jaunu repozitoriju</target>
         
       </trans-unit>
-      <trans-unit id="Browse.Text">
-        <source>Browse</source>
-        <target>Pārlūkot</target>
-        
-      </trans-unit>
       <trans-unit id="Central.Text">
         <source>Central repository, no working directory  (--bare --shared=all)</source>
         
@@ -5632,11 +5741,6 @@ _ReSharper*/</source>
         <source>Cannot initialize a new repository on a file.
 Please choose a directory.</source>
         <target>Nevar inicializēt jaunu repozitoriju failā. Lūdzu, izvēlieties direktoriju.</target>
-        
-      </trans-unit>
-      <trans-unit id="_chooseDirectoryNotFileCaption.Text">
-        <source>Error</source>
-        <target>Kļūda</target>
         
       </trans-unit>
       <trans-unit id="_initMsgBoxCaption.Text">
@@ -5753,6 +5857,26 @@ command &quot;git help shortlog&quot;</source>
       <trans-unit id="Type.HeaderText">
         <source>Type</source>
         <target>Tips</target>
+        
+      </trans-unit>
+      <trans-unit id="_deleteWorktreeFailedText.Text">
+        <source>Failed to delete a worktree</source>
+        
+      </trans-unit>
+      <trans-unit id="_deleteWorktreeText.Text">
+        <source>Are you sure you want to delete this worktree?</source>
+        
+      </trans-unit>
+      <trans-unit id="_deleteWorktreeTitle.Text">
+        <source>Delete a worktree</source>
+        
+      </trans-unit>
+      <trans-unit id="_switchWorktreeText.Text">
+        <source>Are you sure you want to switch to this worktree?</source>
+        
+      </trans-unit>
+      <trans-unit id="_switchWorktreeTitle.Text">
+        <source>Open a worktree</source>
         
       </trans-unit>
       <trans-unit id="buttonClose.Text">
@@ -5940,20 +6064,6 @@ ancestor tree.</source>
       </trans-unit>
     </body>
   </file>
-  <file datatype="plaintext" original="FormModifiedDeletedCreated" source-language="en" target-language="lv">
-    <body>
-      <trans-unit id="$this.Text">
-        <source>Solve merge conflict</source>
-        <target>Atrisināt sapludināšanas konfliktu</target>
-        
-      </trans-unit>
-      <trans-unit id="Abort.Text">
-        <source>Abort</source>
-        <target>Pārtraukt</target>
-        
-      </trans-unit>
-    </body>
-  </file>
   <file datatype="plaintext" original="FormOpenDirectory" source-language="en" target-language="lv">
     <body>
       <trans-unit id="$this.Text">
@@ -5970,14 +6080,12 @@ ancestor tree.</source>
         <source>The selected directory is not a valid git repository.</source>
         
       </trans-unit>
-      <trans-unit id="_warningOpenFailedCaption.Text">
-        <source>Error</source>
-        <target>Kļūda</target>
+      <trans-unit id="folderBrowserButton.Text">
+        <source>&amp;Browse...</source>
         
       </trans-unit>
       <trans-unit id="label1.Text">
-        <source>Directory</source>
-        <target>Katalogs</target>
+        <source>&amp;Directory:</source>
         
       </trans-unit>
     </body>
@@ -6027,6 +6135,10 @@ ancestor tree.</source>
       <trans-unit id="Prune.Text">
         <source>Prune remote branches</source>
         <target>Plūmju attālie zari</target>
+        
+      </trans-unit>
+      <trans-unit id="PruneTags.Text">
+        <source>Prune remote branches and tags</source>
         
       </trans-unit>
       <trans-unit id="Pull.Text">
@@ -6137,9 +6249,8 @@ If you want to fetch and merge a branch, choose a specific branch.</source>
         <target>Jūs nenorādījāt attālo zaru</target>
         
       </trans-unit>
-      <trans-unit id="_noRemoteBranchButtons.Text">
-        <source>Pull from {0}|Cancel</source>
-        <target>Pavilkt no {0} īpaš. atcelt</target>
+      <trans-unit id="_noRemoteBranchButton.Text">
+        <source>Pull from {0}</source>
         
       </trans-unit>
       <trans-unit id="_noRemoteBranchCaption.Text">
@@ -6147,9 +6258,8 @@ If you want to fetch and merge a branch, choose a specific branch.</source>
         <target>Nav norādīts attālais zars</target>
         
       </trans-unit>
-      <trans-unit id="_noRemoteBranchForFetchButtons.Text">
-        <source>Fetch from {0}|Cancel</source>
-        <target>Ienest no {0} īpaš. Atcelt</target>
+      <trans-unit id="_noRemoteBranchForFetchButton.Text">
+        <source>Fetch from {0}</source>
         
       </trans-unit>
       <trans-unit id="_noRemoteBranchForFetchMainInstruction.Text">
@@ -6174,28 +6284,8 @@ Do you want to continue?</source>
         <target>Jūs nevarat “pavilkt”, kad tiek atdalīta galva. Vai vēlaties turpināt?</target>
         
       </trans-unit>
-      <trans-unit id="_notOnBranchButtons.Text">
-        <source>Checkout branch|Continue</source>
-        <target>Izrakstīšanās filiāle lielākam skaitam</target>
-        
-      </trans-unit>
-      <trans-unit id="_notOnBranchCaption.Text">
-        <source>Not on a branch</source>
-        <target>Nav uz zara</target>
-        
-      </trans-unit>
-      <trans-unit id="_notOnBranchMainInstruction.Text">
-        <source>You are not working on a branch</source>
-        <target>Jūs nestrādājat filiālē</target>
-        
-      </trans-unit>
       <trans-unit id="_pruneBranchesBranch.Text">
         <source>Do you want to delete all stale remote-tracking branches?</source>
-        
-      </trans-unit>
-      <trans-unit id="_pruneBranchesButtons.Text">
-        <source>Deletes stale branches|Cancel</source>
-        <target>Izdzēš stale zarus ār. Atcelt</target>
         
       </trans-unit>
       <trans-unit id="_pruneBranchesCaption.Text">
@@ -6288,14 +6378,18 @@ This will initialize and update all submodules recursive.</source>
         <target>Stumšanas zari</target>
         
       </trans-unit>
+      <trans-unit id="BranchTab.ToolTipText">
+        <source>Push branches and commits to remote repository.</source>
+        
+      </trans-unit>
       <trans-unit id="DeleteColumn.HeaderText">
         <source>Delete Remote Branch</source>
         <target>Dzēst attālo zaru</target>
         
       </trans-unit>
       <trans-unit id="ForceColumn.HeaderText">
-        <source>Push (Force Rewind)</source>
-        <target>Stumšana (spēku attīšana)</target>
+        <source>Force</source>
+        <target>Spēks</target>
         
       </trans-unit>
       <trans-unit id="ForcePushBranches.Text">
@@ -6324,8 +6418,7 @@ This will initialize and update all submodules recursive.</source>
         
       </trans-unit>
       <trans-unit id="NewColumn.HeaderText">
-        <source>New at Remote</source>
-        <target>Jauns no attālā</target>
+        <source>Ahead/Behind</source>
         
       </trans-unit>
       <trans-unit id="Pull.Text">
@@ -6387,6 +6480,10 @@ This will initialize and update all submodules recursive.</source>
         <target>Spiedtagi</target>
         
       </trans-unit>
+      <trans-unit id="TagTab.ToolTipText">
+        <source>Push tags to remote repository</source>
+        
+      </trans-unit>
       <trans-unit id="_branchNewForRemote.Text">
         <source>The branch you are about to push seems to be a new branch for the remote.
 Are you sure you want to push this branch?</source>
@@ -6419,11 +6516,6 @@ Would you like to do it now?</source>
         <target>Piespiedu pirkšana ar nomu ir drošāks veids, kā piespiest. Tas nodrošina, ka tiek pārrakstīti tikai tie darbi, kurus esat redzējis lokālajā krātuvē.</target>
         
       </trans-unit>
-      <trans-unit id="_no.Text">
-        <source>No</source>
-        <target>Nē</target>
-        
-      </trans-unit>
       <trans-unit id="_pullActionFetch.Text">
         <source>fetch</source>
         <target>ienest</target>
@@ -6444,14 +6536,16 @@ Would you like to do it now?</source>
         <target>pārdalīt</target>
         
       </trans-unit>
-      <trans-unit id="_pullRepository.Text">
-        <source>The push was rejected because the tip of your current branch is behind its remote counterpart. Merge the remote changes before pushing again.</source>
-        <target>Stumšana tika noraidīta, jo jūsu pašreizējā zara gals atrodas aiz tā attālā partnera. Pirms stumšanas vēlreiz sapludiniet attālinātās izmaiņas.</target>
+      <trans-unit id="_pullDefaultButton.Text">
+        <source>Pull with the default pull action ({0})</source>
         
       </trans-unit>
-      <trans-unit id="_pullRepositoryButtons.Text">
-        <source>Pull with the default pull action ({0})|Pull with rebase|Pull with merge|Force push|Cancel</source>
-        <target>Pavilkšana ar noklusējuma pavilkšanas darbību ({0}) īpaš. Pull ar pārliešanu tim. Pull ar sapludināšanu īpaš. sarkanš. k.</target>
+      <trans-unit id="_pullMergeButton.Text">
+        <source>Pull with merge</source>
+        
+      </trans-unit>
+      <trans-unit id="_pullRebaseButton.Text">
+        <source>Pull with rebase</source>
         
       </trans-unit>
       <trans-unit id="_pullRepositoryCaption.Text">
@@ -6459,14 +6553,31 @@ Would you like to do it now?</source>
         <target>Stumšana tika noraidīta no “{0}”</target>
         
       </trans-unit>
-      <trans-unit id="_pullRepositoryMainInstruction.Text">
+      <trans-unit id="_pullRepositoryForceInstruction.Text">
+        <source>The push was rejected because the tip of your current branch is behind its remote counterpart</source>
+        
+      </trans-unit>
+      <trans-unit id="_pullRepositoryMainForceInstruction.Text">
+        <source>Push rejected</source>
+        
+      </trans-unit>
+      <trans-unit id="_pullRepositoryMainMergeInstruction.Text">
         <source>Pull latest changes from remote repository</source>
         <target>Izvilkt pēdējās izmaiņas no attālinātā repozitorija</target>
+        
+      </trans-unit>
+      <trans-unit id="_pullRepositoryMergeInstruction.Text">
+        <source>The push was rejected because the tip of your current branch is behind its remote counterpart. Merge the remote changes before pushing again.</source>
+        <target>Stumšana tika noraidīta, jo jūsu pašreizējā zara gals atrodas aiz tā attālā partnera. Pirms stumšanas vēlreiz sapludiniet attālinātās izmaiņas.</target>
         
       </trans-unit>
       <trans-unit id="_pushCaption.Text">
         <source>Push</source>
         <target>Grūdiens</target>
+        
+      </trans-unit>
+      <trans-unit id="_pushForceButton.Text">
+        <source>Force push with lease</source>
         
       </trans-unit>
       <trans-unit id="_pushToCaption.Text">
@@ -6492,11 +6603,6 @@ Would you like to do it now?</source>
       <trans-unit id="_useForceWithLeaseInstead.Text">
         <source>Force push may overwrite changes since your last fetch. Do you want to use the safer force with lease instead?</source>
         <target>Piespiedu stumšana var pārrakstīt izmaiņas kopš pēdējās ieneses. Vai vēlaties izmantot drošāko spēku ar nomu?</target>
-        
-      </trans-unit>
-      <trans-unit id="_yes.Text">
-        <source>Yes</source>
-        <target>Jā</target>
         
       </trans-unit>
       <trans-unit id="ckForceWithLease.Text">
@@ -6527,6 +6633,19 @@ Would you like to do it now?</source>
       <trans-unit id="labelTo.Text">
         <source>to</source>
         <target>būt</target>
+        
+      </trans-unit>
+      <trans-unit id="selectAllToolStripMenuItem.Text">
+        <source>Select all</source>
+        <target>Atlasīt visu</target>
+        
+      </trans-unit>
+      <trans-unit id="selectTrackedToolStripMenuItem.Text">
+        <source>Select tracked</source>
+        
+      </trans-unit>
+      <trans-unit id="unselectAllToolStripMenuItem.Text">
+        <source>Unselect all</source>
         
       </trans-unit>
     </body>
@@ -6708,6 +6827,14 @@ Nothing to rebase.</source>
       <trans-unit id="chkAutosquash.Text">
         <source>Autosquash</source>
         <target>Autosquash</target>
+        
+      </trans-unit>
+      <trans-unit id="chkCommitterDateIsAuthorDate.Text">
+        <source>Committer date is author date</source>
+        
+      </trans-unit>
+      <trans-unit id="chkIgnoreDate.Text">
+        <source>Ignore date</source>
         
       </trans-unit>
       <trans-unit id="chkInteractive.Text">
@@ -6945,6 +7072,44 @@ Stash them before if you don't want to lose them.</source>
       </trans-unit>
     </body>
   </file>
+  <file datatype="plaintext" original="FormRemoteProcess" source-language="en" target-language="lv">
+    <body>
+      <trans-unit id="$this.Text">
+        <source>FormRemoteProcess</source>
+        
+      </trans-unit>
+      <trans-unit id="Abort.Text">
+        <source>Abort</source>
+        <target>Pārtraukt</target>
+        
+      </trans-unit>
+      <trans-unit id="KeepDialogOpen.Text">
+        <source>Keep dialog open</source>
+        <target>Turēt dialogu atvērtu</target>
+        
+      </trans-unit>
+      <trans-unit id="Ok.Text">
+        <source>OK</source>
+        <target>LABI</target>
+        
+      </trans-unit>
+      <trans-unit id="_fingerprintNotRegistredText.Text">
+        <source>The fingerprint of this host is not registered by PuTTY.
+This causes this process to hang, and that why it is automatically stopped.
+
+When the connection is opened detached from Git and Git Extensions, the host's fingerprint can be registered.
+You could also manually add the host's fingerprint or run Test Connection from the remotes dialog.
+
+Do you want to register the host's fingerprint and restart the process?</source>
+        
+      </trans-unit>
+      <trans-unit id="_fingerprintNotRegistredTextCaption.Text">
+        <source>Host Fingerprint not registered</source>
+        <target>Host Fingerprint nav reģistrēts</target>
+        
+      </trans-unit>
+    </body>
+  </file>
   <file datatype="plaintext" original="FormRemotes" source-language="en" target-language="lv">
     <body>
       <trans-unit id="$this.Text">
@@ -7021,6 +7186,11 @@ Inactive remote is completely invisible to git.</source>
         <source>An active remote named &quot;{0}&quot; already exists.</source>
         
       </trans-unit>
+      <trans-unit id="_errorNoKeyEntered.Text">
+        <source>No SSH key file entered</source>
+        <target>Nav ievadīts SSH atslēgas fails</target>
+        
+      </trans-unit>
       <trans-unit id="_gbMgtPanelHeaderEdit.Text">
         <source>Edit Remote Details</source>
         <target>Rediģēt attālo informāciju</target>
@@ -7091,11 +7261,6 @@ Value has been reset to empty value.</source>
       <trans-unit id="_sshKeyOpenFilter.Text">
         <source>Private key (*.ppk)</source>
         <target>Privātā atslēga (*. ppk)</target>
-        
-      </trans-unit>
-      <trans-unit id="_warningNoKeyEntered.Text">
-        <source>No SSH key file entered</source>
-        <target>Nav ievadīts SSH atslēgas fails</target>
         
       </trans-unit>
       <trans-unit id="checkBoxSepPushUrl.Text">
@@ -7194,6 +7359,42 @@ Value has been reset to empty value.</source>
       </trans-unit>
     </body>
   </file>
+  <file datatype="plaintext" original="FormResetAnotherBranch" source-language="en" target-language="lv">
+    <body>
+      <trans-unit id="$this.Text">
+        <source>Reset branch</source>
+        <target>Atiestatīt zaru</target>
+        
+      </trans-unit>
+      <trans-unit id="BranchInfo.Text">
+        <source>Reset local &amp;branch:</source>
+        
+      </trans-unit>
+      <trans-unit id="Cancel.Text">
+        <source>Cancel</source>
+        <target>Atcelt</target>
+        
+      </trans-unit>
+      <trans-unit id="ForceReset.Text">
+        <source>&amp;Force reset for a non-fast-forward reset</source>
+        
+      </trans-unit>
+      <trans-unit id="Ok.Text">
+        <source>OK</source>
+        <target>LABI</target>
+        
+      </trans-unit>
+      <trans-unit id="_localRefInvalid.Text">
+        <source>The entered value '{0}' is not the name of an existing local branch.</source>
+        
+      </trans-unit>
+      <trans-unit id="labelResetBranchWarning.Text">
+        <source>You can only reset a branch safely if there is a direct path from it to selected revision.
+Forcing a branch to reset if it has not been merged might leave some commits unreachable.</source>
+        
+      </trans-unit>
+    </body>
+  </file>
   <file datatype="plaintext" original="FormResetChanges" source-language="en" target-language="lv">
     <body>
       <trans-unit id="$this.Text">
@@ -7202,13 +7403,11 @@ Value has been reset to empty value.</source>
         
       </trans-unit>
       <trans-unit id="btnCancel.Text">
-        <source>Cancel</source>
-        <target>Atcelt</target>
+        <source>&amp;Cancel</source>
         
       </trans-unit>
       <trans-unit id="btnReset.Text">
-        <source>Reset</source>
-        <target>Atiestatīt</target>
+        <source>R&amp;eset</source>
         
       </trans-unit>
       <trans-unit id="cbDeleteNewFilesAndDirectories.Text">
@@ -7244,6 +7443,16 @@ Value has been reset to empty value.</source>
         <source>Hard: reset working directory and index
 (discard ALL local changes, even uncommitted changes)</source>
         <target>Grūti: atiestatīt darba direktoriju un indeksu (atmest VISAS lokālās izmaiņas, pat neizpildītās izmaiņas)</target>
+        
+      </trans-unit>
+      <trans-unit id="Keep.Text">
+        <source>Keep: update working directory to the commit 
+(abort if there are local changes), reset index</source>
+        
+      </trans-unit>
+      <trans-unit id="Merge.Text">
+        <source>Merge: update working directory to the commit and keep local changes 
+(abort if there are conflicts), reset index</source>
         
       </trans-unit>
       <trans-unit id="Mixed.Text">
@@ -7414,11 +7623,6 @@ Is the merge conflict solved?</source>
         <target>Vai konflikts ir atrisināts?</target>
         
       </trans-unit>
-      <trans-unit id="_binaryFileWarningCaption.Text">
-        <source>Warning</source>
-        <target>Brīdinājums</target>
-        
-      </trans-unit>
       <trans-unit id="_button1Text.Text">
         <source>Open in</source>
         <target>Atvērt</target>
@@ -7489,6 +7693,10 @@ Is the merge conflict solved?</source>
         <target>izdzēsts</target>
         
       </trans-unit>
+      <trans-unit id="_errorStartingMergetool.Text">
+        <source>Error starting mergetool: {0}</source>
+        
+      </trans-unit>
       <trans-unit id="_failureWhileOpenFile.Text">
         <source>Open temporary file failed.</source>
         <target>Pagaidu faila atvēršana neizdevās.</target>
@@ -7501,39 +7709,33 @@ Is the merge conflict solved?</source>
       </trans-unit>
       <trans-unit id="_fileBinaryChooseLocalBaseRemote.Text">
         <source>File ({0}) appears to be a binary file.
-Choose to keep the local({1}), remote({2}) or base file.</source>
-        <target>Fails ({0}), šķiet, ir binārs fails. Izvēlieties saglabāt lokālo ({1}), attālo ({2}) vai pamatfailu.</target>
+Choose to keep the local ({1}), remote ({2}) or base file.</source>
         
       </trans-unit>
       <trans-unit id="_fileChangeLocallyAndRemotely.Text">
-        <source>The file has been changed both locally({0}) and remotely({1}). Merge the changes.</source>
-        <target>Fails ir mainīts gan lokāli ({0}), gan attāli ({1}). Sapludiniet izmaiņas.</target>
+        <source>The file has been changed both locally ({0}) and remotely ({1}). Merge the changes.</source>
         
       </trans-unit>
       <trans-unit id="_fileCreatedLocallyAndRemotely.Text">
-        <source>A file with the same name has been created locally({0}) and remotely({1}). Choose the file you want to keep or merge the files.</source>
-        <target>Fails ar tādu pašu nosaukumu ir izveidots lokāli ({0}) un attāli ({1}). Izvēlieties failu, kuru vēlaties paturēt vai sapludināt.</target>
+        <source>A file with the same name has been created locally ({0}) and remotely ({1}). Choose the file you want to keep or merge the files.</source>
         
       </trans-unit>
       <trans-unit id="_fileCreatedLocallyAndRemotelyLong.Text">
         <source>File {0} does not have a base revision.
-A file with the same name has been created locally({1}) and remotely({2}) causing this conflict.
+A file with the same name has been created locally ({1}) and remotely ({2}) causing this conflict.
 
 Choose the file you want to keep, merge the files or delete the file?</source>
-        <target>Failam {0} nav bāzes versijas. Fails ar tādu pašu nosaukumu ir izveidots lokāli ({1}) un attāli ({2}), izraisot šo konfliktu. Vai izvēlēties saglabājamo failu, sapludināt failus vai izdzēst failu?</target>
         
       </trans-unit>
       <trans-unit id="_fileDeletedLocallyAndModifiedRemotely.Text">
-        <source>The file has been deleted locally({0}) and modified remotely({1}). Choose to delete the file or keep the modified version.</source>
-        <target>Fails ir dzēsts lokāli ({0}) un modificēts attāli ({1}). Izvēlieties dzēst failu vai paturēt modificēto versiju.</target>
+        <source>The file has been deleted locally ({0}) and modified remotely ({1}). Choose to delete the file or keep the modified version.</source>
         
       </trans-unit>
       <trans-unit id="_fileDeletedLocallyAndModifiedRemotelyLong.Text">
         <source>File {0} does not have a local revision.
-The file has been deleted locally({1}) but modified remotely({2}).
+The file has been deleted locally ({1}) but modified remotely ({2}).
 
 Choose to delete the file or keep the modified version.</source>
-        <target>Failam {0} nav lokālas versijas. Fails ir dzēsts lokāli ({1}), bet modificēts attāli ({2}). Izvēlieties dzēst failu vai paturēt modificēto versiju.</target>
         
       </trans-unit>
       <trans-unit id="_fileIsBinary.Text">
@@ -7543,16 +7745,14 @@ Are you sure you want to open this file in {0}?</source>
         
       </trans-unit>
       <trans-unit id="_fileModifiedLocallyAndDeletedRemotely.Text">
-        <source>The file has been modified locally({0}) and deleted remotely({1}). Choose to delete the file or keep the modified version.</source>
-        <target>Fails ir modificēts lokāli ({0}) un izdzēsts attāli ({1}). Izvēlieties dzēst failu vai paturēt modificēto versiju.</target>
+        <source>The file has been modified locally ({0}) and deleted remotely ({1}). Choose to delete the file or keep the modified version.</source>
         
       </trans-unit>
       <trans-unit id="_fileModifiedLocallyAndDeletedRemotelyLong.Text">
         <source>File {0} does not have a remote revision.
-The file has been modified locally({1}) but deleted remotely({2}).
+The file has been modified locally ({1}) but deleted remotely ({2}).
 
 Choose to delete the file or keep the modified version.</source>
-        <target>Failam {0} nav attālās versijas. Fails ir modificēts lokāli ({1}), bet izdzēsts attāli ({2}). Izvēlieties dzēst failu vai paturēt modificēto versiju.</target>
         
       </trans-unit>
       <trans-unit id="_fileUnchangedAfterMerge.Text">
@@ -7560,6 +7760,34 @@ Choose to delete the file or keep the modified version.</source>
 
 The merge conflict will not be marked as solved. Please try again.</source>
         <target>Sapludināšana nav modificējusi failu. Parasti tas nozīmē, ka fails ir saglabāts nepareizā vietā. Sapludināšanas konflikts netiks atzīmēts kā atrisināts. Lūdzu, mēģiniet vēlreiz.</target>
+        
+      </trans-unit>
+      <trans-unit id="_filesDeletedLocallyAndModifiedRemotelyLong.Text">
+        <source>{0} and {1} other out of {2} selected files do not have a local revision.
+The files have been deleted locally, but modified remotely
+
+Choose to delete the files or keep the modified versions.</source>
+        
+      </trans-unit>
+      <trans-unit id="_filesDeletedLocallyAndModifiedRemotelyLongNoOtherFilesSelected.Text">
+        <source>{0} and {1} other selected file(s) do not have a local revision.
+The files have been deleted locally, but modified remotely
+
+Choose to delete the files or keep the modified versions.</source>
+        
+      </trans-unit>
+      <trans-unit id="_filesModifiedLocallyAndDeletedRemotelyLong.Text">
+        <source>{0} and {1} other out of {2} selected files do not have a remote revision.
+The files have been modified locally, but deleted remotely.
+
+Choose to delete the files or keep the modified versions.</source>
+        
+      </trans-unit>
+      <trans-unit id="_filesModifiedLocallyAndDeletedRemotelyLongNoOtherFilesSelected.Text">
+        <source>{0} and {1} other selected file(s) do not have a remote revision.
+The files have been modified locally, but deleted remotely.
+
+Choose to delete the files or keep the modified versions.</source>
         
       </trans-unit>
       <trans-unit id="_keepBaseButtonText.Text">
@@ -7588,13 +7816,13 @@ Fall back to 2-way merge?</source>
         
       </trans-unit>
       <trans-unit id="_noMergeTool.Text">
-        <source>There is no mergetool configured. Please go to settings and set a mergetool!</source>
-        <target>Nav konfigurēts neviens mergetool. Lūdzu, atveriet iestatījumus un iestatiet sapludināšanas rīku!</target>
+        <source>There is no mergetool configured.
+Please go to settings and set a mergetool!</source>
         
       </trans-unit>
       <trans-unit id="_noMergeToolConfigured.Text">
-        <source>The mergetool is not correctly configured. Please go to settings and configure the mergetool!</source>
-        <target>Mergetool nav pareizi konfigurēts. Lūdzu, atveriet iestatījumus un konfigurējiet mergetool!</target>
+        <source>The mergetool is not correctly configured.
+Please go to settings and configure the mergetool!</source>
         
       </trans-unit>
       <trans-unit id="_openMergeToolItemText.Text">
@@ -7615,6 +7843,15 @@ Fall back to 2-way merge?</source>
       <trans-unit id="_resetItemRebaseText.Text">
         <source>Abort rebase</source>
         <target>Pārtraukt pārbāzes maiņu</target>
+        
+      </trans-unit>
+      <trans-unit id="_solveMergeConflictApplyToAllCheckBoxText.Text">
+        <source>Apply to {0} and {1} other file(s)</source>
+        
+      </trans-unit>
+      <trans-unit id="_solveMergeConflictDialogCaption.Text">
+        <source>Solve merge conflict</source>
+        <target>Atrisināt sapludināšanas konfliktu</target>
         
       </trans-unit>
       <trans-unit id="_stageFilename.Text">
@@ -7642,6 +7879,10 @@ Do you want to use this custom merge script?</source>
       <trans-unit id="conflictDescription.Text">
         <source>Select file</source>
         <target>Atlasīt failu</target>
+        
+      </trans-unit>
+      <trans-unit id="customMergetool.Text">
+        <source>Open in &amp;mergetool</source>
         
       </trans-unit>
       <trans-unit id="fileHistoryToolStripMenuItem.Text">
@@ -7726,11 +7967,6 @@ Do you want to use this custom merge script?</source>
       <trans-unit id="_noneParentSelectedText.Text">
         <source>None parent is selected!</source>
         <target>Neviens no vecākiem nav atlasīts!</target>
-        
-      </trans-unit>
-      <trans-unit id="_noneParentSelectedTextCaption.Text">
-        <source>Error</source>
-        <target>Kļūda</target>
         
       </trans-unit>
       <trans-unit id="columnHeader1.Text">
@@ -7850,16 +8086,8 @@ Do you want to use this custom merge script?</source>
         <target>Uzstādījumi</target>
         
       </trans-unit>
-      <trans-unit id="_cantFindGitMessage.Text">
-        <source>The command to run git is not configured correct.
-You need to set the correct path to be able to use Git Extensions.
-
-Do you want to set the correct command now? If not Global and Local Settings will not be saved.</source>
-        
-      </trans-unit>
-      <trans-unit id="_cantFindGitMessageCaption.Text">
-        <source>Incorrect path</source>
-        <target>Nepareizs ceļš</target>
+      <trans-unit id="_cantSaveSettings.Text">
+        <source>Failed to save all settings</source>
         
       </trans-unit>
       <trans-unit id="buttonApply.Text">
@@ -7974,6 +8202,10 @@ Therefore the Cancel button does NOT revert any changes made.</source>
         <target>Ievietot neizsekotos failus</target>
         
       </trans-unit>
+      <trans-unit id="cherryPickFileChangesToolStripMenuItem.Text">
+        <source>Cherry pick file changes</source>
+        
+      </trans-unit>
       <trans-unit id="chkIncludeUntrackedFiles.Text">
         <source>Include untracked files</source>
         <target>Neizsekotu failu iekļaušana</target>
@@ -7992,6 +8224,10 @@ Therefore the Cancel button does NOT revert any changes made.</source>
       <trans-unit id="toolStripButton_customMessage.Text">
         <source>Custom stash message</source>
         <target>Pielāgots domuzīmes ziņojums</target>
+        
+      </trans-unit>
+      <trans-unit id="toolStripButton_customMessage.ToolTipText">
+        <source>Write custom stash message</source>
         
       </trans-unit>
     </body>
@@ -8016,21 +8252,6 @@ Therefore the Cancel button does NOT revert any changes made.</source>
       <trans-unit id="Ok.Text">
         <source>OK</source>
         <target>LABI</target>
-        
-      </trans-unit>
-      <trans-unit id="_fingerprintNotRegistredText.Text">
-        <source>The fingerprint of this host is not registered by PuTTY.
-This causes this process to hang, and that why it is automatically stopped.
-
-When the connection is opened detached from Git and Git Extensions, the host's fingerprint can be registered.
-You could also manually add the host's fingerprint or run Test Connection from the remotes dialog.
-
-Do you want to register the host's fingerprint and restart the process?</source>
-        
-      </trans-unit>
-      <trans-unit id="_fingerprintNotRegistredTextCaption.Text">
-        <source>Host Fingerprint not registered</source>
-        <target>Host Fingerprint nav reģistrēts</target>
         
       </trans-unit>
     </body>
@@ -8119,116 +8340,6 @@ Do you want to register the host's fingerprint and restart the process?</source>
       </trans-unit>
     </body>
   </file>
-  <file datatype="plaintext" original="FormTranslate" source-language="en" target-language="lv">
-    <body>
-      <trans-unit id="$this.Text">
-        <source>Translate</source>
-        <target>Tulkot</target>
-        
-      </trans-unit>
-      <trans-unit id="_allText.Text">
-        <source>All</source>
-        <target>Visi</target>
-        
-      </trans-unit>
-      <trans-unit id="_editingCellPrefixText.Text">
-        <source>[EDITING]</source>
-        <target>[labošana]</target>
-        
-      </trans-unit>
-      <trans-unit id="_noLanguageCodeSelected.Text">
-        <source>There is no language code selected.
-Do you want to select a language code first?</source>
-        <target>Nav atlasīts neviens valodas kods. Vai vēlaties vispirms atlasīt valodas kodu?</target>
-        
-      </trans-unit>
-      <trans-unit id="_noLanguageCodeSelectedCaption.Text">
-        <source>Language code</source>
-        <target>Valodas kods</target>
-        
-      </trans-unit>
-      <trans-unit id="_saveAsText.Text">
-        <source>Save as</source>
-        <target>Saglabāt kā</target>
-        
-      </trans-unit>
-      <trans-unit id="_saveAsTextFilter.Text">
-        <source>Translation file (*.xlf)</source>
-        <target>Tulkošanas fails (*. xlf)</target>
-        
-      </trans-unit>
-      <trans-unit id="_saveCurrentChangesCaption.Text">
-        <source>Save changes</source>
-        <target>Saglabāt izmaiņas</target>
-        
-      </trans-unit>
-      <trans-unit id="_saveCurrentChangesText.Text">
-        <source>Do you want to save the current changes?</source>
-        <target>Vai vēlaties saglabāt pašreizējās izmaiņas?</target>
-        
-      </trans-unit>
-      <trans-unit id="_translateProgressText.Text">
-        <source>Translated {0} out of {1}</source>
-        <target>Tulkots {0} no {1}</target>
-        
-      </trans-unit>
-      <trans-unit id="categoryDataGridViewTextBoxColumn.HeaderText">
-        <source>Category</source>
-        <target>Kategorija</target>
-        
-      </trans-unit>
-      <trans-unit id="nameDataGridViewTextBoxColumn.HeaderText">
-        <source>Name</source>
-        <target>Vārds</target>
-        
-      </trans-unit>
-      <trans-unit id="neutralValueDataGridViewTextBoxColumn.HeaderText">
-        <source>NeutralValue</source>
-        <target>Neutralvalue</target>
-        
-      </trans-unit>
-      <trans-unit id="nextButton.Text">
-        <source>&amp;Next</source>
-        <target>un nākamā</target>
-        
-      </trans-unit>
-      <trans-unit id="previousButton.Text">
-        <source>&amp;Previous</source>
-        <target>un iepriekšējā</target>
-        
-      </trans-unit>
-      <trans-unit id="propertyDataGridViewTextBoxColumn.HeaderText">
-        <source>Property</source>
-        <target>Īpašums</target>
-        
-      </trans-unit>
-      <trans-unit id="saveAs.ToolTipText">
-        <source>Save translation</source>
-        <target>Saglabāt tulkojumu</target>
-        
-      </trans-unit>
-      <trans-unit id="toolStripButtonNew.Text">
-        <source>New</source>
-        <target>Jauns</target>
-        
-      </trans-unit>
-      <trans-unit id="toolStripTranslationLabel.Text">
-        <source>Current translation:</source>
-        <target>Pašreizējais tulkojums:</target>
-        
-      </trans-unit>
-      <trans-unit id="toolStripTranslationLanguageCode.Text">
-        <source>Language code:</source>
-        <target>Valodas kods:</target>
-        
-      </trans-unit>
-      <trans-unit id="translatedValueDataGridViewTextBoxColumn.HeaderText">
-        <source>TranslatedValue</source>
-        <target>Translatedvalue</target>
-        
-      </trans-unit>
-    </body>
-  </file>
   <file datatype="plaintext" original="FormUpdates" source-language="en" target-language="lv">
     <body>
       <trans-unit id="$this.Text">
@@ -8241,6 +8352,18 @@ Do you want to select a language code first?</source>
         <target>Atjauninājumu meklēšana</target>
         
       </trans-unit>
+      <trans-unit id="_downloadingUpdate.Text">
+        <source>Downloading update...</source>
+        
+      </trans-unit>
+      <trans-unit id="_errorHeading.Text">
+        <source>Download Failed</source>
+        
+      </trans-unit>
+      <trans-unit id="_errorMessage.Text">
+        <source>Failed to download an update.</source>
+        
+      </trans-unit>
       <trans-unit id="_newVersionAvailable.Text">
         <source>There is a new version {0} of Git Extensions available</source>
         <target>Ir pieejama jauna Git paplašinājumu versija {0}</target>
@@ -8251,19 +8374,16 @@ Do you want to select a language code first?</source>
         <target>Nav atrasts neviens atjauninājums</target>
         
       </trans-unit>
-      <trans-unit id="btnDownloadNow.Text">
-        <source>Download Now</source>
-        <target>Lejupielādēt tūlīt</target>
-        
-      </trans-unit>
-      <trans-unit id="closeButton.Text">
-        <source>Close</source>
-        <target>Aizvērties</target>
+      <trans-unit id="btnUpdateNow.Text">
+        <source>&amp;Update Now</source>
         
       </trans-unit>
       <trans-unit id="linkChangeLog.Text">
-        <source>Show ChangeLog</source>
-        <target>Rādīt maiņas žurnālu</target>
+        <source>Show Change&amp;Log</source>
+        
+      </trans-unit>
+      <trans-unit id="linkDirectDownload.Text">
+        <source>&amp;Direct Download</source>
         
       </trans-unit>
     </body>
@@ -8482,6 +8602,34 @@ Context menu for additional operations</source>
         <target>Vispārīgs</target>
         
       </trans-unit>
+      <trans-unit id="_fetch.Text">
+        <source>Fetch</source>
+        <target>Ienest</target>
+        
+      </trans-unit>
+      <trans-unit id="_fetchAll.Text">
+        <source>Fetch all</source>
+        <target>Paņemt visu</target>
+        
+      </trans-unit>
+      <trans-unit id="_fetchAndPruneAll.Text">
+        <source>Fetch and prune all</source>
+        <target>Ienest un saplacināt visu</target>
+        
+      </trans-unit>
+      <trans-unit id="_openPullDialog.Text">
+        <source>Open pull dialog</source>
+        <target>Atvērt vilkšanas dialogu</target>
+        
+      </trans-unit>
+      <trans-unit id="_pullMerge.Text">
+        <source>Pull - merge</source>
+        
+      </trans-unit>
+      <trans-unit id="_pullRebase.Text">
+        <source>Pull - rebase</source>
+        
+      </trans-unit>
       <trans-unit id="btnDefaultDestinationBrowse.Text">
         <source>Browse</source>
         <target>Pārlūkot</target>
@@ -8509,11 +8657,6 @@ Context menu for additional operations</source>
       </trans-unit>
       <trans-unit id="chkShowAheadBehindDataInBrowseWindow.Text">
         <source>Show ahead and behind information on status bar in browse window</source>
-        
-      </trans-unit>
-      <trans-unit id="chkShowCurrentChangesInRevisionGraph.Text">
-        <source>Show current working directory changes as an artificial commit</source>
-        <target>Rādīt pašreizējās darba direktorija izmaiņas kā mākslīgu nodošanu</target>
         
       </trans-unit>
       <trans-unit id="chkShowGitCommandLine.Text">
@@ -8547,8 +8690,16 @@ Context menu for additional operations</source>
         
       </trans-unit>
       <trans-unit id="chkStashUntrackedFiles.Text">
-        <source>Include untracked files in stash</source>
-        <target>Iekļaut ierakstos neizsekotus failus</target>
+        <source>Include untracked files in autostash</source>
+        
+      </trans-unit>
+      <trans-unit id="chkTelemetry.Text">
+        <source>Yes, I allow telemetry!</source>
+        
+      </trans-unit>
+      <trans-unit id="chkUpdateModules.Text">
+        <source>Update submodules on checkout</source>
+        <target>Atjaunināt paņemšanas apakšmoduļus</target>
         
       </trans-unit>
       <trans-unit id="chkUseFastChecks.Text">
@@ -8556,14 +8707,8 @@ Context menu for additional operations</source>
         <target>Izmantojiet FileSystemWatcher, lai pārbaudītu, vai indekss ir mainīts</target>
         
       </trans-unit>
-      <trans-unit id="chkUsePatienceDiffAlgorithm.Text">
-        <source>Use patience diff algorithm</source>
-        <target>Lietot pacietības diff algoritmu</target>
-        
-      </trans-unit>
-      <trans-unit id="chkUseSSL.Text">
-        <source>Use SSL/TLS</source>
-        <target>Izmantot SSL/TLS</target>
+      <trans-unit id="chkUseHistogramDiffAlgorithm.Text">
+        <source>Use histogram diff algorithm</source>
         
       </trans-unit>
       <trans-unit id="groupBoxBehaviour.Text">
@@ -8571,19 +8716,17 @@ Context menu for additional operations</source>
         <target>Uzvedība</target>
         
       </trans-unit>
-      <trans-unit id="groupBoxEmailSettings.Text">
-        <source>Email settings for sending patches</source>
-        <target>Epasta iestatījumi ielāpu sūtīšanai</target>
-        
-      </trans-unit>
       <trans-unit id="groupBoxPerformance.Text">
         <source>Performance</source>
         <target>Izpildījums</target>
         
       </trans-unit>
+      <trans-unit id="groupBoxTelemetry.Text">
+        <source>Telemetry</source>
+        
+      </trans-unit>
       <trans-unit id="lblCommitsLimit.Text">
-        <source>Limit number of commits that will be loaded at startup</source>
-        <target>Ierobežot to saistību skaitu, kas tiks ielādētas startēšanas laikā</target>
+        <source>Limit number of commits to be loaded</source>
         
       </trans-unit>
       <trans-unit id="lblDefaultCloneDestination.Text">
@@ -8591,19 +8734,17 @@ Context menu for additional operations</source>
         <target>Noklusētais klonēšanas mērķis</target>
         
       </trans-unit>
+      <trans-unit id="lblDefaultPullAction.Text">
+        <source>Default pull action</source>
+        
+      </trans-unit>
       <trans-unit id="lblQuickSearchTimeout.Text">
         <source>Revision grid quick search timeout [ms]</source>
         <target>Pārskatīšanas režģa ātrās meklēšanas taimauts [ms]</target>
         
       </trans-unit>
-      <trans-unit id="lblSmtpServerName.Text">
-        <source>SMTP server name</source>
-        <target>SMTP servera nosaukums</target>
-        
-      </trans-unit>
-      <trans-unit id="lblSmtpServerPort.Text">
-        <source>Port</source>
-        <target>Osta</target>
+      <trans-unit id="llblTelemetryPrivacyLink.Text">
+        <source>Why and what is captured?</source>
         
       </trans-unit>
     </body>
@@ -8639,54 +8780,39 @@ Context menu for additional operations</source>
         <target>Konfig</target>
         
       </trans-unit>
-      <trans-unit id="BrowseCommitTemplate.Text">
-        <source>Browse</source>
-        <target>Pārlūkot</target>
-        
-      </trans-unit>
-      <trans-unit id="BrowseDiffTool.Text">
-        <source>Browse</source>
-        <target>Pārlūkot</target>
-        
-      </trans-unit>
-      <trans-unit id="BrowseMergeTool.Text">
-        <source>Browse</source>
-        <target>Pārlūkot</target>
-        
-      </trans-unit>
       <trans-unit id="ConfigureEncoding.Text">
         <source>Configure</source>
         <target>Konfigurēt</target>
         
       </trans-unit>
-      <trans-unit id="DiffToolCmdSuggest.Text">
+      <trans-unit id="_selectFile.Text">
+        <source>Select file</source>
+        <target>Atlasīt failu</target>
+        
+      </trans-unit>
+      <trans-unit id="btnCommitTemplateBrowse.Text">
+        <source>Browse</source>
+        <target>Pārlūkot</target>
+        
+      </trans-unit>
+      <trans-unit id="btnDiffToolBrowse.Text">
+        <source>Browse</source>
+        <target>Pārlūkot</target>
+        
+      </trans-unit>
+      <trans-unit id="btnDiffToolCommandSuggest.Text">
         <source>Suggest</source>
         <target>Ierosināt</target>
         
       </trans-unit>
-      <trans-unit id="MergeToolCmdSuggest.Text">
+      <trans-unit id="btnMergeToolBrowse.Text">
+        <source>Browse</source>
+        <target>Pārlūkot</target>
+        
+      </trans-unit>
+      <trans-unit id="btnMergeToolCommandSuggest.Text">
         <source>Suggest</source>
         <target>Ierosināt</target>
-        
-      </trans-unit>
-      <trans-unit id="PathToKDiff3.Text">
-        <source>Path to mergetool</source>
-        <target>Ceļš uz sapludināšanas rīku</target>
-        
-      </trans-unit>
-      <trans-unit id="_diffToolSuggestCaption.Text">
-        <source>Suggest difftool cmd</source>
-        <target>Ieteikt difftool cmd</target>
-        
-      </trans-unit>
-      <trans-unit id="_mergeToolSuggestCaption.Text">
-        <source>Suggest mergetool cmd</source>
-        <target>Ieteikt mergetool cmd</target>
-        
-      </trans-unit>
-      <trans-unit id="_toolSuggestPathText.Text">
-        <source>Please enter the path to {0} and press suggest.</source>
-        <target>Lūdzu, ievadiet ceļu uz {0} un nospiediet Ieteikt.</target>
         
       </trans-unit>
       <trans-unit id="globalAutoCrlfFalse.Text">
@@ -8711,16 +8837,6 @@ Context menu for additional operations</source>
         <target>Rindas beigas</target>
         
       </trans-unit>
-      <trans-unit id="label19.Text">
-        <source>Mergetool command</source>
-        <target>Mergetool komanda</target>
-        
-      </trans-unit>
-      <trans-unit id="label28.Text">
-        <source>Keep backup (.orig) after merge</source>
-        <target>Pēc sapludināšanas saglabāt dublējumu (. orig)</target>
-        
-      </trans-unit>
       <trans-unit id="label3.Text">
         <source>User name</source>
         <target>Lietotājvārds</target>
@@ -8729,26 +8845,6 @@ Context menu for additional operations</source>
       <trans-unit id="label4.Text">
         <source>User email</source>
         <target>Lietotāja epasts</target>
-        
-      </trans-unit>
-      <trans-unit id="label41.Text">
-        <source>Difftool</source>
-        <target>Difftool</target>
-        
-      </trans-unit>
-      <trans-unit id="label42.Text">
-        <source>Path to difftool</source>
-        <target>Ceļš uz difftool</target>
-        
-      </trans-unit>
-      <trans-unit id="label48.Text">
-        <source>Difftool command</source>
-        <target>Difftool komanda</target>
-        
-      </trans-unit>
-      <trans-unit id="label57.Text">
-        <source>Path to commit template</source>
-        <target>Ceļš uz izpildes veidni</target>
         
       </trans-unit>
       <trans-unit id="label6.Text">
@@ -8761,16 +8857,46 @@ Context menu for additional operations</source>
         <target>Failu satura kodējums</target>
         
       </trans-unit>
-      <trans-unit id="label7.Text">
-        <source>Mergetool</source>
-        <target>Mergetools</target>
-        
-      </trans-unit>
       <trans-unit id="label9.Text">
         <source>You need to set the correct path to 
 git before you can change
 global settings.
 </source>
+        
+      </trans-unit>
+      <trans-unit id="lblCommitTemplatePath.Text">
+        <source>Path to commit template</source>
+        <target>Ceļš uz izpildes veidni</target>
+        
+      </trans-unit>
+      <trans-unit id="lblDiffTool.Text">
+        <source>Difftool</source>
+        <target>Difftool</target>
+        
+      </trans-unit>
+      <trans-unit id="lblDiffToolCommand.Text">
+        <source>Difftool command</source>
+        <target>Difftool komanda</target>
+        
+      </trans-unit>
+      <trans-unit id="lblDiffToolPath.Text">
+        <source>Path to difftool</source>
+        <target>Ceļš uz difftool</target>
+        
+      </trans-unit>
+      <trans-unit id="lblMergeTool.Text">
+        <source>Mergetool</source>
+        <target>Mergetools</target>
+        
+      </trans-unit>
+      <trans-unit id="lblMergeToolCommand.Text">
+        <source>Mergetool command</source>
+        <target>Mergetool komanda</target>
+        
+      </trans-unit>
+      <trans-unit id="lblMergeToolPath.Text">
+        <source>Path to mergetool</source>
+        <target>Ceļš uz sapludināšanas rīku</target>
         
       </trans-unit>
     </body>
@@ -8840,6 +8966,18 @@ Check if file is accessible.</source>
       <trans-unit id="_saveFileQuestion.Text">
         <source>Save changes to .git/info/exclude?</source>
         <target>Vai saglabāt izmaiņas. git/info/exclude?</target>
+        
+      </trans-unit>
+    </body>
+  </file>
+  <file datatype="plaintext" original="GitRootIntroductionPage" source-language="en" target-language="lv">
+    <body>
+      <trans-unit id="$this.Text">
+        <source>Git Settings</source>
+        
+      </trans-unit>
+      <trans-unit id="label1.Text">
+        <source>Select one of the subnodes to view or edit the Git settings</source>
         
       </trans-unit>
     </body>
@@ -9090,6 +9228,59 @@ help</source>
       </trans-unit>
     </body>
   </file>
+  <file datatype="plaintext" original="InteractiveGitActionControl" source-language="en" target-language="lv">
+    <body>
+      <trans-unit id="AbortButton.Text">
+        <source>Abort</source>
+        <target>Pārtraukt</target>
+        
+      </trans-unit>
+      <trans-unit id="ContinueButton.Text">
+        <source>Continue</source>
+        
+      </trans-unit>
+      <trans-unit id="MoreButton.Text">
+        <source>M&amp;ore...</source>
+        
+      </trans-unit>
+      <trans-unit id="ResolveButton.Text">
+        <source>Resolve...</source>
+        
+      </trans-unit>
+      <trans-unit id="_bisect.Text">
+        <source>Bisect</source>
+        <target>Bisekss</target>
+        
+      </trans-unit>
+      <trans-unit id="_conflictsMessage.Text">
+        <source>There are unresolved merge conflicts.</source>
+        
+      </trans-unit>
+      <trans-unit id="_merge.Text">
+        <source>Merge</source>
+        <target>Sapludināšana</target>
+        
+      </trans-unit>
+      <trans-unit id="_patch.Text">
+        <source>Patch</source>
+        <target>Plāksteris</target>
+        
+      </trans-unit>
+      <trans-unit id="_progressMessage.Text">
+        <source>{0} is currently in progress.</source>
+        
+      </trans-unit>
+      <trans-unit id="_progressWithConflictsMessage.Text">
+        <source>{0} is currently in progress with merge conflicts.</source>
+        
+      </trans-unit>
+      <trans-unit id="_rebase.Text">
+        <source>Rebase</source>
+        <target>Pārdalīt</target>
+        
+      </trans-unit>
+    </body>
+  </file>
   <file datatype="plaintext" original="LocalBranchMenuItemsStrings" source-language="en" target-language="lv">
     <body>
       <trans-unit id="DeleteTooltip.Text">
@@ -9139,14 +9330,17 @@ help</source>
   </file>
   <file datatype="plaintext" original="MessageBoxes" source-language="en" target-language="lv">
     <body>
-      <trans-unit id="_confirmDeleteRemoteBranch.Text">
-        <source>Do you want to delete the branch {0} from {1}?</source>
-        <target>Vai vēlaties dzēst filiāli {0} no {1}?</target>
+      <trans-unit id="_archiveRevisionCaption.Text">
+        <source>Archive revision</source>
+        <target>Arhīva versija</target>
         
       </trans-unit>
-      <trans-unit id="_error.Text">
-        <source>Error</source>
-        <target>Kļūda</target>
+      <trans-unit id="_failedToExecuteScript.Text">
+        <source>Failed to execute script</source>
+        
+      </trans-unit>
+      <trans-unit id="_failedToRunShell.Text">
+        <source>Failed to run shell</source>
         
       </trans-unit>
       <trans-unit id="_middleOfPatchApply.Text">
@@ -9179,9 +9373,22 @@ help</source>
         <target>Nevar ielādēt SSH atslēgu. Plūsma nav konfigurēta pareizi.</target>
         
       </trans-unit>
+      <trans-unit id="_reason.Text">
+        <source>Reason</source>
+        
+      </trans-unit>
       <trans-unit id="_rememberChoice.Text">
         <source>Remember choice</source>
         <target>Atcerēties izvēli</target>
+        
+      </trans-unit>
+      <trans-unit id="_resetChangesCaption.Text">
+        <source>Reset changes</source>
+        <target>Atiestatīt izmaiņas</target>
+        
+      </trans-unit>
+      <trans-unit id="_selectOnlyOneOrTwoRevisions.Text">
+        <source>Select only one or two revisions. Abort.</source>
         
       </trans-unit>
       <trans-unit id="_serverHostkeyNotCachedText.Text">
@@ -9189,6 +9396,14 @@ help</source>
 
 Do you want to trust this host key and then try again?</source>
         <target>Servera resursdatora atslēga reģistrā nav ievietota kešatmiņā. Vai vēlaties uzticēties šai resursdatora atslēgai un pēc tam mēģināt vēlreiz?</target>
+        
+      </trans-unit>
+      <trans-unit id="_shellNotFound.Text">
+        <source>The selected shell is not installed, or is not on your path.</source>
+        
+      </trans-unit>
+      <trans-unit id="_shellNotFoundCaption.Text">
+        <source>Shell not found</source>
         
       </trans-unit>
       <trans-unit id="_theRepositorySubmodules.Text">
@@ -9316,25 +9531,9 @@ The action cannot be undone.</source>
         <target>Vai vēlaties dzēst kategoriju “{0}” ar {1} krātuvēm? Darbību nevar atsaukt.</target>
         
       </trans-unit>
-      <trans-unit id="_directoryIsNotAValidRepository.Text">
-        <source>The selected item is not a valid git repository.
-
-Do you want to remove it from the recent repositories list?</source>
-        <target>Atlasītais vienums nav derīgs krāsu repozitorijs. Vai vēlaties to noņemt no jaunāko krātuvju saraksta?</target>
-        
-      </trans-unit>
-      <trans-unit id="_directoryIsNotAValidRepositoryCaption.Text">
-        <source>Open</source>
-        <target>Atvērums</target>
-        
-      </trans-unit>
       <trans-unit id="_groupRecentRepositories.Text">
         <source>Recent repositories</source>
         <target>Nesenie repozitoriji</target>
-        
-      </trans-unit>
-      <trans-unit id="_notAValidRepository.Text">
-        <source>Not a valid git repository</source>
         
       </trans-unit>
       <trans-unit id="clmhdrBranch.Text">
@@ -9434,9 +9633,12 @@ To show all branches, right click the revision grid, select 'view' and then the 
         <source>Show/hide branches/remotes/tags</source>
         
       </trans-unit>
-      <trans-unit id="lblSearchBranch.Text">
-        <source>Search:</source>
-        <target>Meklēt:</target>
+      <trans-unit id="_sortByContextMenuItem.Text">
+        <source>&amp;Sort by...</source>
+        
+      </trans-unit>
+      <trans-unit id="_sortOrderContextMenuItem.Text">
+        <source>&amp;Sort order...</source>
         
       </trans-unit>
       <trans-unit id="mnuBtnFetchAllRemotes.Text">
@@ -9445,6 +9647,19 @@ To show all branches, right click the revision grid, select 'view' and then the 
       </trans-unit>
       <trans-unit id="mnuBtnManageRemotesFromRootNode.Text">
         <source>&amp;Manage...</source>
+        
+      </trans-unit>
+      <trans-unit id="mnuBtnManageRemotesFromRootNode.ToolTipText">
+        <source>Manage remotes</source>
+        <target>Pārvaldīt attālumus</target>
+        
+      </trans-unit>
+      <trans-unit id="mnuBtnOpenRemoteUrlInBrowser.Text">
+        <source>Open remote Url</source>
+        
+      </trans-unit>
+      <trans-unit id="mnuBtnOpenRemoteUrlInBrowser.ToolTipText">
+        <source>Redirects you to the actual repository page</source>
         
       </trans-unit>
       <trans-unit id="mnuBtnPruneAllBranchesFromARemote.Text">
@@ -9460,9 +9675,34 @@ To show all branches, right click the revision grid, select 'view' and then the 
         <target>Sakļaut visu</target>
         
       </trans-unit>
+      <trans-unit id="mnubtnCollapseAll.ToolTipText">
+        <source>Collapse all nodes</source>
+        
+      </trans-unit>
+      <trans-unit id="mnubtnCommitSubmodule.Text">
+        <source>&amp;Commit</source>
+        <target>un nodot</target>
+        
+      </trans-unit>
+      <trans-unit id="mnubtnCommitSubmodule.ToolTipText">
+        <source>Commit changes in selected submodule</source>
+        
+      </trans-unit>
+      <trans-unit id="mnubtnCreateBranch.Text">
+        <source>Create Branch...</source>
+        
+      </trans-unit>
+      <trans-unit id="mnubtnCreateBranch.ToolTipText">
+        <source>Create a local branch</source>
+        
+      </trans-unit>
       <trans-unit id="mnubtnDeleteAllBranches.Text">
         <source>Delete All</source>
         <target>Dzēst visu</target>
+        
+      </trans-unit>
+      <trans-unit id="mnubtnDeleteAllBranches.ToolTipText">
+        <source>Delete all child branchs, which must all be fully merged in its upstream branch or in HEAD</source>
         
       </trans-unit>
       <trans-unit id="mnubtnDisableRemote.Text">
@@ -9482,6 +9722,10 @@ To show all branches, right click the revision grid, select 'view' and then the 
         <target>Izvērst visu</target>
         
       </trans-unit>
+      <trans-unit id="mnubtnExpandAll.ToolTipText">
+        <source>Expand all nodes</source>
+        
+      </trans-unit>
       <trans-unit id="mnubtnFetchAllBranchesFromARemote.Text">
         <source>&amp;Fetch</source>
         <target>un ienest</target>
@@ -9492,9 +9736,17 @@ To show all branches, right click the revision grid, select 'view' and then the 
         <target>Fetc &amp; h &amp; &amp; Izveidot filiāli</target>
         
       </trans-unit>
+      <trans-unit id="mnubtnFetchCreateBranch.ToolTipText">
+        <source>Fetch then create a local branch from the remote branch</source>
+        
+      </trans-unit>
       <trans-unit id="mnubtnFetchOneBranch.Text">
         <source>Fe&amp;tch</source>
         <target>Fe &amp; tch</target>
+        
+      </trans-unit>
+      <trans-unit id="mnubtnFetchOneBranch.ToolTipText">
+        <source>Fetch the new remote branch</source>
         
       </trans-unit>
       <trans-unit id="mnubtnFetchRebase.Text">
@@ -9502,9 +9754,19 @@ To show all branches, right click the revision grid, select 'view' and then the 
         <target>Ienese &amp; &amp; Atkārtošana un bāze</target>
         
       </trans-unit>
+      <trans-unit id="mnubtnFetchRebase.ToolTipText">
+        <source>Fetch &amp; Rebase current branch to this branch</source>
+        
+      </trans-unit>
       <trans-unit id="mnubtnFilterLocalBranchInRevisionGrid.Text">
         <source>Show this branch only</source>
         <target>Rādīt tikai šo zaru</target>
+        
+      </trans-unit>
+      <trans-unit id="mnubtnFilterLocalBranchInRevisionGrid.ToolTipText">
+        <source>Filter the revision grid to show this branch only
+To show all branches, right click the revision grid, select 'view' and then the 'show all branches'</source>
+        <target>Filtrēt pārskatījuma režģi, lai parādītu tikai šo zaru Lai parādītu visus zarus, ar peles labo pogu noklikšķiniet uz pārskatījuma režģa, atlasiet 'view' un pēc tam 'Show all branches' (rādīt visus zarus)</target>
         
       </trans-unit>
       <trans-unit id="mnubtnFilterRemoteBranchInRevisionGrid.Text">
@@ -9512,24 +9774,59 @@ To show all branches, right click the revision grid, select 'view' and then the 
         <target>Rādīt tikai šo zaru</target>
         
       </trans-unit>
+      <trans-unit id="mnubtnFilterRemoteBranchInRevisionGrid.ToolTipText">
+        <source>Filter the revision grid to show this branch only
+To show all branches, right click the revision grid, select 'view' and then the 'show all branches'</source>
+        <target>Filtrēt pārskatījuma režģi, lai parādītu tikai šo zaru Lai parādītu visus zarus, ar peles labo pogu noklikšķiniet uz pārskatījuma režģa, atlasiet 'view' un pēc tam 'Show all branches' (rādīt visus zarus)</target>
+        
+      </trans-unit>
       <trans-unit id="mnubtnManageRemotes.Text">
         <source>&amp;Manage...</source>
+        
+      </trans-unit>
+      <trans-unit id="mnubtnManageRemotes.ToolTipText">
+        <source>Manage remotes</source>
+        <target>Pārvaldīt attālumus</target>
         
       </trans-unit>
       <trans-unit id="mnubtnManageSubmodules.Text">
         <source>&amp;Manage...</source>
         
       </trans-unit>
+      <trans-unit id="mnubtnManageSubmodules.ToolTipText">
+        <source>Manage submodules</source>
+        
+      </trans-unit>
       <trans-unit id="mnubtnMoveDown.Text">
         <source>Move Down</source>
+        
+      </trans-unit>
+      <trans-unit id="mnubtnMoveDown.ToolTipText">
+        <source>Move node down</source>
         
       </trans-unit>
       <trans-unit id="mnubtnMoveUp.Text">
         <source>Move Up</source>
         
       </trans-unit>
+      <trans-unit id="mnubtnMoveUp.ToolTipText">
+        <source>Move node up</source>
+        
+      </trans-unit>
+      <trans-unit id="mnubtnOpenGESubmodule.Text">
+        <source>O&amp;pen</source>
+        
+      </trans-unit>
+      <trans-unit id="mnubtnOpenGESubmodule.ToolTipText">
+        <source>Open selected submodule in a new instance</source>
+        
+      </trans-unit>
       <trans-unit id="mnubtnOpenSubmodule.Text">
         <source>&amp;Open</source>
+        
+      </trans-unit>
+      <trans-unit id="mnubtnOpenSubmodule.ToolTipText">
+        <source>Open selected submodule</source>
         
       </trans-unit>
       <trans-unit id="mnubtnPullFromRemoteBranch.Text">
@@ -9542,29 +9839,86 @@ To show all branches, right click the revision grid, select 'view' and then the 
         <target>un ienese un paņemšana</target>
         
       </trans-unit>
+      <trans-unit id="mnubtnRemoteBranchFetchAndCheckout.ToolTipText">
+        <source>Checkout this branch</source>
+        
+      </trans-unit>
+      <trans-unit id="mnubtnResetSubmodule.Text">
+        <source>&amp;Reset</source>
+        
+      </trans-unit>
+      <trans-unit id="mnubtnResetSubmodule.ToolTipText">
+        <source>Reset selected submodule</source>
+        
+      </trans-unit>
+      <trans-unit id="mnubtnStashSubmodule.Text">
+        <source>&amp;Stash</source>
+        
+      </trans-unit>
+      <trans-unit id="mnubtnStashSubmodule.ToolTipText">
+        <source>Stash changes in selected submodule</source>
+        
+      </trans-unit>
       <trans-unit id="mnubtnSynchronizeSubmodules.Text">
         <source>Synchronize</source>
         <target>Sinhronizēt</target>
+        
+      </trans-unit>
+      <trans-unit id="mnubtnSynchronizeSubmodules.ToolTipText">
+        <source>Synchronize selected submodule recursively</source>
         
       </trans-unit>
       <trans-unit id="mnubtnUpdateSubmodule.Text">
         <source>&amp;Update</source>
         
       </trans-unit>
-      <trans-unit id="tsmiShowBranches.Text">
+      <trans-unit id="mnubtnUpdateSubmodule.ToolTipText">
+        <source>Update selected submodule recursively</source>
+        
+      </trans-unit>
+      <trans-unit id="runScriptToolStripMenuItem.Text">
+        <source>Run script</source>
+        <target>Izpildīt skriptu</target>
+        
+      </trans-unit>
+      <trans-unit id="tsbCollapseAll.ToolTipText">
+        <source>Collapse all nodes</source>
+        
+      </trans-unit>
+      <trans-unit id="tsbShowBranches.Text">
         <source>&amp;Branches</source>
         
       </trans-unit>
-      <trans-unit id="tsmiShowRemotes.Text">
+      <trans-unit id="tsbShowBranches.ToolTipText">
+        <source>Branches</source>
+        <target>Filiāles</target>
+        
+      </trans-unit>
+      <trans-unit id="tsbShowRemotes.Text">
         <source>&amp;Remotes</source>
         
       </trans-unit>
-      <trans-unit id="tsmiShowSubmodules.Text">
+      <trans-unit id="tsbShowRemotes.ToolTipText">
+        <source>Remotes</source>
+        <target>Attālinājumi</target>
+        
+      </trans-unit>
+      <trans-unit id="tsbShowSubmodules.Text">
         <source>&amp;Submodules</source>
         
       </trans-unit>
-      <trans-unit id="tsmiShowTags.Text">
+      <trans-unit id="tsbShowSubmodules.ToolTipText">
+        <source>Submodules</source>
+        <target>Apakšmoduļi</target>
+        
+      </trans-unit>
+      <trans-unit id="tsbShowTags.Text">
         <source>&amp;Tags</source>
+        
+      </trans-unit>
+      <trans-unit id="tsbShowTags.ToolTipText">
+        <source>Tags</source>
+        <target>Atzīmes</target>
         
       </trans-unit>
     </body>
@@ -9587,13 +9941,16 @@ To show all branches, right click the revision grid, select 'view' and then the 
         
       </trans-unit>
       <trans-unit id="_firstRevision.Text">
-        <source>First</source>
-        <target>Pirmais</target>
+        <source>First: a/</source>
         
       </trans-unit>
       <trans-unit id="_multipleDescription.Text">
         <source>&lt;multiple&gt;</source>
         <target>&lt;multiple&gt;</target>
+        
+      </trans-unit>
+      <trans-unit id="_resetSelectedChangesText.Text">
+        <source>Are you sure you want to reset all selected files to {0}?</source>
         
       </trans-unit>
       <trans-unit id="_saveFileFilterAllFiles.Text">
@@ -9607,8 +9964,7 @@ To show all branches, right click the revision grid, select 'view' and then the 
         
       </trans-unit>
       <trans-unit id="_selectedRevision.Text">
-        <source>Selected</source>
-        <target>Atlasīti</target>
+        <source>Second: b/</source>
         
       </trans-unit>
       <trans-unit id="blameToolStripMenuItem.Text">
@@ -9617,8 +9973,7 @@ To show all branches, right click the revision grid, select 'view' and then the 
         
       </trans-unit>
       <trans-unit id="cherryPickSelectedDiffFileToolStripMenuItem.Text">
-        <source>Cherry pick file's changes</source>
-        <target>Ķirši izvēlas faila izmaiņas</target>
+        <source>Cherry pick changes</source>
         
       </trans-unit>
       <trans-unit id="copyFilenameToClipboardToolStripMenuItem1.Text">
@@ -9671,9 +10026,8 @@ To show all branches, right click the revision grid, select 'view' and then the 
         <target>Krājumu submodule izmaiņas</target>
         
       </trans-unit>
-      <trans-unit id="diffSubmoduleSummaryMenuItem.Text">
-        <source>View summary</source>
-        <target>Skatīt kopsavilkumu</target>
+      <trans-unit id="diffTwoSelectedDifftoolToolStripMenuItem.Text">
+        <source>Diff the selected files</source>
         
       </trans-unit>
       <trans-unit id="diffUpdateSubmoduleMenuItem.Text">
@@ -9691,16 +10045,12 @@ To show all branches, right click the revision grid, select 'view' and then the 
         <target>Atrast</target>
         
       </trans-unit>
-      <trans-unit id="firstParentToLocalToolStripMenuItem.Text">
-        <source>Parent to first -&gt; Working directory</source>
-        
-      </trans-unit>
       <trans-unit id="firstToLocalToolStripMenuItem.Text">
         <source>First -&gt; Working directory</source>
         
       </trans-unit>
       <trans-unit id="firstToSelectedToolStripMenuItem.Text">
-        <source>First -&gt; Selected</source>
+        <source>First -&gt; Second</source>
         
       </trans-unit>
       <trans-unit id="openContainingFolderToolStripMenuItem.Text">
@@ -9708,9 +10058,21 @@ To show all branches, right click the revision grid, select 'view' and then the 
         <target>Rādīt mapē</target>
         
       </trans-unit>
+      <trans-unit id="openWithCustomDifftoolToolStripMenuItem.Text">
+        <source>First -&gt; Second...</source>
+        
+      </trans-unit>
       <trans-unit id="openWithDifftoolToolStripMenuItem.Text">
         <source>Open with difftool</source>
         <target>Atvērt ar difftool</target>
+        
+      </trans-unit>
+      <trans-unit id="rememberFirstRevDiffToolStripMenuItem.Text">
+        <source>Remember First for diff</source>
+        
+      </trans-unit>
+      <trans-unit id="rememberSecondRevDiffToolStripMenuItem.Text">
+        <source>Remember Second for diff</source>
         
       </trans-unit>
       <trans-unit id="resetFileToToolStripMenuItem.Text">
@@ -9728,12 +10090,8 @@ To show all branches, right click the revision grid, select 'view' and then the 
         <target>Saglabāt</target>
         
       </trans-unit>
-      <trans-unit id="selectedParentToLocalToolStripMenuItem.Text">
-        <source>Parent to selected -&gt; Working directory</source>
-        
-      </trans-unit>
       <trans-unit id="selectedToLocalToolStripMenuItem.Text">
-        <source>Selected -&gt; Working directory</source>
+        <source>Second -&gt; Working directory</source>
         
       </trans-unit>
       <trans-unit id="stageFileToolStripMenuItem.Text">
@@ -9771,11 +10129,6 @@ Are you sure to assume this file won't change ?</source>
       <trans-unit id="_assumeUnchangedSuccess.Text">
         <source>File successfully assumed unchanged.</source>
         <target>Fails ir veiksmīgi pieņemts nemainīts.</target>
-        
-      </trans-unit>
-      <trans-unit id="_error.Text">
-        <source>Error</source>
-        <target>Kļūda</target>
         
       </trans-unit>
       <trans-unit id="_nodeNotFoundNextAvailableParentSelected.Text">
@@ -9921,6 +10274,10 @@ See the changes in the commit form.</source>
         <target>Atvērt darba direktorija failu ar...</target>
         
       </trans-unit>
+      <trans-unit id="rememberFileStripMenuItem.Text">
+        <source>Remember file for diff</source>
+        
+      </trans-unit>
       <trans-unit id="resetToThisRevisionToolStripMenuItem.Text">
         <source>Reset to selected revision</source>
         <target>Atiestatīt uz atlasīto versiju</target>
@@ -9959,6 +10316,10 @@ See the changes in the commit form.</source>
   </file>
   <file datatype="plaintext" original="RevisionGrid" source-language="en" target-language="lv">
     <body>
+      <trans-unit id="AuthorDateSort.Text">
+        <source>Sort commits by author date</source>
+        
+      </trans-unit>
       <trans-unit id="GotoChildCommit.Text">
         <source>Go to child commit</source>
         <target>Doties uz pakārtoto darbību</target>
@@ -9977,6 +10338,10 @@ See the changes in the commit form.</source>
       <trans-unit id="GotoMergeBaseCommit.Text">
         <source>Go to common ancestor (merge base)</source>
         <target>Doties uz kopējo priekšteci (sapludināšanas bāze)</target>
+        
+      </trans-unit>
+      <trans-unit id="GotoMergeBaseCommit.ToolTipText">
+        <source>Selects the common ancestor commit (merge base), which is the most recent shared ancestor of the selected commits (or if only one commit is selected, between it and the checked out commit (HEAD))</source>
         
       </trans-unit>
       <trans-unit id="GotoParentCommit.Text">
@@ -10009,9 +10374,18 @@ See the changes in the commit form.</source>
         <target>Ātrā meklēšana</target>
         
       </trans-unit>
+      <trans-unit id="QuickSearch.ToolTipText">
+        <source>Start typing in revision grid to start quick search.</source>
+        <target>Sāciet rakstīt versiju režģī, lai sāktu ātro meklēšanu.</target>
+        
+      </trans-unit>
       <trans-unit id="ShowAllBranches.Text">
         <source>Show all branches</source>
         <target>Rādīt visus zarus</target>
+        
+      </trans-unit>
+      <trans-unit id="ShowArtificialCommits.Text">
+        <source>Show artificial commits</source>
         
       </trans-unit>
       <trans-unit id="ShowCurrentBranchOnly.Text">
@@ -10047,6 +10421,10 @@ See the changes in the commit form.</source>
       <trans-unit id="ShowSuperprojectTags.Text">
         <source>Show superproject tags</source>
         <target>Rādīt superprojekta atzīmes</target>
+        
+      </trans-unit>
+      <trans-unit id="ToggleBetweenArtificialAndHeadCommits.Text">
+        <source>Toggle between artificial and HEAD commits</source>
         
       </trans-unit>
       <trans-unit id="ToggleHighlightSelectedBranch.Text">
@@ -10207,18 +10585,13 @@ See the changes in the commit form.</source>
         <target>Filtrs</target>
         
       </trans-unit>
-      <trans-unit id="_strError.Text">
-        <source>Error</source>
-        <target>Kļūda</target>
-        
-      </trans-unit>
       <trans-unit id="_strLoading.Text">
         <source>Loading</source>
         <target>Iekraušana</target>
         
       </trans-unit>
       <trans-unit id="archiveRevisionToolStripMenuItem.Text">
-        <source>Archive this commit...</source>
+        <source>Arch&amp;ive this commit...</source>
         
       </trans-unit>
       <trans-unit id="bisectSkipRevisionToolStripMenuItem.Text">
@@ -10227,46 +10600,39 @@ See the changes in the commit form.</source>
         
       </trans-unit>
       <trans-unit id="checkoutBranchToolStripMenuItem.Text">
-        <source>Checkout branch...</source>
-        <target>Izrakstīšanās zars...</target>
+        <source>Chec&amp;kout branch...</source>
         
       </trans-unit>
       <trans-unit id="checkoutRevisionToolStripMenuItem.Text">
-        <source>Checkout this commit...</source>
+        <source>Checkout &amp;this commit...</source>
         
       </trans-unit>
       <trans-unit id="cherryPickCommitToolStripMenuItem.Text">
-        <source>Cherry pick this commit...</source>
+        <source>Cherr&amp;y pick this commit...</source>
         
       </trans-unit>
       <trans-unit id="compareSelectedCommitsMenuItem.Text">
-        <source>Compare selected commits</source>
-        <target>Salīdzināt atlasītās saistības</target>
+        <source>Compare &amp;selected commits</source>
         
       </trans-unit>
       <trans-unit id="compareToBaseToolStripMenuItem.Text">
-        <source>Compare to BASE</source>
-        <target>Salīdzināšana ar BASE</target>
+        <source>Compare to &amp;BASE</source>
         
       </trans-unit>
       <trans-unit id="compareToBranchToolStripMenuItem.Text">
-        <source>Compare to branch...</source>
-        <target>Salīdzināt ar zaru...</target>
+        <source>Compare &amp;to branch...</source>
         
       </trans-unit>
       <trans-unit id="compareToWorkingDirectoryMenuItem.Text">
-        <source>Compare to working directory</source>
-        <target>Salīdzināšana ar darba direktoriju</target>
+        <source>Compare to &amp;working directory</source>
         
       </trans-unit>
       <trans-unit id="compareToolStripMenuItem.Text">
-        <source>Compare</source>
-        <target>Salīdzināt</target>
+        <source>Com&amp;pare</source>
         
       </trans-unit>
       <trans-unit id="compareWithCurrentBranchToolStripMenuItem.Text">
-        <source>Compare with current branch</source>
-        <target>Salīdzināt ar pašreizējo atzaru</target>
+        <source>Compare with &amp;current branch</source>
         
       </trans-unit>
       <trans-unit id="copyToClipboardToolStripMenuItem.Text">
@@ -10275,40 +10641,35 @@ See the changes in the commit form.</source>
         
       </trans-unit>
       <trans-unit id="createNewBranchToolStripMenuItem.Text">
-        <source>Create new branch here...</source>
+        <source>Create new branc&amp;h here...</source>
         
       </trans-unit>
       <trans-unit id="createTagToolStripMenuItem.Text">
-        <source>Create new tag here...</source>
+        <source>Create new ta&amp;g here...</source>
         
       </trans-unit>
       <trans-unit id="deleteBranchToolStripMenuItem.Text">
-        <source>Delete branch...</source>
-        <target>Dzēst zaru...</target>
+        <source>&amp;Delete branch...</source>
         
       </trans-unit>
       <trans-unit id="deleteTagToolStripMenuItem.Text">
-        <source>Delete tag...</source>
-        <target>Dzēst tagu...</target>
+        <source>De&amp;lete tag...</source>
         
       </trans-unit>
       <trans-unit id="editCommitToolStripMenuItem.Text">
-        <source>Edit commit</source>
-        <target>Rediģēt izpildi</target>
+        <source>&amp;Edit commit</source>
         
       </trans-unit>
       <trans-unit id="fixupCommitToolStripMenuItem.Text">
-        <source>Create a fixup commit...</source>
+        <source>Create a &amp;fixup commit...</source>
         
       </trans-unit>
       <trans-unit id="getHelpOnHowToUseTheseFeaturesToolStripMenuItem.Text">
-        <source>Get help on how to use these features</source>
-        <target>Palīdzība par šo līdzekļu lietošanu</target>
+        <source>Get &amp;help on how to use these features</source>
         
       </trans-unit>
       <trans-unit id="manipulateCommitToolStripMenuItem.Text">
-        <source>Advanced</source>
-        <target>Uzlabots</target>
+        <source>&amp;Advanced</source>
         
       </trans-unit>
       <trans-unit id="markRevisionAsBadToolStripMenuItem.Text">
@@ -10322,71 +10683,71 @@ See the changes in the commit form.</source>
         
       </trans-unit>
       <trans-unit id="mergeBranchToolStripMenuItem.Text">
-        <source>Merge into current branch...</source>
+        <source>&amp;Merge into current branch...</source>
         
       </trans-unit>
       <trans-unit id="navigateToolStripMenuItem.Text">
-        <source>Navigate</source>
-        <target>Navigācija</target>
+        <source>&amp;Navigate</source>
         
       </trans-unit>
       <trans-unit id="openBuildReportToolStripMenuItem.Text">
-        <source>View build report in a browser</source>
+        <source>View &amp;build report in a browser</source>
+        
+      </trans-unit>
+      <trans-unit id="openCommitsWithDiffToolMenuItem.Text">
+        <source>Open selected commits with &amp;difftool</source>
         
       </trans-unit>
       <trans-unit id="openPullRequestPageStripMenuItem.Text">
-        <source>View pull request in a browser</source>
+        <source>Vie&amp;w pull request in a browser</source>
         
       </trans-unit>
       <trans-unit id="rebaseInteractivelyToolStripMenuItem.Text">
-        <source>Selected commit interactively...</source>
+        <source>Selected commit &amp;interactively...</source>
         
       </trans-unit>
       <trans-unit id="rebaseOnToolStripMenuItem.Text">
-        <source>Rebase current branch on</source>
-        <target>Atgriezt pašreizējo atzaru</target>
+        <source>&amp;Rebase current branch on</source>
         
       </trans-unit>
       <trans-unit id="rebaseToolStripMenuItem.Text">
-        <source>Selected commit</source>
-        <target>Atlasītais izpildījums</target>
+        <source>&amp;Selected commit</source>
         
       </trans-unit>
       <trans-unit id="rebaseWithAdvOptionsToolStripMenuItem.Text">
-        <source>Selected commit with advanced options...</source>
-        <target>Atlasītā izpilde ar papildu opcijām...</target>
+        <source>Selected commit with &amp;advanced options...</source>
         
       </trans-unit>
       <trans-unit id="renameBranchToolStripMenuItem.Text">
-        <source>Rename branch...</source>
+        <source>R&amp;ename branch...</source>
+        
+      </trans-unit>
+      <trans-unit id="resetAnotherBranchToHereToolStripMenuItem.Text">
+        <source>Reset an&amp;other branch to here...</source>
         
       </trans-unit>
       <trans-unit id="resetCurrentBranchToHereToolStripMenuItem.Text">
-        <source>Reset current branch to here...</source>
+        <source>Reset c&amp;urrent branch to here...</source>
         
       </trans-unit>
       <trans-unit id="revertCommitToolStripMenuItem.Text">
-        <source>Revert this commit...</source>
-        <target>Atgriezt šo nodošanu...</target>
+        <source>Re&amp;vert this commit...</source>
         
       </trans-unit>
       <trans-unit id="rewordCommitToolStripMenuItem.Text">
-        <source>Reword commit</source>
-        <target>Pārfrāzēt nodošanu</target>
+        <source>&amp;Reword commit</source>
         
       </trans-unit>
       <trans-unit id="runScriptToolStripMenuItem.Text">
-        <source>Run script</source>
-        <target>Izpildīt skriptu</target>
+        <source>Run &amp;script</source>
         
       </trans-unit>
       <trans-unit id="selectAsBaseToolStripMenuItem.Text">
-        <source>Select as BASE to compare</source>
-        <target>Atlasīt kā BASE, lai salīdzinātu</target>
+        <source>Select &amp;as BASE to compare</source>
         
       </trans-unit>
       <trans-unit id="squashCommitToolStripMenuItem.Text">
-        <source>Create a squash commit...</source>
+        <source>Create a &amp;squash commit...</source>
         
       </trans-unit>
       <trans-unit id="stopBisectToolStripMenuItem.Text">
@@ -10451,6 +10812,10 @@ See the changes in the commit form.</source>
       <trans-unit id="URICol.HeaderText">
         <source>URI</source>
         <target>URI</target>
+        
+      </trans-unit>
+      <trans-unit id="_addTemplate.Text">
+        <source>Add {0} templates</source>
         
       </trans-unit>
       <trans-unit id="chkOnlyFirstRemote.Text">
@@ -10527,21 +10892,6 @@ See the changes in the commit form.</source>
         <target>Skripti</target>
         
       </trans-unit>
-      <trans-unit id="AskConfirmation.HeaderText">
-        <source>Confirmation</source>
-        <target>Apstiprinājums</target>
-        
-      </trans-unit>
-      <trans-unit id="EnabledColumn.HeaderText">
-        <source>Enabled</source>
-        <target>Iespējots</target>
-        
-      </trans-unit>
-      <trans-unit id="OnEvent.HeaderText">
-        <source>OnEvent</source>
-        <target>Onevent</target>
-        
-      </trans-unit>
       <trans-unit id="_scriptSettingsPageHelpDisplayArgumentsHelp.Text">
         <source>Arguments help</source>
         <target>Argumentu palīdzība</target>
@@ -10558,6 +10908,9 @@ User Input:
 Working Dir:
 {WorkingDir}
 
+Repository:
+{RepoName}
+
 Selected Commits:
 {sHashes}
 
@@ -10566,11 +10919,13 @@ Selected Branch:
 {sBranch}
 {sLocalBranch}
 {sRemoteBranch}
+{sRemoteBranchName}   (without the remote's name)
 {sRemote}
 {sRemoteUrl}
 {sRemotePathFromUrl}
 {sHash}
 {sMessage}
+{sSubject}
 {sAuthor}
 {sCommitter}
 {sAuthorDate}
@@ -10581,8 +10936,10 @@ Current Branch:
 {cBranch}
 {cLocalBranch}
 {cRemoteBranch}
+{cRemoteBranchName}   (without the remote's name)
 {cHash}
 {cMessage}
+{cSubject}
 {cAuthor}
 {cCommitter}
 {cAuthorDate}
@@ -10592,79 +10949,18 @@ Current Branch:
 {cDefaultRemotePathFromUrl}</source>
         
       </trans-unit>
-      <trans-unit id="addScriptButton.Text">
-        <source>Add</source>
-        <target>Pievienot</target>
+      <trans-unit id="chdrCommand.Text">
+        <source>Command</source>
+        <target>Komanda</target>
         
       </trans-unit>
-      <trans-unit id="argumentsLabel.Text">
-        <source>Arguments:</source>
-        <target>Argumenti:</target>
+      <trans-unit id="chdrEvents.Text">
+        <source>Event</source>
         
       </trans-unit>
-      <trans-unit id="browseScriptButton.Text">
-        <source>Browse</source>
-        <target>Pārlūkot</target>
-        
-      </trans-unit>
-      <trans-unit id="buttonShowArgumentsHelp.Text">
-        <source>Help</source>
-        <target>Palīdzība</target>
-        
-      </trans-unit>
-      <trans-unit id="commandLabel.Text">
-        <source>Command:</source>
-        <target>Komanda:</target>
-        
-      </trans-unit>
-      <trans-unit id="inMenuCheckBox.Text">
-        <source>Add to revision grid context menu</source>
-        <target>Pievienot pārskatījuma režģa konteksta izvēlnei</target>
-        
-      </trans-unit>
-      <trans-unit id="labelOnEvent.Text">
-        <source>On event:</source>
-        <target>Uz pasākumu:</target>
-        
-      </trans-unit>
-      <trans-unit id="lbl_icon.Text">
-        <source>Icon:</source>
-        <target>Ikona:</target>
-        
-      </trans-unit>
-      <trans-unit id="nameLabel.Text">
-        <source>Name:</source>
-        <target>Nosaukums:</target>
-        
-      </trans-unit>
-      <trans-unit id="removeScriptButton.Text">
-        <source>Remove</source>
-        <target>Noņemt</target>
-        
-      </trans-unit>
-      <trans-unit id="sbtn_icon.Text">
-        <source>Select icon</source>
-        <target>Atlasīt ikonu</target>
-        
-      </trans-unit>
-      <trans-unit id="scriptEnabled.Text">
-        <source>Enabled</source>
-        <target>Iespējots</target>
-        
-      </trans-unit>
-      <trans-unit id="scriptIsPowerShell.Text">
-        <source>Is PowerShell</source>
-        <target>Ir PowerShell</target>
-        
-      </trans-unit>
-      <trans-unit id="scriptNeedsConfirmation.Text">
-        <source>Ask for confirmation</source>
-        <target>Pieprasīt apstiprinājumu</target>
-        
-      </trans-unit>
-      <trans-unit id="scriptRunInBackground.Text">
-        <source>Run in background</source>
-        <target>Izpildīt fonā</target>
+      <trans-unit id="chdrNames.Text">
+        <source>Name</source>
+        <target>Vārds</target>
         
       </trans-unit>
     </body>
@@ -10901,6 +11197,10 @@ When OpenSSH is used, command line dialogs are shown!
   </file>
   <file datatype="plaintext" original="Strings" source-language="en" target-language="lv">
     <body>
+      <trans-unit id="_argumentsText.Text">
+        <source>Arguments</source>
+        
+      </trans-unit>
       <trans-unit id="_authorDateText.Text">
         <source>{0:Author date|Author dates}</source>
         <target>{0: autora datums t.sk. autora datums}</target>
@@ -10909,6 +11209,14 @@ When OpenSSH is used, command line dialogs are shown!
       <trans-unit id="_authorText.Text">
         <source>{0:Author|Authors}</source>
         <target>{0: autors īpaš.: Autori}</target>
+        
+      </trans-unit>
+      <trans-unit id="_authored.Text">
+        <source>authored</source>
+        
+      </trans-unit>
+      <trans-unit id="_authoredAndCommitted.Text">
+        <source>authored and committed</source>
         
       </trans-unit>
       <trans-unit id="_bodyNotLoaded.Text">
@@ -10929,24 +11237,103 @@ Select this commit to populate the full message.</source>
         <target>Filiāles</target>
         
       </trans-unit>
+      <trans-unit id="_buttonCheckoutBranch.Text">
+        <source>Checkout branch</source>
+        <target>Norēķināšanās filiāle</target>
+        
+      </trans-unit>
+      <trans-unit id="_buttonCloseApp.Text">
+        <source>Close application</source>
+        
+      </trans-unit>
+      <trans-unit id="_buttonContinue.Text">
+        <source>Continue</source>
+        
+      </trans-unit>
+      <trans-unit id="_buttonCreateBranch.Text">
+        <source>Create branch</source>
+        <target>Izveidot zaru</target>
+        
+      </trans-unit>
+      <trans-unit id="_buttonIgnore.Text">
+        <source>Ignore</source>
+        <target>Ignorēt</target>
+        
+      </trans-unit>
+      <trans-unit id="_buttonReportBug.Text">
+        <source>Report bug!</source>
+        
+      </trans-unit>
+      <trans-unit id="_cancelText.Text">
+        <source>Cancel</source>
+        <target>Atcelt</target>
+        
+      </trans-unit>
+      <trans-unit id="_captionFailedExecute.Text">
+        <source>Failed to execute</source>
+        
+      </trans-unit>
       <trans-unit id="_childrenText.Text">
         <source>{0:Child|Children}</source>
         <target>{0: bērnelementi</target>
         
       </trans-unit>
+      <trans-unit id="_combinedDiff.Text">
+        <source>Combined diff</source>
+        
+      </trans-unit>
+      <trans-unit id="_commandText.Text">
+        <source>Command</source>
+        <target>Komanda</target>
+        
+      </trans-unit>
       <trans-unit id="_commitDateText.Text">
-        <source>{0:Commit date|Commits dates}</source>
-        <target>{0: izpildes datums lielākam datumam}</target>
+        <source>{0:Commit date|Commit dates}</source>
         
       </trans-unit>
       <trans-unit id="_commitHashText.Text">
-        <source>{0:Commit hash|Commits hashes}</source>
-        <target>{0: veikt jaucējhašus}</target>
+        <source>{0:Commit hash|Commit hashes}</source>
+        
+      </trans-unit>
+      <trans-unit id="_committed.Text">
+        <source>committed</source>
         
       </trans-unit>
       <trans-unit id="_committerText.Text">
         <source>Committer</source>
         <target>Committer</target>
+        
+      </trans-unit>
+      <trans-unit id="_contScrollToNextFileOnlyWithAlt.Text">
+        <source>Enable automatic continuous scroll (without ALT button)</source>
+        
+      </trans-unit>
+      <trans-unit id="_containedInBranchesText.Text">
+        <source>Contained in branches:</source>
+        <target>Atrodas filiālēs:</target>
+        
+      </trans-unit>
+      <trans-unit id="_containedInCurrentCommitText.Text">
+        <source>'{0}' is contained in the currently selected commit</source>
+        
+      </trans-unit>
+      <trans-unit id="_containedInNoBranchText.Text">
+        <source>Contained in no branch</source>
+        <target>Atrodas bez filiāles</target>
+        
+      </trans-unit>
+      <trans-unit id="_containedInNoTagText.Text">
+        <source>Contained in no tag</source>
+        <target>Iekļauts bez taga</target>
+        
+      </trans-unit>
+      <trans-unit id="_containedInTagsText.Text">
+        <source>Contained in tags:</source>
+        <target>Iekļauti tagos:</target>
+        
+      </trans-unit>
+      <trans-unit id="_createPullRequest.Text">
+        <source>Create pull request</source>
         
       </trans-unit>
       <trans-unit id="_dateText.Text">
@@ -10959,9 +11346,68 @@ Select this commit to populate the full message.</source>
         <target>{0} {1: dienas] pirms</target>
         
       </trans-unit>
+      <trans-unit id="_deleteFile.Text">
+        <source>{0:Delete file|Delete files}</source>
+        
+      </trans-unit>
+      <trans-unit id="_diffBaseToB.Text">
+        <source>Unique diff BASE with b/</source>
+        
+      </trans-unit>
+      <trans-unit id="_diffCommonBase.Text">
+        <source>Common diff with BASE a/</source>
+        
+      </trans-unit>
+      <trans-unit id="_diffRange.Text">
+        <source>Range diff</source>
+        
+      </trans-unit>
+      <trans-unit id="_diffSelectedWithRememberedFile.Text">
+        <source>Diff with &quot;{0}&quot;</source>
+        
+      </trans-unit>
+      <trans-unit id="_diffWithParent.Text">
+        <source>Diff with a/</source>
+        
+      </trans-unit>
+      <trans-unit id="_directoryIsNotAValidRepository.Text">
+        <source>The selected item is not a valid git repository.</source>
+        <target>Atlasītais vienums nav derīgs krāsu repozitorijs.</target>
+        
+      </trans-unit>
+      <trans-unit id="_error.Text">
+        <source>Error</source>
+        <target>Kļūda</target>
+        
+      </trans-unit>
+      <trans-unit id="_errorCaptionFailedDeleteFile.Text">
+        <source>Failed to delete file</source>
+        
+      </trans-unit>
+      <trans-unit id="_errorCaptionFailedDeleteFolder.Text">
+        <source>Failed to delete directory</source>
+        
+      </trans-unit>
+      <trans-unit id="_errorCaptionNotOnBranch.Text">
+        <source>Not on a branch</source>
+        <target>Nav uz zara</target>
+        
+      </trans-unit>
       <trans-unit id="_findGitExecutable.Text">
         <source>Find git...</source>
         <target>Atrast git...</target>
+        
+      </trans-unit>
+      <trans-unit id="_forkCloneRepo.Text">
+        <source>Fork or clone a repository</source>
+        
+      </trans-unit>
+      <trans-unit id="_generalGitConfigExceptionCaption.Text">
+        <source>Repository Configuration Error</source>
+        
+      </trans-unit>
+      <trans-unit id="_generalGitConfigExceptionMessage.Text">
+        <source>Failed to read &quot;{0}&quot; due to the following error:{1}{1}{2}{1}{1}Due to the nature of this problem, the behavior of the application cannot be guaranteed and it must be closed.{1}{1}Please correct this issue and re-open Git Extensions.</source>
         
       </trans-unit>
       <trans-unit id="_gitExecutableNotFoundText.Text">
@@ -10984,9 +11430,35 @@ Select this commit to populate the full message.</source>
         <target>Instalēt git...</target>
         
       </trans-unit>
+      <trans-unit id="_instructionOperationFailed.Text">
+        <source>Operation failed</source>
+        
+      </trans-unit>
+      <trans-unit id="_invisibleCommitText.Text">
+        <source>'{0}' is not currently visible</source>
+        
+      </trans-unit>
       <trans-unit id="_loadingDataText.Text">
         <source>Loading data...</source>
         <target>Notiek datu ielāde...</target>
+        
+      </trans-unit>
+      <trans-unit id="_local.Text">
+        <source>Local</source>
+        <target>Vietējs</target>
+        
+      </trans-unit>
+      <trans-unit id="_mainInstructionNotOnBranch.Text">
+        <source>You are not working on a branch</source>
+        <target>Jūs nestrādājat filiālē</target>
+        
+      </trans-unit>
+      <trans-unit id="_markBisectAsBad.Text">
+        <source>Marked as bad in bisect</source>
+        
+      </trans-unit>
+      <trans-unit id="_markBisectAsGood.Text">
+        <source>Marked as good in bisect</source>
         
       </trans-unit>
       <trans-unit id="_messageText.Text">
@@ -11004,14 +11476,114 @@ Select this commit to populate the full message.</source>
         <target>pirms {0} {1: mēneša veci mēneši}</target>
         
       </trans-unit>
+      <trans-unit id="_no.Text">
+        <source>No</source>
+        <target>Nē</target>
+        
+      </trans-unit>
+      <trans-unit id="_noBranch.Text">
+        <source>no branch</source>
+        <target>bez filiāles</target>
+        
+      </trans-unit>
+      <trans-unit id="_noResultsFound.Text">
+        <source>&lt;No results found&gt;</source>
+        
+      </trans-unit>
+      <trans-unit id="_noRevision.Text">
+        <source>No revision</source>
+        <target>Nav pārskatīšanas</target>
+        
+      </trans-unit>
+      <trans-unit id="_okText.Text">
+        <source>OK</source>
+        <target>LABI</target>
+        
+      </trans-unit>
+      <trans-unit id="_open.Text">
+        <source>Open</source>
+        <target>Atvērums</target>
+        
+      </trans-unit>
+      <trans-unit id="_openReport.Text">
+        <source>Open report</source>
+        
+      </trans-unit>
+      <trans-unit id="_openWithGitExtensions.Text">
+        <source>Open with Git Extensions</source>
+        <target>Atvērt, izmantojot Git paplašinājumus</target>
+        
+      </trans-unit>
       <trans-unit id="_parentsText.Text">
         <source>{0:Parent|Parents}</source>
         <target>{0: augstākstāvošas personas</target>
         
       </trans-unit>
+      <trans-unit id="_remote.Text">
+        <source>Remote</source>
+        <target>Attāls</target>
+        
+      </trans-unit>
       <trans-unit id="_remotesText.Text">
         <source>Remotes</source>
         <target>Attālinājumi</target>
+        
+      </trans-unit>
+      <trans-unit id="_removeAllInvalidRepositories.Text">
+        <source>Remove all {0} invalid repositories</source>
+        <target>Noņemt visus {0} nederīgos repozitorijus</target>
+        
+      </trans-unit>
+      <trans-unit id="_removeSelectedInvalidRepository.Text">
+        <source>Remove the selected invalid repository</source>
+        <target>Noņemt atlasīto nederīgo repozitoriju</target>
+        
+      </trans-unit>
+      <trans-unit id="_reportBugText.Text">
+        <source>If you think this was caused by Git Extensions, you can report a bug for the team to investigate.</source>
+        
+      </trans-unit>
+      <trans-unit id="_resetChangesCaption.Text">
+        <source>Reset changes</source>
+        <target>Atiestatīt izmaiņas</target>
+        
+      </trans-unit>
+      <trans-unit id="_resetSelectedLines.Text">
+        <source>Reset selected line(s)</source>
+        <target>Atiestatīt atlasīto (ās) līniju (as)</target>
+        
+      </trans-unit>
+      <trans-unit id="_resetSelectedLinesConfirmation.Text">
+        <source>Are you sure you want to reset the changes to the selected lines?</source>
+        <target>Vai tiešām vēlaties atiestatīt izmaiņas atlasītajās rindās?</target>
+        
+      </trans-unit>
+      <trans-unit id="_rotInactive.Text">
+        <source>[ Inactive ]</source>
+        
+      </trans-unit>
+      <trans-unit id="_scriptConfirmExecuteText.Text">
+        <source>Do you want to execute script</source>
+        
+      </trans-unit>
+      <trans-unit id="_scriptErrorCantFindText.Text">
+        <source>Unable to find script</source>
+        
+      </trans-unit>
+      <trans-unit id="_scriptErrorFailedToExecuteText.Text">
+        <source>Failed to execute script</source>
+        
+      </trans-unit>
+      <trans-unit id="_scriptErrorOptionWithoutRevisionGridText.Text">
+        <source>option is only supported when invoked from the revision grid</source>
+        
+      </trans-unit>
+      <trans-unit id="_scriptErrorOptionWithoutRevisionText.Text">
+        <source>A valid revision is required to substitute the argument options</source>
+        
+      </trans-unit>
+      <trans-unit id="_scriptText.Text">
+        <source>Script</source>
         
       </trans-unit>
       <trans-unit id="_searchingFor.Text">
@@ -11024,9 +11596,49 @@ Select this commit to populate the full message.</source>
         <target>pirms {0} {1: sekundes]</target>
         
       </trans-unit>
+      <trans-unit id="_showAllText.Text">
+        <source>Show all</source>
+        
+      </trans-unit>
+      <trans-unit id="_showDiffForAllParentsText.Text">
+        <source>Show file differences for all parents in browse dialog</source>
+        <target>Rādīt failu atšķirības visiem vecākiem pārlūkošanas dialogā</target>
+        
+      </trans-unit>
+      <trans-unit id="_showDiffForAllParentsTooltip.Text">
+        <source>Show all differences between the selected commits, not limiting to only one difference.
+
+- For a single selected commit, show the difference with its parent commit.
+- For a single selected merge commit, show the difference with all parents.
+- For two selected commits with a common ancestor (BASE):
+   - Show the difference between the commits.
+   - The difference of unique files from BASE to each of the selected commits.
+   - The difference of common files (identical changes) from BASE to the commits.
+- For multiple selected commits (up to four), show the difference for all the first selected with the last selected commit.
+- For more than four selected commits, show the difference from the first to the last selected commit.</source>
+        
+      </trans-unit>
+      <trans-unit id="_sortBy.Text">
+        <source>&amp;Sort by...</source>
+        
+      </trans-unit>
+      <trans-unit id="_sortOrder.Text">
+        <source>&amp;Sort order...</source>
+        
+      </trans-unit>
+      <trans-unit id="_stageSelectedLines.Text">
+        <source>Stage selected line(s)</source>
+        <target>Atlasītās ( o) līnijas (u) stadija</target>
+        
+      </trans-unit>
       <trans-unit id="_submodulesText.Text">
         <source>Submodules</source>
         <target>Apakšmoduļi</target>
+        
+      </trans-unit>
+      <trans-unit id="_tag.Text">
+        <source>Tag</source>
+        <target>Birka</target>
         
       </trans-unit>
       <trans-unit id="_tagsText.Text">
@@ -11034,14 +11646,46 @@ Select this commit to populate the full message.</source>
         <target>Atzīmes</target>
         
       </trans-unit>
+      <trans-unit id="_telemetryPermissionCaption.Text">
+        <source>Allow Capture Telemetry?</source>
+        
+      </trans-unit>
+      <trans-unit id="_telemetryPermissionMessage.Text">
+        <source>We collect information so we can make the app better.
+
+We won't collect any personal or identifiable information.
+You can change your mind at any time.
+
+Yes, I allow telemetry!</source>
+        
+      </trans-unit>
       <trans-unit id="_uninterestingDiffOmitted.Text">
         <source>Uninteresting diff hunks are omitted.</source>
         <target>Tiek izlaisti neinteresanti fragmenti.</target>
         
       </trans-unit>
+      <trans-unit id="_unstageSelectedLines.Text">
+        <source>Unstage selected line(s)</source>
+        <target>Noņemt atlasīto ( ās) rindiņu ( es)</target>
+        
+      </trans-unit>
+      <trans-unit id="_viewPullRequest.Text">
+        <source>View pull requests</source>
+        
+      </trans-unit>
+      <trans-unit id="_warning.Text">
+        <source>Warning</source>
+        <target>Brīdinājums</target>
+        
+      </trans-unit>
       <trans-unit id="_weeksAgo.Text">
         <source>{0} {1:week|weeks} ago</source>
         <target>{0} {1: nedēļa] pirms nedēļas</target>
+        
+      </trans-unit>
+      <trans-unit id="_workingDirectoryText.Text">
+        <source>Working directory</source>
+        <target>Darba katalogs</target>
         
       </trans-unit>
       <trans-unit id="_workspaceText.Text">
@@ -11052,6 +11696,11 @@ Select this commit to populate the full message.</source>
       <trans-unit id="_yearsAgo.Text">
         <source>{0} {1:year|years} ago</source>
         <target>pirms {0} {1: gada]</target>
+        
+      </trans-unit>
+      <trans-unit id="_yes.Text">
+        <source>Yes</source>
+        <target>Jā</target>
         
       </trans-unit>
     </body>
@@ -11130,11 +11779,6 @@ Select this commit to populate the full message.</source>
       <trans-unit id="_strCouldNotLoadDiscussion.Text">
         <source>Could not load discussion!</source>
         <target>Nevarēja ielādēt diskusiju!</target>
-        
-      </trans-unit>
-      <trans-unit id="_strError.Text">
-        <source>Error</source>
-        <target>Kļūda</target>
         
       </trans-unit>
       <trans-unit id="_strFailedToClosePullRequest.Text">

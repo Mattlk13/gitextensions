@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Diagnostics;
 using Microsoft.Win32;
 
 namespace GitCommands.Utils
@@ -17,6 +18,22 @@ namespace GitCommands.Utils
                 default:
                     return false;
             }
+        }
+
+        public static bool RunningOnWindowsWithMainWindow()
+        {
+            if (!RunningOnWindows())
+            {
+                return false;
+            }
+
+            var currentProcess = Process.GetCurrentProcess();
+            if (currentProcess is null)
+            {
+                return false;
+            }
+
+            return currentProcess.MainWindowHandle != IntPtr.Zero;
         }
 
         public static bool IsWindowsVistaOrGreater()
@@ -69,13 +86,13 @@ namespace GitCommands.Utils
 
                 try
                 {
-                    RegistryKey registryKey = Registry.LocalMachine.OpenSubKey("SOFTWARE\\Microsoft\\NET Framework Setup\\NDP\\v4\\Full", false);
-                    if (registryKey != null)
+                    RegistryKey? registryKey = Registry.LocalMachine.OpenSubKey("SOFTWARE\\Microsoft\\NET Framework Setup\\NDP\\v4\\Full", false);
+                    if (registryKey is not null)
                     {
                         using (registryKey)
                         {
                             var v = registryKey.GetValue("Install");
-                            return v != null && v.ToString() == "1";
+                            return v is not null && v.ToString() == "1";
                         }
                     }
                 }
@@ -88,9 +105,9 @@ namespace GitCommands.Utils
             return false;
         }
 
-        public static string ReplaceLinuxNewLinesDependingOnPlatform(string s)
+        public static string? ReplaceLinuxNewLinesDependingOnPlatform(string? s)
         {
-            if (s.IsNullOrEmpty())
+            if (string.IsNullOrEmpty(s))
             {
                 return s;
             }

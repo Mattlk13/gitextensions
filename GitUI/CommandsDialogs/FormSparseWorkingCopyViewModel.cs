@@ -6,8 +6,8 @@ using System.Linq;
 using System.Windows.Forms;
 
 using GitCommands;
-
-using JetBrains.Annotations;
+using GitExtUtils;
+using GitUI.HelperDialogs;
 
 namespace GitUI.CommandsDialogs
 {
@@ -17,7 +17,6 @@ namespace GitUI.CommandsDialogs
 
         public static readonly string SettingCoreSparseCheckout = "core.sparseCheckout";
 
-        [NotNull]
         private readonly GitUICommands _gitCommands;
 
         private bool _isRefreshWorkingCopyOnSave = true /* on by default, otherwise index bitmap won't be updated */;
@@ -29,17 +28,15 @@ namespace GitUI.CommandsDialogs
         /// </summary>
         private bool _isSparseCheckoutEnabledAsSaved;
 
-        [CanBeNull]
-        private string _rulesText;
+        private string? _rulesText;
 
         /// <summary>
         /// Remembers what were loaded from disk, to check <see cref="RulesText" /> against to tell if modified.
         /// NULL until loaded.
         /// </summary>
-        [CanBeNull]
-        private string _sRulesTextAsOnDisk;
+        private string? _sRulesTextAsOnDisk;
 
-        public FormSparseWorkingCopyViewModel([NotNull] GitUICommands gitCommands)
+        public FormSparseWorkingCopyViewModel(GitUICommands gitCommands)
         {
             _gitCommands = gitCommands ?? throw new ArgumentNullException(nameof(gitCommands));
             _isSparseCheckoutEnabled = _isSparseCheckoutEnabledAsSaved = GetCurrentSparseEnabledState();
@@ -64,7 +61,7 @@ namespace GitUI.CommandsDialogs
         /// <summary>
         /// Tells whether the rules have been edited in the UI against what's on disk.
         /// </summary>
-        public bool IsRulesTextChanged => (_rulesText != null) && (_rulesText != (_sRulesTextAsOnDisk ?? ""));
+        public bool IsRulesTextChanged => (_rulesText is not null) && (_rulesText != (_sRulesTextAsOnDisk ?? ""));
 
         /// <summary>
         /// Current UI state of the Git sparse option.
@@ -90,8 +87,7 @@ namespace GitUI.CommandsDialogs
         /// <summary>
         /// Current UI state of the sparse WC rules text. NULL if n/a.
         /// </summary>
-        [CanBeNull]
-        public string RulesText
+        public string? RulesText
         {
             get
             {
@@ -125,7 +121,6 @@ namespace GitUI.CommandsDialogs
         /// <summary>
         /// Path to the file with the sparse WC rules.
         /// </summary>
-        [NotNull]
         public FileInfo GetPathToSparseCheckoutFile()
         {
             return new FileInfo(Path.Combine(_gitCommands.GitModule.ResolveGitInternalPath("info"), "sparse-checkout"));
@@ -156,10 +151,8 @@ namespace GitUI.CommandsDialogs
         {
             // Re-apply tree to the index
             // TODO: check how it affects the uncommitted working copy changes
-            using (var fromProcess = new FormRemoteProcess(_gitCommands.Module, AppSettings.GitCommand, RefreshWorkingCopyCommandName))
-            {
-                fromProcess.ShowDialog(Form.ActiveForm);
-            }
+            using FormRemoteProcess fromProcess = new(_gitCommands, AppSettings.GitCommand, RefreshWorkingCopyCommandName);
+            fromProcess.ShowDialog(Form.ActiveForm);
         }
 
         /// <summary>
@@ -167,9 +160,11 @@ namespace GitUI.CommandsDialogs
         /// </summary>
         public void SaveChanges()
         {
-            // Don't abort if !IsWithUnsavedChanges because we have to run IsRefreshWorkingCopyOnSave in either case (e.g. if edited by hand or got outdated)
+            // Don't abort if !IsWithUnsavedChanges because we have to run IsRefreshWorkingCopyOnSave in either case
+            // (e.g. if edited by hand or got outdated)
 
-            // Special case: turning off sparse for a repo — this won't just go smoothly, looks like git still reads the sparse checkout rules, so emptying or deleting them with turning off will just leave you with what you had before
+            // Special case: turning off sparse for a repo - this won't just go smoothly, looks like git still reads
+            // the sparse checkout rules, so emptying or deleting them with turning off will just leave you with what you had before
             SaveChangesTurningOffSparseSpecialCase();
 
             // Enabled state for the repo
@@ -197,7 +192,7 @@ namespace GitUI.CommandsDialogs
         /// <summary>
         /// As view loads the text in its impl of the editor, tells the exact on-disk text when it gets known.
         /// </summary>
-        public void SetRulesTextAsOnDisk([NotNull] string text)
+        public void SetRulesTextAsOnDisk(string text)
         {
             _sRulesTextAsOnDisk = text ?? throw new ArgumentNullException(nameof(text));
         }
@@ -217,20 +212,20 @@ namespace GitUI.CommandsDialogs
         /// </summary>
         private void SaveChangesTurningOffSparseSpecialCase()
         {
-            if (IsSparseCheckoutEnabled || !_isSparseCheckoutEnabledAsSaved)
+            if (IsSparseCheckoutEnabled || !_isSparseCheckoutEnabledAsSaved || RulesText is null)
             {
                 return; // Not turning off
             }
 
             // Now check the rules, the well-known recommendation is to have the single "/*" rule active
-            List<string> rulelines = RulesText.SplitLines().Select(l => l.Trim()).Where(l => (!l.IsNullOrEmpty()) && (l[0] != '#')).ToList(); // All nonempty and non-comment lines
+            List<string> rulelines = RulesText.LazySplit('\n', StringSplitOptions.RemoveEmptyEntries).Select(l => l.Trim()).Where(l => (!string.IsNullOrEmpty(l)) && (l[0] != '#')).ToList(); // All nonempty and non-comment lines
             if (rulelines.All(l => l == "/*"))
             {
                 return; // Rules OK for turning off
             }
 
             // Confirm
-            var args = new ComfirmAdjustingRulesOnDeactEventArgs(!rulelines.Any());
+            ComfirmAdjustingRulesOnDeactEventArgs args = new(!rulelines.Any());
             ComfirmAdjustingRulesOnDeactRequested(this, args);
             if (args.Cancel)
             {
@@ -238,8 +233,8 @@ namespace GitUI.CommandsDialogs
             }
 
             // Adjust the rules
-            // Comment out all existing nonempty lines, add the single “/*” line to make a total pass filter
-            RulesText = new[] { "/*" }.Concat(RulesText.SplitLines().Select(l => (string.IsNullOrWhiteSpace(l) || (l[0] == '#')) ? l : "#" + l)).Join(Environment.NewLine);
+            // Comment out all existing nonempty lines, add the single "/*" line to make a total pass filter
+            RulesText = new[] { "/*" }.Concat(RulesText.LazySplit('\n', StringSplitOptions.RemoveEmptyEntries).Select(l => (string.IsNullOrWhiteSpace(l) || (l[0] == '#')) ? l : "#" + l)).Join(Environment.NewLine);
         }
 
         /// <summary>
@@ -253,7 +248,7 @@ namespace GitUI.CommandsDialogs
             }
 
             /// <summary>
-            /// Empty rule set vs. got some stuff there
+            /// Empty rule set vs. got some stuff there.
             /// </summary>
             public bool IsCurrentRuleSetEmpty { get; }
         }

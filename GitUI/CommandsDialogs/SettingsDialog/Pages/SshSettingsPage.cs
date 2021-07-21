@@ -4,21 +4,20 @@ using System.IO;
 using System.Linq;
 using GitCommands;
 using GitCommands.Utils;
+using GitExtUtils.GitUI.Theming;
 using Microsoft.Win32;
 
 namespace GitUI.CommandsDialogs.SettingsDialog.Pages
 {
     public partial class SshSettingsPage : SettingsPageWithHeader
     {
-        private readonly ISshPathLocator _sshPathLocator = new SshPathLocator();
-
         public SshSettingsPage()
         {
             InitializeComponent();
             Text = "SSH";
             InitializeComplete();
 
-            label18.ForeColor = ColorHelper.GetForeColorForBackColor(label18.BackColor);
+            label18.SetForeColorForBackColor();
         }
 
         public static SettingsPageReference GetPageReference()
@@ -33,12 +32,12 @@ namespace GitUI.CommandsDialogs.SettingsDialog.Pages
             PageantPath.Text = AppSettings.Pageant;
             AutostartPageant.Checked = AppSettings.AutoStartPageant;
 
-            var sshPath = _sshPathLocator.Find(AppSettings.GitBinDir);
+            var sshPath = AppSettings.SshPath;
             if (string.IsNullOrEmpty(sshPath))
             {
                 OpenSSH.Checked = true;
             }
-            else if (GitCommandHelpers.Plink())
+            else if (GitSshHelpers.Plink())
             {
                 Putty.Checked = true;
             }
@@ -58,20 +57,24 @@ namespace GitUI.CommandsDialogs.SettingsDialog.Pages
             AppSettings.Pageant = PageantPath.Text;
             AppSettings.AutoStartPageant = AutostartPageant.Checked;
 
+            string path;
             if (OpenSSH.Checked)
             {
-                GitCommandHelpers.UnsetSsh();
+                path = "";
+            }
+            else if (Putty.Checked)
+            {
+                path = PlinkPath.Text;
+            }
+            else
+            {
+                // Other.Checked
+                path = OtherSsh.Text;
             }
 
-            if (Putty.Checked)
-            {
-                GitCommandHelpers.SetSsh(PlinkPath.Text);
-            }
-
-            if (Other.Checked)
-            {
-                GitCommandHelpers.SetSsh(OtherSsh.Text);
-            }
+            // Set persistent settings as well as the env var used by Git
+            GitSshHelpers.SetSsh(path);
+            AppSettings.SshPath = path;
         }
 
         private void OpenSSH_CheckedChanged(object sender, EventArgs e)
@@ -100,7 +103,7 @@ namespace GitUI.CommandsDialogs.SettingsDialog.Pages
 
             yield return Path.Combine(AppSettings.GetInstallDir(), @"PuTTY\");
             string programFiles = Environment.GetEnvironmentVariable("ProgramFiles");
-            string programFilesX86 = null;
+            string? programFilesX86 = null;
             if (IntPtr.Size == 8
                 || !string.IsNullOrEmpty(Environment.GetEnvironmentVariable("PROCESSOR_ARCHITEW6432")))
             {
@@ -108,19 +111,19 @@ namespace GitUI.CommandsDialogs.SettingsDialog.Pages
             }
 
             yield return programFiles + @"\TortoiseGit\bin\";
-            if (programFilesX86 != null)
+            if (programFilesX86 is not null)
             {
                 yield return programFilesX86 + @"\TortoiseGit\bin\";
             }
 
             yield return programFiles + @"\TortoiseSvn\bin\";
-            if (programFilesX86 != null)
+            if (programFilesX86 is not null)
             {
                 yield return programFilesX86 + @"\TortoiseSvn\bin\";
             }
 
             yield return programFiles + @"\PuTTY\";
-            if (programFilesX86 != null)
+            if (programFilesX86 is not null)
             {
                 yield return programFilesX86 + @"\PuTTY\";
             }

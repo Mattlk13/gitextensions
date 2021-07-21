@@ -7,19 +7,18 @@ using System.Linq;
 using System.Xml;
 using System.Xml.Serialization;
 using GitCommands;
-using JetBrains.Annotations;
 
 namespace GitUI.Script
 {
     public static class ScriptManager
     {
-        private static readonly XmlSerializer _serializer = new XmlSerializer(typeof(BindingList<ScriptInfo>));
-        private static BindingList<ScriptInfo> _scripts;
+        internal const int MinimumUserScriptID = 9000;
+        private static readonly XmlSerializer _serializer = new(typeof(BindingList<ScriptInfo>));
+        private static BindingList<ScriptInfo>? _scripts;
 
-        [NotNull]
         public static BindingList<ScriptInfo> GetScripts()
         {
-            if (_scripts == null)
+            if (_scripts is null)
             {
                 _scripts = DeserializeFromXml(AppSettings.OwnScripts);
                 FixAmbiguousHotkeyCommandIdentifiers();
@@ -27,11 +26,11 @@ namespace GitUI.Script
 
             return _scripts;
 
-            void FixAmbiguousHotkeyCommandIdentifiers()
+            static void FixAmbiguousHotkeyCommandIdentifiers()
             {
-                var ids = new HashSet<int>();
+                HashSet<int> ids = new();
 
-                foreach (var script in _scripts)
+                foreach (var script in _scripts!)
                 {
                     if (!ids.Add(script.HotkeyCommandIdentifier))
                     {
@@ -41,12 +40,11 @@ namespace GitUI.Script
             }
         }
 
-        [CanBeNull]
-        public static ScriptInfo GetScript(string key)
+        public static ScriptInfo? GetScript(string key)
         {
             foreach (var script in GetScripts())
             {
-                if (script.Name.Equals(key, StringComparison.CurrentCultureIgnoreCase))
+                if (StringComparer.CurrentCultureIgnoreCase.Equals(script.Name, key))
                 {
                     return script;
                 }
@@ -55,20 +53,25 @@ namespace GitUI.Script
             return null;
         }
 
-        public static void RunEventScripts(GitModuleForm form, ScriptEvent scriptEvent)
+        public static bool RunEventScripts(GitModuleForm form, ScriptEvent scriptEvent)
         {
             foreach (var script in GetScripts().Where(scriptInfo => scriptInfo.Enabled && scriptInfo.OnEvent == scriptEvent))
             {
-                ScriptRunner.RunScript(form, form.Module, script.Name, form.UICommands, revisionGrid: null);
+                var result = ScriptRunner.RunScript(form, form.Module, script.Name, form.UICommands, revisionGrid: null);
+                if (!result.Executed)
+                {
+                    return false;
+                }
             }
+
+            return true;
         }
 
-        [CanBeNull]
-        public static string SerializeIntoXml()
+        public static string? SerializeIntoXml()
         {
             try
             {
-                var sw = new StringWriter();
+                StringWriter sw = new();
                 _serializer.Serialize(sw, _scripts);
                 return sw.ToString();
             }
@@ -78,8 +81,7 @@ namespace GitUI.Script
             }
         }
 
-        [NotNull]
-        private static BindingList<ScriptInfo> DeserializeFromXml([CanBeNull] string xml)
+        private static BindingList<ScriptInfo> DeserializeFromXml(string? xml)
         {
             // When there is nothing to deserialize, add default scripts
             if (string.IsNullOrEmpty(xml))
@@ -89,11 +91,9 @@ namespace GitUI.Script
 
             try
             {
-                using (var stringReader = new StringReader(xml))
-                using (var xmlReader = new XmlTextReader(stringReader))
-                {
-                    return (BindingList<ScriptInfo>)_serializer.Deserialize(xmlReader);
-                }
+                using StringReader stringReader = new(xml);
+                using XmlTextReader xmlReader = new(stringReader);
+                return (BindingList<ScriptInfo>)_serializer.Deserialize(xmlReader);
             }
             catch (Exception ex)
             {
@@ -101,7 +101,7 @@ namespace GitUI.Script
                 return DeserializeFromOldFormat(xml);
             }
 
-            BindingList<ScriptInfo> GetDefaultScripts() => new BindingList<ScriptInfo>
+            BindingList<ScriptInfo> GetDefaultScripts() => new()
             {
                 new ScriptInfo
                 {
@@ -170,7 +170,7 @@ namespace GitUI.Script
                 const string paramSeparator = "<_PARAM_SEPARATOR_>";
                 const string scriptSeparator = "<_SCRIPT_SEPARATOR_>";
 
-                var scripts = new BindingList<ScriptInfo>();
+                BindingList<ScriptInfo> scripts = new();
 
                 if (inputString.Contains(paramSeparator) || inputString.Contains(scriptSeparator))
                 {

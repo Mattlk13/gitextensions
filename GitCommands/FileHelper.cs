@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using JetBrains.Annotations;
+using GitExtUtils;
 
 namespace GitCommands
 {
@@ -54,17 +54,18 @@ namespace GitCommands
             ".tiff",
         };
 
-        public static bool IsBinaryFileName(GitModule module, string fileName)
+        public static bool IsBinaryFileName(GitModule module, string? fileName)
         {
-            return IsBinaryAccordingToGitAttributes(module, fileName)
-                ?? HasMatchingExtension(BinaryExtensions, fileName);
+            return !string.IsNullOrWhiteSpace(fileName)
+                   && (IsBinaryAccordingToGitAttributes(module, fileName)
+                       ?? HasMatchingExtension(BinaryExtensions, fileName));
         }
 
         /// <returns>null if no info in .gitattributes (or ambiguous). True if marked as binary, false if marked as text</returns>
         private static bool? IsBinaryAccordingToGitAttributes(GitModule module, string fileName)
         {
             string[] diffValues = { "set", "astextplain", "ada", "bibtext", "cpp", "csharp", "fortran", "html", "java", "matlab", "objc", "pascal", "perl", "php", "python", "ruby", "tex" };
-            var cmd = new GitArgumentBuilder("check-attr")
+            GitArgumentBuilder cmd = new("check-attr")
             {
                 "-z",
                 "diff",
@@ -75,8 +76,8 @@ namespace GitCommands
                 fileName.Quote()
             };
             string result = module.GitExecutable.GetOutput(cmd);
-            var lines = result.Split('\n', '\0');
-            var attributes = new Dictionary<string, string>();
+            var lines = result.Split(Delimiters.NullAndLineFeed);
+            Dictionary<string, string> attributes = new();
             for (int i = 0; i < lines.Length - 2; i += 3)
             {
                 attributes[lines[i + 1].Trim()] = lines[i + 2].Trim();
@@ -134,10 +135,10 @@ namespace GitCommands
 
         #region binary file check
 
-        public static bool IsBinaryFileAccordingToContent([CanBeNull] byte[] content)
+        public static bool IsBinaryFileAccordingToContent(byte[]? content)
         {
             // Check for binary file.
-            if (content != null && content.Length > 0)
+            if (content is not null && content.Length > 0)
             {
                 int nullCount = 0;
                 foreach (char c in content)
@@ -162,7 +163,7 @@ namespace GitCommands
             return false;
         }
 
-        public static bool IsBinaryFileAccordingToContent(string content)
+        public static bool IsBinaryFileAccordingToContent(string? content)
         {
             // Check for binary file.
             if (!string.IsNullOrEmpty(content))

@@ -1,5 +1,5 @@
 using System.Text;
-using GitCommands;
+using GitExtUtils;
 
 namespace GitUIPluginInterfaces
 {
@@ -10,6 +10,6 @@ namespace GitUIPluginInterfaces
             bool createWindow = false,
             bool redirectInput = false,
             bool redirectOutput = false,
-            Encoding outputEncoding = null);
+            Encoding? outputEncoding = null);
     }
 }

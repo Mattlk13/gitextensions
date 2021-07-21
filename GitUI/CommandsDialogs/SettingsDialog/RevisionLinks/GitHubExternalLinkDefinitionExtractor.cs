@@ -10,7 +10,7 @@ namespace GitUI.CommandsDialogs.SettingsDialog.RevisionLinks
     {
         public override string ServiceName => "GitHub";
         public override Image Icon => Images.GitHub;
-        private readonly GitHubRemoteParser _remoteParser = new GitHubRemoteParser();
+        private readonly GitHubRemoteParser _remoteParser = new();
 
         public override bool IsValidRemoteUrl(string remoteUrl)
         {
@@ -19,20 +19,20 @@ namespace GitUI.CommandsDialogs.SettingsDialog.RevisionLinks
 
         public override IList<ExternalLinkDefinition> GetDefinitions(string remoteUrl)
         {
-            var externalLinkDefinitions = new List<ExternalLinkDefinition>();
-            string organizationName = null;
-            string repoName = null;
+            List<ExternalLinkDefinition> externalLinkDefinitions = new();
+            string? organizationName = null;
+            string? repoName = null;
 
             if (!string.IsNullOrWhiteSpace(remoteUrl))
             {
                 _remoteParser.TryExtractGitHubDataFromRemoteUrl(remoteUrl, out organizationName, out repoName);
             }
 
-            organizationName = organizationName ?? "ORGANIZATION_NAME";
-            repoName = repoName ?? "REPO_NAME";
+            organizationName ??= "ORGANIZATION_NAME";
+            repoName ??= "REPO_NAME";
 
             var gitHubUrl = $"https://github.com/{organizationName}/{repoName}";
-            var definition = new ExternalLinkDefinition
+            ExternalLinkDefinition definition = new()
             {
                 Name = string.Format(CodeLink.Text, ServiceName),
                 Enabled = true,

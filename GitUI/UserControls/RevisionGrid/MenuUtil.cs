@@ -1,44 +1,39 @@
 ﻿using System.Drawing;
 using System.Windows.Forms;
+using GitExtUtils.GitUI;
 
 namespace GitUI.UserControls.RevisionGrid
 {
     internal static class MenuUtil
     {
-        private static readonly object _captionTag = new object();
-        private static readonly CaptionCustomMenuRenderer _customMenuRenderer = new CaptionCustomMenuRenderer();
-        private static Font _disabledFont;
+        private static readonly object _captionTag = new();
+        private static readonly MenuItemBackgroundFilter _menuItemBackgroundFilter = new();
+        private static Font? _disabledFont;
 
         /// <summary>
-        /// set the menu item disabled and remove mouse hover effect
+        /// set the menu item disabled and remove mouse hover effect.
         /// </summary>
         public static void SetAsCaptionMenuItem(ToolStripMenuItem menuItem, ToolStrip menu)
         {
-            menu.Renderer = _customMenuRenderer;
+            menu.AttachMenuItemBackgroundFilter(_menuItemBackgroundFilter);
 
             menuItem.Tag = _captionTag;
             menuItem.Enabled = false;
 
-            if (_disabledFont == null)
-            {
-                _disabledFont = new Font(menuItem.Font, FontStyle.Italic);
-            }
+            _disabledFont ??= new Font(menuItem.Font, FontStyle.Italic);
 
             menuItem.Font = _disabledFont;
         }
 
         /// <summary>
-        /// no mouse over effect for disabled menu items, if the Tag is "caption"
+        /// no mouse over effect for disabled menu items, if the Tag is "caption".
         /// </summary>
-        private sealed class CaptionCustomMenuRenderer : ToolStripProfessionalRenderer
+        private sealed class MenuItemBackgroundFilter : IMenuItemBackgroundFilter
         {
-            protected override void OnRenderMenuItemBackground(ToolStripItemRenderEventArgs e)
+            public bool ShouldRenderMenuItemBackground(ToolStripItemRenderEventArgs e)
             {
                 // Only render the background for non-caption menu items
-                if (!ReferenceEquals(e.Item.Tag, _captionTag))
-                {
-                    base.OnRenderMenuItemBackground(e);
-                }
+                return !ReferenceEquals(e.Item.Tag, _captionTag);
             }
         }
     }

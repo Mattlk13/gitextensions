@@ -7,7 +7,7 @@ using System;
 using System.Text.RegularExpressions;
 using System.Windows.Forms;
 
-namespace ReleaseNotesGenerator
+namespace GitExtensions.Plugins.ReleaseNotesGenerator
 {
     /// <summary>
     /// Helper class to decode HTML from the clipboard.
@@ -29,7 +29,7 @@ namespace ReleaseNotesGenerator
         public static HtmlFragment FromClipboard()
         {
             string rawClipboardText = Clipboard.GetText(TextDataFormat.Html);
-            var h = new HtmlFragment(rawClipboardText);
+            HtmlFragment h = new(rawClipboardText);
             return h;
         }
 
@@ -119,7 +119,7 @@ namespace ReleaseNotesGenerator
                 }
             }
 
-            if (Context == null && Fragment == null)
+            if (Context is null && Fragment is null)
             {
                 throw new FormatException("No data specified");
             }
@@ -130,23 +130,23 @@ namespace ReleaseNotesGenerator
         /// <summary>
         /// Get the Version of the html. Usually something like "1.0".
         /// </summary>
-        public string Version { get; }
+        public string? Version { get; }
 
         /// <summary>
         /// Get the full text (context) of the HTML fragment. This includes tags that the HTML is enclosed in.
         /// May be null if context is not specified.
         /// </summary>
-        public string Context { get; }
+        public string? Context { get; }
 
         /// <summary>
         /// Get just the fragment of HTML text.
         /// </summary>
-        public string Fragment { get; }
+        public string? Fragment { get; }
 
         /// <summary>
         /// Get the Source URL of the HTML. May be null if no SourceUrl is specified. This is useful for resolving relative urls.
         /// </summary>
-        public Uri SourceUrl { get; }
+        public Uri? SourceUrl { get; }
 
         #endregion
 
@@ -162,7 +162,7 @@ namespace ReleaseNotesGenerator
         /// <param name="htmlFragment">a html fragment</param>
         /// <param name="title">optional title of the HTML document (can be null)</param>
         /// <param name="sourceUri">optional Source URL of the HTML document, for resolving relative links (can be null)</param>
-        public static void CopyToClipboard(string htmlFragment, string title = null, Uri sourceUri = null)
+        public static void CopyToClipboard(string htmlFragment, string? title = null, Uri? sourceUri = null)
         {
             var dataObject = CreateHtmlFormatClipboardDataObject(htmlFragment, title, sourceUri);
 
@@ -173,9 +173,9 @@ namespace ReleaseNotesGenerator
             // or as table to MS Word or LibreOffice Writer
         }
 
-        internal static DataObject CreateHtmlFormatClipboardDataObject(string htmlFragment, string title = "From Clipboard", Uri sourceUri = null)
+        internal static DataObject CreateHtmlFormatClipboardDataObject(string htmlFragment, string? title = "From Clipboard", Uri? sourceUri = null)
         {
-            System.Text.StringBuilder sb = new System.Text.StringBuilder();
+            System.Text.StringBuilder sb = new();
 
             // Builds the CF_HTML header. See format specification here:
             // http://msdn.microsoft.com/library/default.asp?url=/workshop/networking/clipboard/htmlclipboard.asp
@@ -192,7 +192,7 @@ namespace ReleaseNotesGenerator
 
             sb.Append(header);
 
-            if (sourceUri != null)
+            if (sourceUri is not null)
             {
                 sb.AppendFormat("SourceURL:{0}", sourceUri);
             }
@@ -223,7 +223,7 @@ namespace ReleaseNotesGenerator
             // Finally copy to clipboard.
             // http://stackoverflow.com/questions/13332377/how-to-set-html-text-in-clipboard
             string data = sb.ToString();
-            var dataObject = new DataObject();
+            DataObject dataObject = new();
             dataObject.SetText(data, TextDataFormat.Html);
             dataObject.SetText(htmlFragment, TextDataFormat.Text);
 

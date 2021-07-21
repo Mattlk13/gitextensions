@@ -2,7 +2,7 @@
 using Newtonsoft.Json.Linq;
 using RestSharp;
 
-namespace Bitbucket
+namespace GitExtensions.Plugins.Bitbucket
 {
     internal class GetInBetweenCommitsRequest : BitbucketRequestBase<List<Commit>>
     {
@@ -21,7 +21,7 @@ namespace Bitbucket
             _targetCommit = targetCommit;
         }
 
-        protected override object RequestBody => null;
+        protected override object? RequestBody => null;
 
         protected override Method RequestMethod => Method.GET;
 
@@ -32,7 +32,7 @@ namespace Bitbucket
 
         protected override List<Commit> ParseResponse(JObject json)
         {
-            var result = new List<Commit>();
+            List<Commit> result = new();
             foreach (JObject commit in json["values"])
             {
                 result.Add(Commit.Parse(commit));

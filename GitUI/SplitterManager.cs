@@ -8,7 +8,7 @@ namespace GitUI
 {
     public sealed class SplitterManager
     {
-        private readonly List<SplitterData> _splitters = new List<SplitterData>();
+        private readonly List<SplitterData> _splitters = new();
         private readonly ISettingsSource _settings;
 
         public SplitterManager(ISettingsSource settings)
@@ -18,49 +18,57 @@ namespace GitUI
 
         public void AddSplitter(SplitContainer splitter, string settingName, int? defaultDistance = null)
         {
-            _splitters.Add(new SplitterData
-            {
-                Splitter = splitter,
-                SettingName = settingName,
-                DefaultDistance = defaultDistance,
-                Dpi = DpiUtil.DpiX
-            });
+            _splitters.Add(new SplitterData(
+                splitter,
+                settingName,
+                DpiUtil.DpiX,
+                defaultDistance));
         }
 
         public void RestoreSplitters()
         {
-            foreach (var splitter in _splitters)
-            {
-                splitter.RestoreFromSettings(_settings);
-            }
+            // TODO: Disabled as splitters have become unstable. Refer to #8745 for more details.
+            ////foreach (var splitter in _splitters)
+            ////{
+            ////    splitter.RestoreFromSettings(_settings);
+            ////}
         }
 
         public void SaveSplitters()
         {
-            foreach (var splitter in _splitters)
-            {
-                splitter.SaveToSettings(_settings);
-            }
+            // TODO: Disabled as splitters have become unstable. Refer to #8745 for more details.
+            ////foreach (var splitter in _splitters)
+            ////{
+            ////    splitter.SaveToSettings(_settings);
+            ////}
         }
 
         private sealed class SplitterData
         {
-            public SplitContainer Splitter;
-            public string SettingName;
-            public int Dpi;
-            public int? DefaultDistance;
+            private readonly SplitContainer _splitter;
+            private readonly string _settingName;
+            private readonly int _dpi;
+            private readonly int? _defaultDistance;
 
-            private int SplitterSize => Splitter.Orientation == Orientation.Horizontal ? Splitter.Height : Splitter.Width;
-            private string SizeSettingsKey => SettingName + "_Size";
-            private string DpiSettingsKey => SettingName + "_Dpi";
-            private string DistanceSettingsKey => SettingName + "_Distance";
-            private string FontSizeSettingsKey => SettingName + "_FontSize";
-            private string Panel1CollapsedSettingsKey => SettingName + "_Panel1Collapsed";
+            public SplitterData(SplitContainer splitter, string settingName, int dpi, int? defaultDistance)
+            {
+                _splitter = splitter;
+                _settingName = settingName;
+                _dpi = dpi;
+                _defaultDistance = defaultDistance;
+            }
+
+            private int SplitterSize => _splitter.Orientation == Orientation.Horizontal ? _splitter.Height : _splitter.Width;
+            private string SizeSettingsKey => _settingName + "_Size";
+            private string DpiSettingsKey => _settingName + "_Dpi";
+            private string DistanceSettingsKey => _settingName + "_Distance";
+            private string FontSizeSettingsKey => _settingName + "_FontSize";
+            private string Panel1CollapsedSettingsKey => _settingName + "_Panel1Collapsed";
 
             public void RestoreFromSettings(ISettingsSource settings)
             {
-                Splitter.BeginInit();
-                Splitter.SuspendLayout();
+                _splitter.BeginInit();
+                _splitter.SuspendLayout();
 
                 int prevDpi = settings.GetInt(DpiSettingsKey) ?? DpiUtil.DpiX;
                 int prevSize = settings.GetInt(SizeSettingsKey) ?? 0;
@@ -68,15 +76,20 @@ namespace GitUI
 
                 if (prevSize > 0 && prevDistance > 0)
                 {
-                    if (SplitterSize == prevSize && Dpi == prevDpi)
+                    var fixedPanel = _splitter.FixedPanel;
+                    var splitterWidth = _splitter.SplitterWidth;
+                    if (SplitterSize == prevSize && _dpi == prevDpi)
                     {
-                        SetSplitterDistance(prevDistance);
+                        SetSplitterDistance(fixedPanel == FixedPanel.Panel2 ? prevDistance + splitterWidth : prevDistance);
                     }
                     else
                     {
-                        switch (Splitter.FixedPanel)
+                        switch (fixedPanel)
                         {
                             case FixedPanel.None:
+                                // At this point, the property "SplitterSize" has its original value from design time,
+                                // i.e. the actual size after opening the window is unknown yet. The calculation below
+                                // determines the resulting splitter distance by the ratio of both sides of the splitter.
                                 SetSplitterDistance((float)SplitterSize * prevDistance / prevSize);
                                 break;
                             case FixedPanel.Panel1:
@@ -84,25 +97,26 @@ namespace GitUI
                                 break;
                             case FixedPanel.Panel2:
                                 int panel2PrevSize = DpiUtil.Scale(prevSize, prevDpi) - DpiUtil.Scale(prevDistance, prevDpi);
-                                SetSplitterDistance(SplitterSize - panel2PrevSize);
+                                const int paddingOffset = 2; // Refer to FormCommit.ctor+WorkaroundPaddingIncreaseBug
+                                SetSplitterDistance(SplitterSize - panel2PrevSize - paddingOffset + splitterWidth);
                                 break;
                         }
                     }
                 }
 
-                Splitter.Panel1Collapsed = settings.GetBool(Panel1CollapsedSettingsKey, defaultValue: false);
+                _splitter.Panel1Collapsed = settings.GetBool(Panel1CollapsedSettingsKey, defaultValue: false);
 
-                Splitter.ResumeLayout();
-                Splitter.EndInit();
+                _splitter.ResumeLayout();
+                _splitter.EndInit();
             }
 
             public void SaveToSettings(ISettingsSource settings)
             {
-                settings.SetInt(DpiSettingsKey, Dpi);
+                settings.SetInt(DpiSettingsKey, _dpi);
                 settings.SetInt(SizeSettingsKey, SplitterSize);
-                settings.SetInt(DistanceSettingsKey, Splitter.SplitterDistance);
-                settings.SetFloat(FontSizeSettingsKey, Splitter.Font.Size);
-                settings.SetBool(Panel1CollapsedSettingsKey, Splitter.Panel1Collapsed);
+                settings.SetInt(DistanceSettingsKey, _splitter.SplitterDistance);
+                settings.SetFloat(FontSizeSettingsKey, _splitter.Font.Size);
+                settings.SetBool(Panel1CollapsedSettingsKey, _splitter.Panel1Collapsed);
             }
 
             private void SetSplitterDistance(float distance)
@@ -113,11 +127,11 @@ namespace GitUI
 
                     if (IsValidSplitterDistance(intDistance))
                     {
-                        Splitter.SplitterDistance = intDistance;
+                        _splitter.SplitterDistance = intDistance;
                     }
-                    else if (DefaultDistance.HasValue && IsValidSplitterDistance(DefaultDistance.Value))
+                    else if (_defaultDistance.HasValue && IsValidSplitterDistance(_defaultDistance.Value))
                     {
-                        Splitter.SplitterDistance = DefaultDistance.Value;
+                        _splitter.SplitterDistance = _defaultDistance.Value;
                     }
                 }
                 catch
@@ -127,8 +141,8 @@ namespace GitUI
 
                 bool IsValidSplitterDistance(int d)
                 {
-                    return d > Splitter.Panel1MinSize &&
-                           d < SplitterSize - Splitter.Panel2MinSize;
+                    return d > _splitter.Panel1MinSize &&
+                           d < SplitterSize - _splitter.Panel2MinSize;
                 }
             }
         }

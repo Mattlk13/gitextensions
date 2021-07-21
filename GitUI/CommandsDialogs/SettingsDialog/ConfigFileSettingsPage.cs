@@ -1,12 +1,13 @@
 ﻿using GitCommands.Settings;
 using GitUIPluginInterfaces;
+using Microsoft;
 
 namespace GitUI.CommandsDialogs.SettingsDialog
 {
     public class ConfigFileSettingsPage : SettingsPageWithHeader, ILocalSettingsPage
     {
         protected ConfigFileSettingsSet ConfigFileSettingsSet => CommonLogic.ConfigFileSettingsSet;
-        protected ConfigFileSettings CurrentSettings { get; private set; }
+        protected ConfigFileSettings? CurrentSettings { get; private set; }
 
         protected override void Init(ISettingsPageHost pageHost)
         {
@@ -17,12 +18,13 @@ namespace GitUI.CommandsDialogs.SettingsDialog
 
         protected override ISettingsSource GetCurrentSettings()
         {
+            Validates.NotNull(CurrentSettings);
             return CurrentSettings;
         }
 
         public void SetEffectiveSettings()
         {
-            if (ConfigFileSettingsSet != null)
+            if (ConfigFileSettingsSet is not null)
             {
                 SetCurrentSettings(ConfigFileSettingsSet.EffectiveSettings);
             }
@@ -30,7 +32,7 @@ namespace GitUI.CommandsDialogs.SettingsDialog
 
         public void SetLocalSettings()
         {
-            if (ConfigFileSettingsSet != null)
+            if (ConfigFileSettingsSet is not null)
             {
                 SetCurrentSettings(ConfigFileSettingsSet.LocalSettings);
             }
@@ -38,7 +40,7 @@ namespace GitUI.CommandsDialogs.SettingsDialog
 
         public override void SetGlobalSettings()
         {
-            if (ConfigFileSettingsSet != null)
+            if (ConfigFileSettingsSet is not null)
             {
                 SetCurrentSettings(ConfigFileSettingsSet.GlobalSettings);
             }
@@ -46,7 +48,7 @@ namespace GitUI.CommandsDialogs.SettingsDialog
 
         private void SetCurrentSettings(ConfigFileSettings settings)
         {
-            if (CurrentSettings != null)
+            if (CurrentSettings is not null)
             {
                 SaveSettings();
             }

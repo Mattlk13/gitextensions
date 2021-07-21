@@ -4,7 +4,7 @@ using System.ComponentModel;
 using System.Linq.Expressions;
 using System.Windows.Forms;
 
-namespace DeleteUnusedBranches
+namespace GitExtensions.Plugins.DeleteUnusedBranches
 {
     /// <summary>
     /// Custom sortable binding branches list, use for support user-defined sorting in <see cref="DataGridView"/>.
@@ -27,7 +27,7 @@ namespace DeleteUnusedBranches
 
         private static class BranchesComparer
         {
-            private static readonly Dictionary<string, Comparison<Branch>> PropertyComparers = new Dictionary<string, Comparison<Branch>>();
+            private static readonly Dictionary<string, Comparison<Branch>> PropertyComparers = new();
 
             static BranchesComparer()
             {

@@ -6,33 +6,31 @@ using System.Runtime.InteropServices;
 using System.Windows.Forms;
 using GitCommands;
 using GitUI.Editor;
-using JetBrains.Annotations;
 using ResourceManager;
 
 namespace GitUI.CommandsDialogs
 {
     public sealed class FormSparseWorkingCopy : GitModuleForm
     {
-        [CanBeNull]
-        private IDisposable _disposable1;
+        private IDisposable? _disposable1;
 
         [Obsolete("For VS designer and translation test only. Do not remove.")]
         private FormSparseWorkingCopy()
         {
         }
 
-        public FormSparseWorkingCopy([NotNull] GitUICommands commands)
+        public FormSparseWorkingCopy(GitUICommands commands)
             : base(commands)
         {
-            var sparse = new FormSparseWorkingCopyViewModel(commands);
+            FormSparseWorkingCopyViewModel sparse = new(commands);
             BindToViewModelGlobal(sparse);
             CreateView(sparse);
             InitializeComplete();
         }
 
-        private void BindSaveOnClose([NotNull] FormSparseWorkingCopyViewModel sparse)
+        private void BindSaveOnClose(FormSparseWorkingCopyViewModel sparse)
         {
-            if (sparse == null)
+            if (sparse is null)
             {
                 throw new ArgumentNullException(nameof(sparse));
             }
@@ -73,9 +71,9 @@ namespace GitUI.CommandsDialogs
             };
         }
 
-        private void BindToViewModelGlobal([NotNull] FormSparseWorkingCopyViewModel sparse)
+        private void BindToViewModelGlobal(FormSparseWorkingCopyViewModel sparse)
         {
-            if (sparse == null)
+            if (sparse is null)
             {
                 throw new ArgumentNullException(nameof(sparse));
             }
@@ -89,7 +87,7 @@ namespace GitUI.CommandsDialogs
             };
         }
 
-        private void CreateView([NotNull] FormSparseWorkingCopyViewModel sparse)
+        private void CreateView(FormSparseWorkingCopyViewModel sparse)
         {
             Text = Globalized.Strings.SparseWorkingCopy.Text;
             AutoScaleMode = AutoScaleMode.Dpi;
@@ -97,9 +95,9 @@ namespace GitUI.CommandsDialogs
             MinimumSize = new Size(800, 600);
 
             // Tooltips support for the form
-            var componentContainer = new Container();
+            Container componentContainer = new();
             _disposable1 = componentContainer;
-            var tooltip = new ToolTip(componentContainer) { AutomaticDelay = 100 };
+            ToolTip tooltip = new(componentContainer) { AutomaticDelay = 100 };
 
             Panel panelHeader = CreateViewHeader();
 
@@ -130,10 +128,9 @@ namespace GitUI.CommandsDialogs
             };
         }
 
-        [NotNull]
-        private static Panel CreateViewFooter([NotNull] FormSparseWorkingCopyViewModel sparse, [NotNull] ToolTip tooltip, [NotNull] out Button btnSave, [NotNull] out Button btnCancel)
+        private static Panel CreateViewFooter(FormSparseWorkingCopyViewModel sparse, ToolTip tooltip, out Button btnSave, out Button btnCancel)
         {
-            var tableFooterButtons = new TableLayoutPanel { BackColor = SystemColors.ControlLightLight, Dock = DockStyle.Fill, AutoSize = true, AutoSizeMode = AutoSizeMode.GrowAndShrink, ColumnCount = 4, RowCount = 1, Margin = Padding.Empty, ColumnStyles = { new ColumnStyle(SizeType.Percent, 100) }, Padding = new Padding(10, 15, 10, 15), CellBorderStyle = TableLayoutPanelCellBorderStyle.None };
+            TableLayoutPanel tableFooterButtons = new() { BackColor = SystemColors.ControlLightLight, Dock = DockStyle.Fill, AutoSize = true, AutoSizeMode = AutoSizeMode.GrowAndShrink, ColumnCount = 4, RowCount = 1, Margin = Padding.Empty, ColumnStyles = { new ColumnStyle(SizeType.Percent, 100) }, Padding = new Padding(10, 15, 10, 15), CellBorderStyle = TableLayoutPanelCellBorderStyle.None };
 
             CheckBox check;
             tableFooterButtons.Controls.Add(check = new CheckBox { Text = Globalized.Strings.RefreshWorkingCopyUsingTheCurrentSettingsAndRules.Text, Checked = sparse.IsRefreshWorkingCopyOnSave, AutoSize = true, Dock = DockStyle.Fill, Margin = Padding.Empty });
@@ -149,10 +146,9 @@ namespace GitUI.CommandsDialogs
             return tableFooterButtons;
         }
 
-        [NotNull]
         private static Panel CreateViewHeader()
         {
-            var panelHeaderMain = new TableLayoutPanel { BackColor = SystemColors.ControlLightLight, Dock = DockStyle.Fill, AutoSize = true, Margin = Padding.Empty, Padding = Padding.Empty, RowCount = 2, ColumnCount = 1 };
+            TableLayoutPanel panelHeaderMain = new() { BackColor = SystemColors.ControlLightLight, Dock = DockStyle.Fill, AutoSize = true, Margin = Padding.Empty, Padding = Padding.Empty, RowCount = 2, ColumnCount = 1 };
 
             Label labelTitle;
             panelHeaderMain.Controls.Add(labelTitle = new Label { Text = Globalized.Strings.SparseWorkingCopy.Text, Dock = DockStyle.Bottom, AutoSize = true, Margin = new Padding(10, 10, 10, 0) });
@@ -163,11 +159,10 @@ namespace GitUI.CommandsDialogs
             return panelHeaderMain;
         }
 
-        [NotNull]
-        private static Control CreateViewOnOff([NotNull] FormSparseWorkingCopyViewModel sparse, [NotNull] ToolTip tooltip)
+        private static Control CreateViewOnOff(FormSparseWorkingCopyViewModel sparse, ToolTip tooltip)
         {
             // When disabled: hint-like panel to enable
-            var panelWhenDisabled = new TableLayoutPanel { BackColor = SystemColors.Info, AutoSize = true, AutoSizeMode = AutoSizeMode.GrowAndShrink, Dock = DockStyle.Bottom, ColumnCount = 2, RowCount = 1, ColumnStyles = { new ColumnStyle(SizeType.Percent, 100) }, Margin = Padding.Empty, Padding = new Padding(10, 5, 10, 5) };
+            TableLayoutPanel panelWhenDisabled = new() { BackColor = SystemColors.Info, AutoSize = true, AutoSizeMode = AutoSizeMode.GrowAndShrink, Dock = DockStyle.Bottom, ColumnCount = 2, RowCount = 1, ColumnStyles = { new ColumnStyle(SizeType.Percent, 100) }, Margin = Padding.Empty, Padding = new Padding(10, 5, 10, 5) };
             panelWhenDisabled.Controls.Add(new Label { ForeColor = SystemColors.InfoText, Text = Globalized.Strings.SparseWorkingCopySupportHasNotBeenEnabledForThisRepository.Text, Dock = DockStyle.Fill, AutoSize = true, TextAlign = ContentAlignment.MiddleLeft, Margin = Padding.Empty });
             Button btnEnable;
             panelWhenDisabled.Controls.Add(btnEnable = new Button { Width = 75, Height = 23, Text = Globalized.Strings.Enable.Text, Anchor = AnchorStyles.Bottom | AnchorStyles.Right, Dock = DockStyle.Right, UseVisualStyleBackColor = true, Margin = Padding.Empty });
@@ -182,7 +177,7 @@ namespace GitUI.CommandsDialogs
             // When enabled: a less bold link to disable
             string labelBeforeLink = Globalized.Strings.SparseWorkingCopySupportIsEnabled.Text + ' ';
             string labelWithLink = labelBeforeLink + Globalized.Strings.DisableForThisRepository.Text;
-            var labelWhenEnabled = new LinkLabel { Text = labelWithLink, Dock = DockStyle.Bottom, AutoSize = true, Padding = new Padding(10, 10, 10, 5), FlatStyle = FlatStyle.System, UseCompatibleTextRendering = true };
+            LinkLabel labelWhenEnabled = new() { Text = labelWithLink, Dock = DockStyle.Bottom, AutoSize = true, Padding = new Padding(10, 10, 10, 5), FlatStyle = FlatStyle.System, UseCompatibleTextRendering = true };
             labelWhenEnabled.Links.Add(new LinkLabel.Link(labelBeforeLink.Length, labelWithLink.Length - labelBeforeLink.Length));
             labelWhenEnabled.LinkClicked += delegate { sparse.IsSparseCheckoutEnabled = false; };
             tooltip.SetToolTip(labelWhenEnabled, string.Format(Globalized.Strings.SetsTheGitPropertyToFalseForTheLocalRepository.Text, FormSparseWorkingCopyViewModel.SettingCoreSparseCheckout));
@@ -191,16 +186,15 @@ namespace GitUI.CommandsDialogs
             return new Panel { Dock = DockStyle.Fill, Controls = { panelWhenDisabled, separatorWhenDisabled, labelWhenEnabled }, Margin = Padding.Empty, Padding = Padding.Empty, AutoSize = true };
         }
 
-        [NotNull]
-        private static Panel CreateViewRules([NotNull] FormSparseWorkingCopyViewModel sparse, [NotNull] ToolTip tooltip, [NotNull] IGitUICommandsSource commandsSource)
+        private static Panel CreateViewRules(FormSparseWorkingCopyViewModel sparse, ToolTip tooltip, IGitUICommandsSource commandsSource)
         {
             // Label
-            var label1 = new Label { AutoSize = true, Text = Globalized.Strings.SpecifyTheRulesForIncludingOrExcludingFilesAndDirectories.Text, Dock = DockStyle.Top, Padding = new Padding(10, 5, 10, 0) };
-            var label2 = new Label { AutoSize = true, Text = Globalized.Strings.SpecifyTheRulesForIncludingOrExcludingFilesAndDirectoriesLine2.Text, Dock = DockStyle.Top, Padding = new Padding(25, 3, 10, 3), ForeColor = SystemColors.GrayText };
+            Label label1 = new() { AutoSize = true, Text = Globalized.Strings.SpecifyTheRulesForIncludingOrExcludingFilesAndDirectories.Text, Dock = DockStyle.Top, Padding = new Padding(10, 5, 10, 0) };
+            Label label2 = new() { AutoSize = true, Text = Globalized.Strings.SpecifyTheRulesForIncludingOrExcludingFilesAndDirectoriesLine2.Text, Dock = DockStyle.Top, Padding = new Padding(25, 3, 10, 3), ForeColor = SystemColors.GrayText };
             sparse.PropertyChanged += delegate { label1.Visible = label2.Visible = sparse.IsSparseCheckoutEnabled; };
 
             // Text editor
-            var editor = new FileViewer { Dock = DockStyle.Fill, UICommandsSource = commandsSource, IsReadOnly = false };
+            FileViewer editor = new() { Dock = DockStyle.Fill, UICommandsSource = commandsSource, IsReadOnly = false };
             editor.TextLoaded += (sender, args) => sparse.SetRulesTextAsOnDisk(editor.GetText());
             try
             {
@@ -220,12 +214,11 @@ namespace GitUI.CommandsDialogs
             Control separator = CreateViewSeparator(DockStyle.Top);
             sparse.PropertyChanged += delegate { editor.Visible = separator.Visible = sparse.IsSparseCheckoutEnabled; };
 
-            var panel = new Panel { Margin = Padding.Empty, Padding = Padding.Empty, Controls = { editor, separator, label2, label1 }, AutoSize = true, Dock = DockStyle.Fill };
+            Panel panel = new() { Margin = Padding.Empty, Padding = Padding.Empty, Controls = { editor, separator, label2, label1 }, AutoSize = true, Dock = DockStyle.Fill };
 
             return panel;
         }
 
-        [NotNull]
         private static Control CreateViewSeparator([Optional] DockStyle? dock)
         {
             return new Control { Height = 2, BackColor = SystemColors.ControlDark, Dock = dock ?? DockStyle.Fill, Padding = Padding.Empty, Margin = Padding.Empty };
@@ -242,60 +235,60 @@ namespace GitUI.CommandsDialogs
 
         private class Globalized : Translate
         {
-            public static readonly Globalized Strings = new Globalized();
+            public static readonly Globalized Strings = new();
 
             private Globalized()
             {
                 Translator.Translate(this, AppSettings.CurrentTranslation);
             }
 
-            public readonly TranslationString Cancel = new TranslationString("Cancel");
+            public readonly TranslationString Cancel = new("Cancel");
 
-            public readonly TranslationString CannotLoadTheTextOfTheSparseFile = new TranslationString("Cannot load the text of the sparse file.");
+            public readonly TranslationString CannotLoadTheTextOfTheSparseFile = new("Cannot load the text of the sparse file.");
 
-            public readonly TranslationString ConfirmDisableGitSparse = new TranslationString("You are about to disable Git Sparse feature for this repository, {0}.\nGit won't be able to restore the working copy to its full content this way.\n\nWould you like to have the filter modified so that it allowed for the full working copy?");
+            public readonly TranslationString ConfirmDisableGitSparse = new("You are about to disable Git Sparse feature for this repository, {0}.\nGit won't be able to restore the working copy to its full content this way.\n\nWould you like to have the filter modified so that it allowed for the full working copy?");
 
-            public readonly TranslationString CouldNotSave = new TranslationString("Could not save the modified settings and rules.");
+            public readonly TranslationString CouldNotSave = new("Could not save the modified settings and rules.");
 
-            public readonly TranslationString DisableForThisRepository = new TranslationString("Disable for this repository");
+            public readonly TranslationString DisableForThisRepository = new("Disable for this repository");
 
-            public readonly TranslationString DisableGitSparse = new TranslationString("Disable Git Sparse");
+            public readonly TranslationString DisableGitSparse = new("Disable Git Sparse");
 
-            public readonly TranslationString EditsTheContentsOfTheGitInfoSparseCheckoutFile = new TranslationString("Edits the contents of the “.git/info/sparse-checkout” file.");
+            public readonly TranslationString EditsTheContentsOfTheGitInfoSparseCheckoutFile = new("Edits the contents of the “.git/info/sparse-checkout” file.");
 
-            public readonly TranslationString Enable = new TranslationString("&Enable");
+            public readonly TranslationString Enable = new("&Enable");
 
-            public readonly TranslationString HeaderDetailsText = new TranslationString("Need only a small part of a large repository?\nWith sparse checkout, you can skip the rest from being extracted into your working copy.");
+            public readonly TranslationString HeaderDetailsText = new("Need only a small part of a large repository?\nWith sparse checkout, you can skip the rest from being extracted into your working copy.");
 
-            public readonly TranslationString LoadFile = new TranslationString("Load File");
+            public readonly TranslationString LoadFile = new("Load File");
 
-            public readonly TranslationString RefreshWorkingCopyCheckboxHint = new TranslationString("As the sparse working copy rules are changed, it might become outdated.\nRefreshes the working copy against the current set of the rules to restore any missing files and remove any extra files.\n\nnActual command line: {0}");
+            public readonly TranslationString RefreshWorkingCopyCheckboxHint = new("As the sparse working copy rules are changed, it might become outdated.\nRefreshes the working copy against the current set of the rules to restore any missing files and remove any extra files.\n\nnActual command line: {0}");
 
-            public readonly TranslationString RefreshWorkingCopyUsingTheCurrentSettingsAndRules = new TranslationString("Refresh working copy using the current settings and rules");
+            public readonly TranslationString RefreshWorkingCopyUsingTheCurrentSettingsAndRules = new("Refresh working copy using the current settings and rules");
 
-            public readonly TranslationString Save = new TranslationString("&Save");
+            public readonly TranslationString Save = new("&Save");
 
-            public readonly TranslationString SaveFile = new TranslationString("Save File");
+            public readonly TranslationString SaveFile = new("Save File");
 
-            public readonly TranslationString SetsTheGitPropertyToFalseForTheLocalRepository = new TranslationString("Sets the Git property “{0}” to False for the local repository.");
+            public readonly TranslationString SetsTheGitPropertyToFalseForTheLocalRepository = new("Sets the Git property “{0}” to False for the local repository.");
 
-            public readonly TranslationString SetsTheGitPropertyToTrueForTheLocalRepository = new TranslationString("Sets the Git property “{0}” to True for the local repository.");
+            public readonly TranslationString SetsTheGitPropertyToTrueForTheLocalRepository = new("Sets the Git property “{0}” to True for the local repository.");
 
-            public readonly TranslationString SparseWorkingCopy = new TranslationString("Sparse Working Copy");
+            public readonly TranslationString SparseWorkingCopy = new("Sparse Working Copy");
 
-            public readonly TranslationString SparseWorkingCopySupportHasNotBeenEnabledForThisRepository = new TranslationString("Git Sparse feature has not been enabled for this repository.");
+            public readonly TranslationString SparseWorkingCopySupportHasNotBeenEnabledForThisRepository = new("Git Sparse feature has not been enabled for this repository.");
 
-            public readonly TranslationString SparseWorkingCopySupportIsEnabled = new TranslationString("Git Sparse feature is currently enabled.");
+            public readonly TranslationString SparseWorkingCopySupportIsEnabled = new("Git Sparse feature is currently enabled.");
 
-            public readonly TranslationString SpecifyTheRulesForIncludingOrExcludingFilesAndDirectories = new TranslationString("Specify the pass-filter rules for files and directories:");
+            public readonly TranslationString SpecifyTheRulesForIncludingOrExcludingFilesAndDirectories = new("Specify the pass-filter rules for files and directories:");
 
-            public readonly TranslationString SpecifyTheRulesForIncludingOrExcludingFilesAndDirectoriesLine2 = new TranslationString("The rules have the same format as the “.gitignore” file, matched items are included. To exclude, prefix a rule with an exclamation mark “!”.\n“#” comments a line. This is only a filter, so it cannot change the structure like pulling up a deep subfolder to the first level.");
+            public readonly TranslationString SpecifyTheRulesForIncludingOrExcludingFilesAndDirectoriesLine2 = new("The rules have the same format as the “.gitignore” file, matched items are included. To exclude, prefix a rule with an exclamation mark “!”.\n“#” comments a line. This is only a filter, so it cannot change the structure like pulling up a deep subfolder to the first level.");
 
-            public readonly TranslationString WithSomeRulesStillInTheSparsePassFilter = new TranslationString("with some rules still in the sparse pass-filter");
+            public readonly TranslationString WithSomeRulesStillInTheSparsePassFilter = new("with some rules still in the sparse pass-filter");
 
-            public readonly TranslationString WithTheSparsePassFilterEmptyOrMissing = new TranslationString("with the sparse pass-filter empty or missing");
+            public readonly TranslationString WithTheSparsePassFilterEmptyOrMissing = new("with the sparse pass-filter empty or missing");
 
-            public readonly TranslationString YouHaveMadeChangesToSettingsOrRulesWouldYouLikeToSaveThem = new TranslationString("You have made changes to settings or rules.\nWould you like to save them?");
+            public readonly TranslationString YouHaveMadeChangesToSettingsOrRulesWouldYouLikeToSaveThem = new("You have made changes to settings or rules.\nWould you like to save them?");
         }
     }
 }

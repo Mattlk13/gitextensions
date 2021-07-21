@@ -1,5 +1,4 @@
 ﻿using System.Collections.Generic;
-using System.Text;
 using System.Windows.Forms;
 
 namespace GitUI.UserControls
@@ -14,11 +13,11 @@ namespace GitUI.UserControls
         /// </summary>
         public static string GetFullNamePath(this TreeNode node)
         {
-            var sep = node.TreeView != null ? node.TreeView.PathSeparator : "\\";
+            var sep = node.TreeView is not null ? node.TreeView.PathSeparator : "\\";
 
             string result = GetNameOrText(node);
             var currNode = node;
-            while (currNode.Parent != null)
+            while (currNode.Parent is not null)
             {
                 currNode = currNode.Parent;
                 result = GetNameOrText(currNode) + sep + result;
@@ -39,13 +38,13 @@ namespace GitUI.UserControls
         /// </summary>
         public static HashSet<string> GetExpandedNodesState(this TreeNode node)
         {
-            var result = new HashSet<string>();
+            HashSet<string> result = new();
             node.DoGetExpandedNodesState(result);
             return result;
         }
 
         /// <summary>
-        /// Restores the expanded state of nodes under the input node using the set returned by GetExpandedNodesState
+        /// Restores the expanded state of nodes under the input node using the set returned by GetExpandedNodesState.
         /// </summary>
         public static void RestoreExpandedNodesState(this TreeNode node, HashSet<string> expandedNodes)
         {
@@ -69,7 +68,7 @@ namespace GitUI.UserControls
             }
         }
 
-        private static TreeNode GetNodeFromPath(TreeNode node, string path)
+        public static TreeNode? GetNodeFromPath(this TreeNode node, string? path)
         {
             if (GetFullNamePath(node) == path)
             {
@@ -79,7 +78,7 @@ namespace GitUI.UserControls
             foreach (TreeNode childNode in node.Nodes)
             {
                 var foundNode = GetNodeFromPath(childNode, path);
-                if (foundNode != null)
+                if (foundNode is not null)
                 {
                     return foundNode;
                 }

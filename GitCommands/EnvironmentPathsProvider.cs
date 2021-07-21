@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using GitCommands.Utils;
+using GitExtUtils;
 
 namespace GitCommands
 {
@@ -36,14 +37,14 @@ namespace GitCommands
         /// <returns>The list of paths defined under %PATH% environment variable.</returns>
         public IEnumerable<string> GetEnvironmentPaths()
         {
-            string pathVariable = _environment.GetEnvironmentVariable("PATH");
+            string? pathVariable = _environment.GetEnvironmentVariable("PATH");
 
             if (string.IsNullOrWhiteSpace(pathVariable))
             {
                 yield break;
             }
 
-            foreach (string rawDir in pathVariable.Split(EnvUtils.EnvVariableSeparator))
+            foreach (string rawDir in pathVariable.LazySplit(EnvUtils.EnvVariableSeparator))
             {
                 string dir = rawDir;
 
@@ -72,22 +73,32 @@ namespace GitCommands
         // TODO: optimise?
         internal static bool IsValidPath(string path)
         {
-            FileInfo fi = null;
             try
             {
-                fi = new FileInfo(path);
+                // NOTE:
+                // Path APIs don't throw an exception for invalid characters
+                // https://docs.microsoft.com/dotnet/core/compatibility/2.1#path-apis-dont-throw-an-exception-for-invalid-characters
+
+                _ = new FileInfo(path).Attributes;
+
+                return true;
             }
             catch (ArgumentException)
             {
             }
-            catch (PathTooLongException)
+            catch (IOException)
             {
+                // Querying attributes for UNC paths results in IOException
+                if (Uri.TryCreate(path, UriKind.Absolute, out Uri? uri) && uri.IsUnc)
+                {
+                    return true;
+                }
             }
             catch (NotSupportedException)
             {
             }
 
-            return fi != null;
+            return false;
         }
     }
 }

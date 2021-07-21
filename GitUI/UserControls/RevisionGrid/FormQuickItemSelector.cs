@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using System.Drawing;
 using System.Windows.Forms;
-using JetBrains.Annotations;
 
 namespace GitUI.UserControls.RevisionGrid
 {
@@ -22,15 +21,14 @@ namespace GitUI.UserControls.RevisionGrid
         /// <summary>
         /// Gets the item selected by the user.
         /// </summary>
-        [CanBeNull]
-        public object SelectedItem => (lbxRefs.SelectedItem as ItemData)?.Item;
+        public object? SelectedItem => (lbxRefs.SelectedItem as ItemData)?.Item;
 
         protected void Init(IReadOnlyList<ItemData> items, string buttonText)
         {
             btnAction.Text = buttonText;
 
             lbxRefs.Items.Clear();
-            if (items == null || items.Count < 1)
+            if (items is null || items.Count < 1)
             {
                 DialogResult = DialogResult.Cancel;
                 Close();
@@ -43,17 +41,15 @@ namespace GitUI.UserControls.RevisionGrid
             {
                 lbxRefs.BeginUpdate();
 
-                using (Graphics graphics = lbxRefs.CreateGraphics())
+                using Graphics graphics = lbxRefs.CreateGraphics();
+                foreach (var item in items)
                 {
-                    foreach (var item in items)
-                    {
-                        lbxRefs.Items.Add(item);
+                    lbxRefs.Items.Add(item);
 
-                        // assume that the branch names or tags are never longer than MaxRefLength symbols long
-                        // if they are (sanity!) - don't resize past beyond certain limit
-                        var label = item.Label.Length > MaxRefLength ? item.Label.Substring(0, MaxRefLength) : item.Label;
-                        longestItemWidth = Math.Max(longestItemWidth, graphics.MeasureString(label, lbxRefs.Font).Width);
-                    }
+                    // assume that the branch names or tags are never longer than MaxRefLength symbols long
+                    // if they are (sanity!) - don't resize past beyond certain limit
+                    var label = item.Label.Length > MaxRefLength ? item.Label.Substring(0, MaxRefLength) : item.Label;
+                    longestItemWidth = Math.Max(longestItemWidth, graphics.MeasureString(label, lbxRefs.Font).Width);
                 }
             }
             finally
@@ -97,8 +93,14 @@ namespace GitUI.UserControls.RevisionGrid
 
         public class ItemData
         {
-            public string Label { get; set; }
-            public object Item { get; set; }
+            public string Label { get; }
+            public object Item { get; }
+
+            public ItemData(string label, object item)
+            {
+                Label = label;
+                Item = item;
+            }
         }
     }
 }

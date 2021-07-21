@@ -4,34 +4,36 @@ using System.Windows.Forms;
 using GitCommands;
 using GitCommands.Git;
 using GitCommands.UserRepositoryHistory;
-using GitExtUtils;
 using ResourceManager;
 
 namespace GitUI.CommandsDialogs
 {
-    public partial class FormInit : GitExtensionsForm
+    public partial class FormInit : GitExtensionsDialog
     {
         private readonly TranslationString _chooseDirectory =
-            new TranslationString("Please choose a directory.");
+            new("Please choose a directory.");
 
         private readonly TranslationString _chooseDirectoryCaption =
-            new TranslationString("Choose directory");
+            new("Choose directory");
 
         private readonly TranslationString _chooseDirectoryNotFile =
-            new TranslationString("Cannot initialize a new repository on a file.\nPlease choose a directory.");
-
-        private readonly TranslationString _chooseDirectoryNotFileCaption =
-            new TranslationString("Error");
+            new("Cannot initialize a new repository on a file.\nPlease choose a directory.");
 
         private readonly TranslationString _initMsgBoxCaption =
-            new TranslationString("Create new repository");
+            new("Create new repository");
 
-        private readonly EventHandler<GitModuleEventArgs> _gitModuleChanged;
+        private readonly EventHandler<GitModuleEventArgs>? _gitModuleChanged;
 
-        public FormInit(string dir, EventHandler<GitModuleEventArgs> gitModuleChanged)
+        public FormInit(string dir, EventHandler<GitModuleEventArgs>? gitModuleChanged)
+            : base(commands: null, enablePositionRestore: true)
         {
             _gitModuleChanged = gitModuleChanged;
             InitializeComponent();
+
+            // work-around the designer bug that can't add controls to FlowLayoutPanel
+            ControlsPanel.Controls.Add(Init);
+            AcceptButton = Init;
+
             InitializeComplete();
 
             ThreadHelper.JoinableTaskFactory.Run(async () =>
@@ -39,38 +41,38 @@ namespace GitUI.CommandsDialogs
                 var repositoryHistory = await RepositoryHistoryManager.Locals.LoadRecentHistoryAsync();
 
                 await this.SwitchToMainThreadAsync();
-                Directory.DataSource = repositoryHistory;
-                Directory.DisplayMember = nameof(Repository.Path);
+                _NO_TRANSLATE_Directory.DataSource = repositoryHistory;
+                _NO_TRANSLATE_Directory.DisplayMember = nameof(Repository.Path);
             });
 
-            Directory.SelectedIndex = -1;
-            Directory.Text = string.IsNullOrEmpty(dir) ? AppSettings.DefaultCloneDestinationPath : dir;
+            _NO_TRANSLATE_Directory.SelectedIndex = -1;
+            _NO_TRANSLATE_Directory.Text = string.IsNullOrEmpty(dir) ? AppSettings.DefaultCloneDestinationPath : dir;
         }
 
         private void InitClick(object sender, EventArgs e)
         {
-            var directoryPath = Directory.Text;
+            var directoryPath = _NO_TRANSLATE_Directory.Text;
 
             if (!IsRootedDirectoryPath(directoryPath))
             {
-                MessageBox.Show(this, _chooseDirectory.Text, _chooseDirectoryCaption.Text);
+                MessageBox.Show(this, _chooseDirectory.Text, _chooseDirectoryCaption.Text, MessageBoxButtons.OK, MessageBoxIcon.Error);
                 return;
             }
 
             if (File.Exists(directoryPath))
             {
-                MessageBox.Show(this, _chooseDirectoryNotFile.Text, _chooseDirectoryNotFileCaption.Text);
+                MessageBox.Show(this, _chooseDirectoryNotFile.Text, TranslatedStrings.Error, MessageBoxButtons.OK, MessageBoxIcon.Error);
                 return;
             }
 
-            var module = new GitModule(directoryPath);
+            GitModule module = new(directoryPath);
 
             if (!System.IO.Directory.Exists(module.WorkingDir))
             {
                 System.IO.Directory.CreateDirectory(module.WorkingDir);
             }
 
-            MessageBox.Show(this, module.Init(Central.Checked, Central.Checked), _initMsgBoxCaption.Text);
+            MessageBox.Show(this, module.Init(Central.Checked, Central.Checked), _initMsgBoxCaption.Text, MessageBoxButtons.OK, MessageBoxIcon.Information);
 
             _gitModuleChanged?.Invoke(this, new GitModuleEventArgs(module));
 
@@ -88,7 +90,7 @@ namespace GitUI.CommandsDialogs
                 }
 
                 // this is going to throw if it's an invalid path (e.g. contains special chars)
-                var info = new DirectoryInfo(path);
+                DirectoryInfo info = new(path);
 
                 return Path.IsPathRooted(path.Trim());
             }
@@ -106,13 +108,13 @@ namespace GitUI.CommandsDialogs
         {
             var userSelectedPath = OsShellUtil.PickFolder(this);
 
-            if (userSelectedPath != null)
+            if (userSelectedPath is not null)
             {
-                Directory.Text = userSelectedPath;
+                _NO_TRANSLATE_Directory.Text = userSelectedPath;
             }
         }
 
-        internal TestAccessor GetTestAccessor() => new TestAccessor(this);
+        internal TestAccessor GetTestAccessor() => new(this);
 
         internal readonly struct TestAccessor
         {
@@ -123,7 +125,7 @@ namespace GitUI.CommandsDialogs
                 _form = form;
             }
 
-            public ComboBox DirectoryCombo => _form.Directory;
+            public ComboBox DirectoryCombo => _form._NO_TRANSLATE_Directory;
 
             public bool IsRootedDirectoryPath(string path)
             {

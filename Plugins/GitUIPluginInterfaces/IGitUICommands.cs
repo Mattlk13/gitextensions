@@ -1,8 +1,7 @@
 ﻿using System;
 using System.Drawing;
 using System.Windows.Forms;
-using GitCommands;
-using JetBrains.Annotations;
+using GitExtUtils;
 
 namespace GitUIPluginInterfaces
 {
@@ -16,7 +15,6 @@ namespace GitUIPluginInterfaces
         event EventHandler<GitUIEventArgs> PostRegisterPlugin;
         event EventHandler<GitUIEventArgs> PreCommit;
 
-        [NotNull]
         IGitModule GitModule { get; }
 
         IGitRemoteCommand CreateRemoteCommand();
@@ -26,13 +24,20 @@ namespace GitUIPluginInterfaces
         /// </summary>
         ILockableNotifier RepoChangedNotifier { get; }
 
-        void StartCommandLineProcessDialog(IWin32Window owner, string command, ArgumentString arguments);
-        bool StartCommandLineProcessDialog(IWin32Window owner, IGitCommand command);
+        void StartCommandLineProcessDialog(IWin32Window? owner, string command, ArgumentString arguments);
+        bool StartCommandLineProcessDialog(IWin32Window? owner, IGitCommand command);
         void StartBatchFileProcessDialog(string batchFile);
 
-        bool StartRemotesDialog();
+        /// <summary>
+        /// Opens the FormRemotes.
+        /// </summary>
+        /// <param name="preselectRemote">Makes the FormRemotes initially select the given remote.</param>
+        /// <param name="preselectLocal">Makes the FormRemotes initially show the tab "Default push behavior" and select the given local.</param>
+        bool StartRemotesDialog(IWin32Window? owner, string? preselectRemote = null, string? preselectLocal = null);
+
+        bool StartSettingsDialog(Type pageType);
         bool StartSettingsDialog(IGitPlugin gitPlugin);
-        void AddCommitTemplate(string key, Func<string> addingText, Image icon);
+        void AddCommitTemplate(string key, Func<string> addingText, Image? icon);
         void RemoveCommitTemplate(string key);
     }
 }

@@ -1,8 +1,9 @@
 ﻿using System;
 using System.Linq;
 using System.Windows.Forms;
-using GitCommands;
 using GitCommands.Git;
+using GitCommands.Git.Commands;
+using GitUI.HelperDialogs;
 using GitUIPluginInterfaces;
 using ResourceManager;
 
@@ -12,27 +13,24 @@ namespace GitUI.CommandsDialogs.BrowseDialog
     {
         // TODO: Improve me
         private readonly TranslationString _bisectStart =
-            new TranslationString("Mark selected revisions as start bisect range?");
+            new("Mark selected revisions as start bisect range?");
 
         private readonly RevisionGridControl _revisionGrid;
 
         [Obsolete("For VS designer and translation test only. Do not remove.")]
+#pragma warning disable CS8618 // Non-nullable field must contain a non-null value when exiting constructor. Consider declaring as nullable.
         private FormBisect()
+#pragma warning restore CS8618 // Non-nullable field must contain a non-null value when exiting constructor. Consider declaring as nullable.
         {
             InitializeComponent();
-        }
-
-        private FormBisect(GitUICommands commands)
-            : base(commands)
-        {
-            InitializeComponent();
-            InitializeComplete();
         }
 
         public FormBisect(RevisionGridControl revisionGrid)
-            : this(revisionGrid.UICommands)
+            : base(revisionGrid.UICommands)
         {
             _revisionGrid = revisionGrid;
+            InitializeComponent();
+            InitializeComplete();
             UpdateButtonsState();
         }
 
@@ -48,11 +46,11 @@ namespace GitUI.CommandsDialogs.BrowseDialog
 
         private void Start_Click(object sender, EventArgs e)
         {
-            FormProcess.ShowDialog(this, GitCommandHelpers.StartBisectCmd());
+            FormProcess.ShowDialog(this, process: null, arguments: GitCommandHelpers.StartBisectCmd(), Module.WorkingDir, input: null, useDialogSettings: true);
+
             UpdateButtonsState();
 
             var revisions = _revisionGrid.GetSelectedRevisions();
-
             if (revisions.Count > 1)
             {
                 if (MessageBox.Show(this, _bisectStart.Text, Text, MessageBoxButtons.YesNo, MessageBoxIcon.Question) == DialogResult.Yes)
@@ -67,14 +65,14 @@ namespace GitUI.CommandsDialogs.BrowseDialog
             void BisectRange(ObjectId startRevision, ObjectId endRevision)
             {
                 var command = GitCommandHelpers.ContinueBisectCmd(GitBisectOption.Good, startRevision);
-                var errorOccurred = !FormProcess.ShowDialog(this, command);
-                if (errorOccurred)
+                bool success = FormProcess.ShowDialog(this, process: null, arguments: command, Module.WorkingDir, input: null, useDialogSettings: true);
+                if (!success)
                 {
                     return;
                 }
 
                 command = GitCommandHelpers.ContinueBisectCmd(GitBisectOption.Bad, endRevision);
-                FormProcess.ShowDialog(this, command);
+                FormProcess.ShowDialog(this, process: null, arguments: command, Module.WorkingDir, input: null, useDialogSettings: true);
             }
         }
 
@@ -90,7 +88,7 @@ namespace GitUI.CommandsDialogs.BrowseDialog
 
         private void Stop_Click(object sender, EventArgs e)
         {
-            FormProcess.ShowDialog(this, GitCommandHelpers.StopBisectCmd());
+            FormProcess.ShowDialog(this, process: null, arguments: GitCommandHelpers.StopBisectCmd(), Module.WorkingDir, input: null, useDialogSettings: false);
             Close();
         }
 
@@ -101,7 +99,7 @@ namespace GitUI.CommandsDialogs.BrowseDialog
 
         private void ContinueBisect(GitBisectOption bisectOption)
         {
-            FormProcess.ShowDialog(this, GitCommandHelpers.ContinueBisectCmd(bisectOption), false);
+            FormProcess.ShowDialog(this, process: null, arguments: GitCommandHelpers.ContinueBisectCmd(bisectOption), Module.WorkingDir, input: null, useDialogSettings: false);
             Close();
         }
     }

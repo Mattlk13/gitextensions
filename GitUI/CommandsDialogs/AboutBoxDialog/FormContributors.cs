@@ -8,12 +8,12 @@ namespace GitUI.CommandsDialogs.AboutBoxDialog
 {
     public sealed class FormContributors : GitExtensionsForm
     {
-        private readonly TranslationString _developers = new TranslationString("Developers");
-        private readonly TranslationString _translators = new TranslationString("Translators");
-        private readonly TranslationString _designers = new TranslationString("Designers");
-        private readonly TranslationString _team = new TranslationString("Team");
-        private readonly TranslationString _contributors = new TranslationString("Contributors");
-        private readonly TranslationString _caption = new TranslationString("The application would not be possible without...");
+        private readonly TranslationString _developers = new("Developers");
+        private readonly TranslationString _translators = new("Translators");
+        private readonly TranslationString _designers = new("Designers");
+        private readonly TranslationString _team = new("Team");
+        private readonly TranslationString _contributors = new("Contributors");
+        private readonly TranslationString _caption = new("The application would not be possible without...");
 
         public FormContributors()
         {
@@ -62,7 +62,8 @@ namespace GitUI.CommandsDialogs.AboutBoxDialog
                 {
                     return new TextBox
                     {
-                        BackColor = Color.White,
+                        BackColor = SystemColors.Window,
+                        ForeColor = SystemColors.WindowText,
                         BorderStyle = BorderStyle.None,
                         Dock = DockStyle.Fill,
                         Margin = new Padding(0),
@@ -75,7 +76,7 @@ namespace GitUI.CommandsDialogs.AboutBoxDialog
 
                 TabPage GetNewTabPage(TextBox textBox, string caption)
                 {
-                    var tabPage = new TabPage
+                    TabPage tabPage = new()
                     {
                         BorderStyle = BorderStyle.None,
                         Margin = new Padding(0),

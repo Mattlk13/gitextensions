@@ -1,15 +1,16 @@
-<?xml version="1.0" ?><xliff GitExVersion="3.1.0" version="1.0" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+<?xml version="1.0" ?><xliff GitExVersion="" version="1.0" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
   <file datatype="plaintext" original="AppVeyorSettingsUserControl" source-language="en" target-language="cs">
     <body>
       <trans-unit id="cbLoadTestResults.Text">
         <source>Display test results in build status summary for each build result (network intensive!)</source>
+        <target>Zobrazit výsledky testů v souhrnu stavů sestavení pro každý výsledek sestavení (síťově náročné!)</target>
         
       </trans-unit>
     </body>
   </file>
   <file datatype="plaintext" original="AutoCompileSubModulesPlugin" source-language="en" target-language="cs">
     <body>
-      <trans-unit id="Description.Text">
+      <trans-unit id="Name.Text">
         <source>Auto compile SubModules</source>
         <target>Automaticky přeložit podmoduly</target>
         
@@ -47,7 +48,7 @@
   </file>
   <file datatype="plaintext" original="BackgroundFetchPlugin" source-language="en" target-language="cs">
     <body>
-      <trans-unit id="Description.Text">
+      <trans-unit id="Name.Text">
         <source>Periodic background fetch</source>
         <target>Pravidelné přenášení na pozadí</target>
         
@@ -78,6 +79,7 @@
     <body>
       <trans-unit id="BitbucketBaseUrl.Caption">
         <source>Specify the base URL to Bitbucket</source>
+        <target>Zadejte základní adresu URL pro Bitbucket</target>
         
       </trans-unit>
       <trans-unit id="BitbucketDisableSsl.Caption">
@@ -95,12 +97,14 @@
         <target>Uživatelské jméno na Bitbucket</target>
         
       </trans-unit>
-      <trans-unit id="Description.Text">
+      <trans-unit id="Name.Text">
         <source>Bitbucket Server</source>
+        <target>Bitbucket server</target>
         
       </trans-unit>
       <trans-unit id="_yourRepositoryIsNotInBitbucket.Text">
         <source>Your repository is not hosted in BitBucket Server.</source>
+        <target>Váš repozitář není hostován na Bitbucket serveru</target>
         
       </trans-unit>
     </body>
@@ -109,6 +113,7 @@
     <body>
       <trans-unit id="$this.Text">
         <source>Bitbucket Server</source>
+        <target>Bitbucket server</target>
         
       </trans-unit>
       <trans-unit id="_committed.Text">
@@ -125,6 +130,7 @@
       </trans-unit>
       <trans-unit id="_linkLabelToolTip.Text">
         <source>Right-click to copy link</source>
+        <target>Pravý klik pro zkopírování odkazu</target>
         
       </trans-unit>
       <trans-unit id="_success.Text">
@@ -290,7 +296,7 @@
   </file>
   <file datatype="plaintext" original="CreateLocalBranchesPlugin" source-language="en" target-language="cs">
     <body>
-      <trans-unit id="Description.Text">
+      <trans-unit id="Name.Text">
         <source>Create local tracking branches</source>
         <target>Vytvořit místní sledovací větve</target>
         
@@ -330,8 +336,8 @@
         
       </trans-unit>
       <trans-unit id="RefreshBtn.Text">
-        <source>Cancel</source>
-        <target>Storno</target>
+        <source>Search branches</source>
+        <target>Prohledat větve</target>
         
       </trans-unit>
       <trans-unit id="_areYouSureToDelete.Text">
@@ -423,11 +429,6 @@ Opravdu chcete pokračovat?</target>
         <target>Smazat větve plně sloučené do větve</target>
         
       </trans-unit>
-      <trans-unit id="lblStatus.Text">
-        <source>Loading...</source>
-        <target>Načítám...</target>
-        
-      </trans-unit>
       <trans-unit id="nameDataGridViewTextBoxColumn.HeaderText">
         <source>Name</source>
         <target>Název</target>
@@ -435,6 +436,7 @@ Opravdu chcete pokračovat?</target>
       </trans-unit>
       <trans-unit id="regexDoesNotMatch.Text">
         <source>Does not match</source>
+        <target>Nesouhlasí</target>
         
       </trans-unit>
       <trans-unit id="regexFilter.Text">
@@ -444,6 +446,7 @@ Opravdu chcete pokračovat?</target>
       </trans-unit>
       <trans-unit id="useRegexCaseInsensitive.Text">
         <source>Case insensitive</source>
+        <target>Citlivé na velikost písmen</target>
         
       </trans-unit>
       <trans-unit id="useRegexFilter.Text">
@@ -455,7 +458,7 @@ Opravdu chcete pokračovat?</target>
   </file>
   <file datatype="plaintext" original="DeleteUnusedBranchesPlugin" source-language="en" target-language="cs">
     <body>
-      <trans-unit id="Description.Text">
+      <trans-unit id="Name.Text">
         <source>Delete obsolete branches</source>
         <target>Smazat zastaralé větve</target>
         
@@ -467,10 +470,12 @@ Opravdu chcete pokračovat?</target>
       </trans-unit>
       <trans-unit id="_deleteRemoteBranchesFromFlag.Caption">
         <source>Delete obsolete branches from remote</source>
+        <target>Smazat větev ze vzdáleného repozitáře</target>
         
       </trans-unit>
       <trans-unit id="_includeUnmergedBranchesFlag.Caption">
         <source>Delete unmerged branches</source>
+        <target>Smazat nesloučené větve</target>
         
       </trans-unit>
       <trans-unit id="_mergedInBranch.Caption">
@@ -496,6 +501,7 @@ Opravdu chcete pokračovat?</target>
       </trans-unit>
       <trans-unit id="_useRegexToFilterBranchesFlag.Caption">
         <source>Use regex to filter branches to delete</source>
+        <target>K filtrování větví ke smazaní použít regulérní výraz</target>
         
       </trans-unit>
     </body>
@@ -571,7 +577,7 @@ Opravdu chcete pokračovat?</target>
   </file>
   <file datatype="plaintext" original="FindLargeFilesPlugin" source-language="en" target-language="cs">
     <body>
-      <trans-unit id="Description.Text">
+      <trans-unit id="Name.Text">
         <source>Find large files</source>
         <target>Najít velké soubory</target>
         
@@ -683,11 +689,6 @@ Opravdu chcete pokračovat?</target>
         <target>Vydat (&amp;P)</target>
         
       </trans-unit>
-      <trans-unit id="PublishDraft.Text">
-        <source>Submit review as draft</source>
-        <target>Odeslat revizi jako koncept</target>
-        
-      </trans-unit>
       <trans-unit id="_publishCaption.Text">
         <source>Publish change</source>
         <target>Vydat změny</target>
@@ -713,6 +714,20 @@ Opravdu chcete pokračovat?</target>
         <target>Větev:</target>
         
       </trans-unit>
+      <trans-unit id="labelCc.Text">
+        <source>CC:</source>
+        <target>CC:</target>
+        
+      </trans-unit>
+      <trans-unit id="labelHashtag.Text">
+        <source>Hashtag:</source>
+        <target>Hashtag:</target>
+        
+      </trans-unit>
+      <trans-unit id="labelPublishType.Text">
+        <source>Publish Type:</source>
+        
+      </trans-unit>
       <trans-unit id="labelRemote.Text">
         <source>Remote:</source>
         <target>Vzdálená:</target>
@@ -720,6 +735,7 @@ Opravdu chcete pokračovat?</target>
       </trans-unit>
       <trans-unit id="labelReviewers.Text">
         <source>Reviewer(s):</source>
+        <target>Kontrolor(ři):</target>
         
       </trans-unit>
       <trans-unit id="labelTopic.Text">
@@ -861,46 +877,57 @@ defaultrebase=0</target>
       </trans-unit>
       <trans-unit id="_blankLinesP.Text">
         <source>{0:N0} Blank lines ({1:P1})</source>
+        <target>{0:N0} prázdných řádků ({1:P1})</target>
         
       </trans-unit>
       <trans-unit id="_commentLinesP.Text">
         <source>{0:N0} Comment lines ({1:P1})</source>
+        <target>{0:N0} řádků komentářů ({1:P1})</target>
         
       </trans-unit>
       <trans-unit id="_commits.Text">
         <source>{0:N0} Commits</source>
+        <target>{0:N0} odevzdání</target>
         
       </trans-unit>
       <trans-unit id="_commitsBy.Text">
         <source>{0:N0} Commits by {1}</source>
+        <target>{0:N0} odevzdání od {1}</target>
         
       </trans-unit>
       <trans-unit id="_linesOfCode.Text">
         <source>{0:N0} Lines of code</source>
+        <target>{0:N0} řádků kódu</target>
         
       </trans-unit>
       <trans-unit id="_linesOfCodeInFiles.Text">
         <source>{0:N0} Lines of code in {1} files ({2:P1})</source>
+        <target>{0:N0} řádků kódu v {1} souborech ({2:P1})</target>
         
       </trans-unit>
       <trans-unit id="_linesOfCodeP.Text">
         <source>{0:N0} Lines of code ({1:P1})</source>
+        <target>{0:N0} řádků kódu ({1:P1})</target>
         
       </trans-unit>
       <trans-unit id="_linesOfDesignerFilesP.Text">
         <source>{0:N0} Lines in designer files ({1:P1})</source>
+        <target>{0:N0} řádků v souborech návrhu ({1:P1})</target>
         
       </trans-unit>
       <trans-unit id="_linesOfProductionCodeP.Text">
         <source>{0:N0} Lines of production code ({1:P1})</source>
+        <target>{0:N0} řádků produkčního kódu ({1:P1})</target>
         
       </trans-unit>
       <trans-unit id="_linesOfTestCode.Text">
         <source>{0:N0} Lines of test code</source>
+        <target>{0:N0} řádků testovacího kódu</target>
         
       </trans-unit>
       <trans-unit id="_linesOfTestCodeP.Text">
         <source>{0:N0} Lines of test code ({1:P1})</source>
+        <target>{0:N0} řádků testovacího kódu ({1:P1})</target>
         
       </trans-unit>
       <trans-unit id="tabPage1.Text">
@@ -969,9 +996,33 @@ To enable Gerrit support for a repository, a .gitreview file must be created. Th
       </trans-unit>
     </body>
   </file>
+  <file datatype="plaintext" original="GerritCapabilities" source-language="en" target-language="cs">
+    <body>
+      <trans-unit id="_publishTypeDraft.Text">
+        <source>Draft</source>
+        <target>Koncept</target>
+        
+      </trans-unit>
+      <trans-unit id="_publishTypePrivate.Text">
+        <source>Private</source>
+        <target>Soukromý</target>
+        
+      </trans-unit>
+      <trans-unit id="_publishTypeReview.Text">
+        <source>For Review</source>
+        <target>Ke kontrole</target>
+        
+      </trans-unit>
+      <trans-unit id="_publishTypeWip.Text">
+        <source>Work-in-Progress</source>
+        <target>Rozpracované</target>
+        
+      </trans-unit>
+    </body>
+  </file>
   <file datatype="plaintext" original="GerritPlugin" source-language="en" target-language="cs">
     <body>
-      <trans-unit id="Description.Text">
+      <trans-unit id="Name.Text">
         <source>Gerrit Code Review</source>
         <target>Gerrit - Revize kódu</target>
         
@@ -1008,6 +1059,10 @@ To enable Gerrit support for a repository, a .gitreview file must be created. Th
       <trans-unit id="_installCommitMsgHookShortText.Text">
         <source>Install commit-msg hook</source>
         <target>Instalovat hákovací skript commit-msg</target>
+        
+      </trans-unit>
+      <trans-unit id="_predefinedGerritVersion.Caption">
+        <source>Treat Gerrit as having version</source>
         
       </trans-unit>
       <trans-unit id="_publishGerritChange.Text">
@@ -1112,6 +1167,10 @@ To enable Gerrit support for a repository, a .gitreview file must be created. Th
         <source>Push after finish</source>
         
       </trans-unit>
+      <trans-unit id="cbSquash.Text">
+        <source>Squash</source>
+        
+      </trans-unit>
       <trans-unit id="gbManage.Text">
         <source>Manage existing branches:</source>
         <target>Spravovat dostupné větve:</target>
@@ -1171,7 +1230,7 @@ To enable Gerrit support for a repository, a .gitreview file must be created. Th
   </file>
   <file datatype="plaintext" original="GitFlowPlugin" source-language="en" target-language="cs">
     <body>
-      <trans-unit id="Description.Text">
+      <trans-unit id="Name.Text">
         <source>GitFlow</source>
         <target>GitFlow</target>
         
@@ -1180,8 +1239,13 @@ To enable Gerrit support for a repository, a .gitreview file must be created. Th
   </file>
   <file datatype="plaintext" original="GitHub3Plugin" source-language="en" target-language="cs">
     <body>
-      <trans-unit id="Description.Text">
+      <trans-unit id="Name.Text">
         <source>GitHub</source>
+        <target>GitHub</target>
+        
+      </trans-unit>
+      <trans-unit id="GitHubHost.Caption">
+        <source>GitHub (Enterprise) hostname</source>
         
       </trans-unit>
       <trans-unit id="OAuthToken.Caption">
@@ -1189,11 +1253,19 @@ To enable Gerrit support for a repository, a .gitreview file must be created. Th
         <target>OAuth token</target>
         
       </trans-unit>
+      <trans-unit id="_tokenAlreadyExist.Text">
+        <source>You already have an OAuth token. To get a new one, delete your old one in Plugins &gt; Settings first.</source>
+        
+      </trans-unit>
+      <trans-unit id="_viewInWebSite.Text">
+        <source>View in {0}</source>
+        
+      </trans-unit>
     </body>
   </file>
   <file datatype="plaintext" original="GitImpactPlugin" source-language="en" target-language="cs">
     <body>
-      <trans-unit id="Description.Text">
+      <trans-unit id="Name.Text">
         <source>Impact Graph</source>
         <target>Graf vlivu</target>
         
@@ -1202,7 +1274,7 @@ To enable Gerrit support for a repository, a .gitreview file must be created. Th
   </file>
   <file datatype="plaintext" original="GitStatisticsPlugin" source-language="en" target-language="cs">
     <body>
-      <trans-unit id="Description.Text">
+      <trans-unit id="Name.Text">
         <source>Statistics</source>
         <target>Statistiky</target>
         
@@ -1226,7 +1298,7 @@ To enable Gerrit support for a repository, a .gitreview file must be created. Th
   </file>
   <file datatype="plaintext" original="GourcePlugin" source-language="en" target-language="cs">
     <body>
-      <trans-unit id="Description.Text">
+      <trans-unit id="Name.Text">
         <source>Gource</source>
         <target>Gource</target>
         
@@ -1373,8 +1445,41 @@ Chcete znovu nastavit cestu?</target>
   </file>
   <file datatype="plaintext" original="JiraCommitHintPlugin" source-language="en" target-language="cs">
     <body>
-      <trans-unit id="Description.Text">
+      <trans-unit id="Name.Text">
         <source>Jira Commit Hint</source>
+        
+      </trans-unit>
+      <trans-unit id="EmptyQueryResultCaption.Text">
+        <source>First Task Preview</source>
+        
+      </trans-unit>
+      <trans-unit id="EmptyQueryResultMessage.Text">
+        <source>[Empty Jira Query Result]</source>
+        
+      </trans-unit>
+      <trans-unit id="InvalidUrlCaption.Text">
+        <source>Invalid Jira url</source>
+        
+      </trans-unit>
+      <trans-unit id="InvalidUrlMessage.Text">
+        <source>A valid url is required to launch the Jira query helper</source>
+        
+      </trans-unit>
+      <trans-unit id="JiraFieldsLabel.Text">
+        <source>Jira fields</source>
+        
+      </trans-unit>
+      <trans-unit id="PreviewButtonText.Text">
+        <source>Preview</source>
+        <target>Náhled</target>
+        
+      </trans-unit>
+      <trans-unit id="QueryHelperLinkText.Text">
+        <source>Open the query helper inside Jira</source>
+        
+      </trans-unit>
+      <trans-unit id="QueryHelperOpenErrorText.Text">
+        <source>Unable to open Jira query helper</source>
         
       </trans-unit>
       <trans-unit id="_credentialsSettings.Caption">
@@ -1385,20 +1490,19 @@ Chcete znovu nastavit cestu?</target>
         <source>Jira hint plugin enabled</source>
         
       </trans-unit>
-      <trans-unit id="_jiraFields.Caption">
-        <source>Jira fields</source>
-        
-      </trans-unit>
       <trans-unit id="_jqlQuerySettings.Caption">
         <source>JQL Query</source>
+        <target>JQL Query</target>
         
       </trans-unit>
       <trans-unit id="_stringTemplateSetting.Caption">
         <source>Message Template</source>
+        <target>Šablona zprávy</target>
         
       </trans-unit>
       <trans-unit id="_urlSettings.Caption">
         <source>Jira URL</source>
+        <target>Jira URL</target>
         
       </trans-unit>
     </body>
@@ -1449,7 +1553,7 @@ Chcete znovu nastavit cestu?</target>
   </file>
   <file datatype="plaintext" original="ProxySwitcherPlugin" source-language="en" target-language="cs">
     <body>
-      <trans-unit id="Description.Text">
+      <trans-unit id="Name.Text">
         <source>Proxy Switcher</source>
         <target>Přepínač proxy serverů</target>
         
@@ -1604,7 +1708,7 @@ název větve, nebo značky)</target>
   </file>
   <file datatype="plaintext" original="ReleaseNotesGeneratorPlugin" source-language="en" target-language="cs">
     <body>
-      <trans-unit id="Description.Text">
+      <trans-unit id="Name.Text">
         <source>Release Notes Generator</source>
         <target>Generátor poznámek k vydání</target>
         
@@ -1647,6 +1751,10 @@ Please ensure that the url is valid and that the API token has access to build a
  - https://dev.azure.com/yourorganization/projectname/
  - https://yourhost:8080/tfs/collectionname/projectname/
  - https://yourorganization.visualstudio.com/projectname/</source>
+        <target>Příklady:
+- https://dev.azure.com/yourorganization/projectname/
+- https://yourhost:8080/tfs/collectionname/projectname/
+- https://yourorganization.visualstudio.com/projectname/</target>
         
       </trans-unit>
       <trans-unit id="label4.Text">

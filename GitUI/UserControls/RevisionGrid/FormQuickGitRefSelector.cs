@@ -1,23 +1,21 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
 using GitUIPluginInterfaces;
-using JetBrains.Annotations;
 using ResourceManager;
 
 namespace GitUI.UserControls.RevisionGrid
 {
     public class FormQuickGitRefSelector : FormQuickItemSelector
     {
-        private readonly TranslationString _actionRename = new TranslationString("Rename");
-        private readonly TranslationString _actionDelete = new TranslationString("Delete");
-        private readonly TranslationString _actionSelect = new TranslationString("Select");
-        private readonly TranslationString _tag = new TranslationString("tag");
+        private readonly TranslationString _actionRename = new("Rename");
+        private readonly TranslationString _actionDelete = new("Delete");
+        private readonly TranslationString _actionSelect = new("Select");
+        private readonly TranslationString _tag = new("tag");
 
         /// <summary>
         /// Gets the ref selected by the user.
         /// </summary>
-        [CanBeNull]
-        public IGitRef SelectedRef => SelectedItem as IGitRef;
+        public IGitRef? SelectedRef => SelectedItem as IGitRef;
 
         public void Init(Action action, IReadOnlyList<IGitRef> refs)
         {
@@ -26,11 +24,7 @@ namespace GitUI.UserControls.RevisionGrid
             ItemData GetItemData(IGitRef gitRef)
             {
                 var suffix = gitRef.IsTag ? $" ({_tag.Text})" : string.Empty;
-                return new ItemData
-                {
-                    Label = $"{gitRef.Name}{suffix}",
-                    Item = gitRef
-                };
+                return new ItemData($"{gitRef.Name}{suffix}", gitRef);
             }
 
             switch (action)

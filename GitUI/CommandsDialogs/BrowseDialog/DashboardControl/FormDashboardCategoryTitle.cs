@@ -8,10 +8,10 @@ namespace GitUI.CommandsDialogs.BrowseDialog.DashboardControl
 {
     public partial class FormDashboardCategoryTitle : GitExtensionsForm
     {
-        private readonly TranslationString _categoryNameRequiredText = new TranslationString("Category name is required");
-        private readonly TranslationString _categoryNameExistsText = new TranslationString("Category name already exists");
-        private readonly TranslationString _renameCategoryText = new TranslationString("Rename category");
-        private readonly List<string> _existingCategories = new List<string>();
+        private readonly TranslationString _categoryNameRequiredText = new("Category name is required");
+        private readonly TranslationString _categoryNameExistsText = new("Category name already exists");
+        private readonly TranslationString _renameCategoryText = new("Rename category");
+        private readonly List<string> _existingCategories = new();
 
         public FormDashboardCategoryTitle()
         {
@@ -19,15 +19,15 @@ namespace GitUI.CommandsDialogs.BrowseDialog.DashboardControl
             InitializeComplete();
         }
 
-        public FormDashboardCategoryTitle(IEnumerable<string> existingCategories, string originalName = null)
+        public FormDashboardCategoryTitle(IEnumerable<string> existingCategories, string? originalName = null)
             : this()
         {
-            if (existingCategories != null)
+            if (existingCategories is not null)
             {
                 _existingCategories.AddRange(existingCategories);
             }
 
-            if (originalName != null)
+            if (originalName is not null)
             {
                 Category = originalName;
                 txtCategoryName.Text = originalName;
@@ -39,7 +39,7 @@ namespace GitUI.CommandsDialogs.BrowseDialog.DashboardControl
         /// <summary>
         /// Gets the new category.
         /// </summary>
-        public string Category { get; private set; }
+        public string? Category { get; private set; }
 
         private void OkButton_Click(object sender, EventArgs e)
         {

@@ -6,24 +6,24 @@ namespace GitUI.CommandsDialogs.BrowseDialog
     {
         public static bool FileOrParentDirectoryExists(string path)
         {
-            var fileInfo = new FileInfo(path);
-            return fileInfo.Exists || fileInfo.Directory.Exists;
+            return File.Exists(path) || (Directory.Exists(path) && new FileInfo(path).Directory.Exists);
         }
 
-        public static bool IsFileOrDirectory(string path)
+        public static bool IsFileOrDirectory(string? path)
         {
             return File.Exists(path) || Directory.Exists(path);
         }
 
         public static void ShowFileOrParentFolderInFileExplorer(string path)
         {
-            var fileInfo = new FileInfo(path);
-            if (fileInfo.Exists)
+            if (File.Exists(path))
             {
+                FileInfo fileInfo = new(path);
                 OsShellUtil.SelectPathInFileExplorer(fileInfo.FullName);
             }
-            else if (fileInfo.Directory.Exists)
+            else if (Directory.Exists(path))
             {
+                FileInfo fileInfo = new(path);
                 OsShellUtil.OpenWithFileExplorer(fileInfo.Directory.FullName);
             }
         }

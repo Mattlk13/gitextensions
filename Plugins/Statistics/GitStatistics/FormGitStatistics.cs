@@ -7,34 +7,35 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 using GitCommands;
+using GitExtensions.Plugins.GitStatistics.PieChart;
 using GitExtUtils.GitUI;
-using GitStatistics.PieChart;
 using GitUI;
 using GitUIPluginInterfaces;
+using Microsoft;
 using Microsoft.VisualStudio.Threading;
 using ResourceManager;
 
-namespace GitStatistics
+namespace GitExtensions.Plugins.GitStatistics
 {
     public partial class FormGitStatistics : GitExtensionsFormBase
     {
-        private readonly TranslationString _commits = new TranslationString("{0:N0} Commits");
-        private readonly TranslationString _commitsBy = new TranslationString("{0:N0} Commits by {1}");
-        private readonly TranslationString _linesOfCodeInFiles = new TranslationString("{0:N0} Lines of code in {1} files ({2:P1})");
-        private readonly TranslationString _linesOfCode = new TranslationString("{0:N0} Lines of code");
-        private readonly TranslationString _linesOfCodeP = new TranslationString("{0:N0} Lines of code ({1:P1})");
-        private readonly TranslationString _linesOfTestCode = new TranslationString("{0:N0} Lines of test code");
-        private readonly TranslationString _linesOfTestCodeP = new TranslationString("{0:N0} Lines of test code ({1:P1})");
-        private readonly TranslationString _linesOfProductionCodeP = new TranslationString("{0:N0} Lines of production code ({1:P1})");
-        private readonly TranslationString _blankLinesP = new TranslationString("{0:N0} Blank lines ({1:P1})");
-        private readonly TranslationString _commentLinesP = new TranslationString("{0:N0} Comment lines ({1:P1})");
-        private readonly TranslationString _linesOfDesignerFilesP = new TranslationString("{0:N0} Lines in designer files ({1:P1})");
+        private readonly TranslationString _commits = new("{0:N0} Commits");
+        private readonly TranslationString _commitsBy = new("{0:N0} Commits by {1}");
+        private readonly TranslationString _linesOfCodeInFiles = new("{0:N0} Lines of code in {1} files ({2:P1})");
+        private readonly TranslationString _linesOfCode = new("{0:N0} Lines of code");
+        private readonly TranslationString _linesOfCodeP = new("{0:N0} Lines of code ({1:P1})");
+        private readonly TranslationString _linesOfTestCode = new("{0:N0} Lines of test code");
+        private readonly TranslationString _linesOfTestCodeP = new("{0:N0} Lines of test code ({1:P1})");
+        private readonly TranslationString _linesOfProductionCodeP = new("{0:N0} Lines of production code ({1:P1})");
+        private readonly TranslationString _blankLinesP = new("{0:N0} Blank lines ({1:P1})");
+        private readonly TranslationString _commentLinesP = new("{0:N0} Comment lines ({1:P1})");
+        private readonly TranslationString _linesOfDesignerFilesP = new("{0:N0} Lines in designer files ({1:P1})");
 
         private readonly string _codeFilePattern;
         private readonly bool _countSubmodules;
         private readonly IGitModule _module;
 
-        private LineCounter _lineCounter;
+        private LineCounter? _lineCounter;
 
         protected Color[] DecentColors { get; } =
                 {
@@ -53,7 +54,7 @@ namespace GitStatistics
                     Color.Purple
                 };
 
-        public string DirectoriesToIgnore { get; set; }
+        public string DirectoriesToIgnore { get; set; } = "";
 
         public FormGitStatistics(IGitModule module, string codeFilePattern, bool countSubmodules)
         {
@@ -82,7 +83,7 @@ namespace GitStatistics
             InitializeComplete();
         }
 
-        private void FormGitStatisticsSizeChanged(object sender, EventArgs e)
+        private void FormGitStatisticsSizeChanged(object? sender, EventArgs e)
         {
             SetPieStyle(CommitCountPie);
             SetPieStyle(LinesOfCodeExtensionPie);
@@ -109,7 +110,7 @@ namespace GitStatistics
 
                     TotalCommits.Text = string.Format(_commits.Text, totalCommits);
 
-                    var builder = new StringBuilder();
+                    StringBuilder builder = new();
 
                     var commitCountValues = new decimal[commitsPerUser.Count];
                     var commitCountLabels = new string[commitsPerUser.Count];
@@ -156,7 +157,7 @@ namespace GitStatistics
 
         private void InitializeLinesOfCode()
         {
-            if (_lineCounter != null)
+            if (_lineCounter is not null)
             {
                 return;
             }
@@ -165,50 +166,53 @@ namespace GitStatistics
             _lineCounter.Updated += OnLineCounterUpdated;
 
             Task.Run(() => LoadLinesOfCode());
-        }
 
-        public void LoadLinesOfCode()
-        {
-            LoadLinesOfCodeForModule(_module);
-
-            if (_countSubmodules)
+            void LoadLinesOfCode()
             {
-                var submodules = _module.GetSubmodulesInfo()
-                    .Select(submodule => new GitModule(Path.Combine(_module.WorkingDir, submodule.LocalPath)));
+                LoadLinesOfCodeForModule(_module);
 
-                foreach (var submodule in submodules)
+                if (_countSubmodules)
                 {
-                    LoadLinesOfCodeForModule(submodule);
+                    var submodules = _module.GetSubmodulesInfo()
+                        .WhereNotNull()
+                        .Select(submodule => new GitModule(Path.Combine(_module.WorkingDir, submodule.LocalPath)));
+
+                    foreach (var submodule in submodules)
+                    {
+                        LoadLinesOfCodeForModule(submodule);
+                    }
                 }
-            }
 
-            // Send 'changed' event when done
-            OnLineCounterUpdated(_lineCounter, EventArgs.Empty);
+                // Send 'changed' event when done
+                OnLineCounterUpdated(_lineCounter, EventArgs.Empty);
 
-            return;
+                return;
 
-            void LoadLinesOfCodeForModule(IGitModule module)
-            {
-                var filesToCheck = module
-                    .GetTree(module.RevParse("HEAD"), full: true)
-                    .Select(file => Path.Combine(module.WorkingDir, file.Name))
-                    .ToList();
+                void LoadLinesOfCodeForModule(IGitModule module)
+                {
+                    var filesToCheck = module
+                        .GetTree(module.RevParse("HEAD"), full: true)
+                        .Select(file => Path.Combine(module.WorkingDir, file.Name))
+                        .ToList();
 
-                _lineCounter.FindAndAnalyzeCodeFiles(_codeFilePattern, DirectoriesToIgnore, filesToCheck);
+                    _lineCounter.FindAndAnalyzeCodeFiles(_codeFilePattern, DirectoriesToIgnore, filesToCheck);
+                }
             }
         }
 
         private void OnLineCounterUpdated(object sender, EventArgs e)
         {
+            Validates.NotNull(_lineCounter);
+
             // Must do this synchronously because lineCounter.LinesOfCodePerExtension might change while we are iterating over it otherwise.
             var extensionValues = new decimal[_lineCounter.LinesOfCodePerExtension.Count];
             var extensionLabels = new string[_lineCounter.LinesOfCodePerExtension.Count];
 
-            var linesOfCodePerExtension = new List<KeyValuePair<string, int>>(_lineCounter.LinesOfCodePerExtension);
+            List<KeyValuePair<string, int>> linesOfCodePerExtension = new(_lineCounter.LinesOfCodePerExtension);
             linesOfCodePerExtension.Sort((first, next) => -first.Value.CompareTo(next.Value));
 
             var n = 0;
-            var linesOfCodePerLanguageText = new StringBuilder();
+            StringBuilder linesOfCodePerLanguageText = new();
             foreach (var (extension, loc) in linesOfCodePerExtension)
             {
                 var percent = (double)loc / _lineCounter.CodeLineCount;
@@ -288,18 +292,21 @@ namespace GitStatistics
             Tabs.Visible = true;
             LoadingLabel.Visible = false;
 
-            FormGitStatisticsSizeChanged(null, null);
+            FormGitStatisticsSizeChanged(sender, EventArgs.Empty);
             SizeChanged += FormGitStatisticsSizeChanged;
         }
 
         private void TabsSelectedIndexChanged(object sender, EventArgs e)
         {
-            FormGitStatisticsSizeChanged(null, null);
+            FormGitStatisticsSizeChanged(sender, EventArgs.Empty);
         }
 
         private void FormGitStatistics_FormClosing(object sender, FormClosingEventArgs e)
         {
-            _lineCounter.Updated -= OnLineCounterUpdated;
+            if (_lineCounter is not null)
+            {
+                _lineCounter.Updated -= OnLineCounterUpdated;
+            }
         }
     }
 }

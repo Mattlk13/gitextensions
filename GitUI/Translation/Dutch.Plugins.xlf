@@ -1,4 +1,4 @@
-<?xml version="1.0" ?><xliff GitExVersion="3.1.0" version="1.0" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+<?xml version="1.0" ?><xliff GitExVersion="" version="1.0" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
   <file datatype="plaintext" original="AppVeyorSettingsUserControl" source-language="en" target-language="nl">
     <body>
       <trans-unit id="cbLoadTestResults.Text">
@@ -10,7 +10,7 @@
   </file>
   <file datatype="plaintext" original="AutoCompileSubModulesPlugin" source-language="en" target-language="nl">
     <body>
-      <trans-unit id="Description.Text">
+      <trans-unit id="Name.Text">
         <source>Auto compile SubModules</source>
         <target>Compileer SubModules automatisch</target>
         
@@ -48,7 +48,7 @@
   </file>
   <file datatype="plaintext" original="BackgroundFetchPlugin" source-language="en" target-language="nl">
     <body>
-      <trans-unit id="Description.Text">
+      <trans-unit id="Name.Text">
         <source>Periodic background fetch</source>
         <target>Fetch periodiek op de achtergrond</target>
         
@@ -97,7 +97,7 @@
         <target>Btibucket Gebruikersnaam</target>
         
       </trans-unit>
-      <trans-unit id="Description.Text">
+      <trans-unit id="Name.Text">
         <source>Bitbucket Server</source>
         <target>Bitbucket Server</target>
         
@@ -296,7 +296,7 @@
   </file>
   <file datatype="plaintext" original="CreateLocalBranchesPlugin" source-language="en" target-language="nl">
     <body>
-      <trans-unit id="Description.Text">
+      <trans-unit id="Name.Text">
         <source>Create local tracking branches</source>
         <target>Maak lokale tracking branches</target>
         
@@ -336,8 +336,8 @@
         
       </trans-unit>
       <trans-unit id="RefreshBtn.Text">
-        <source>Cancel</source>
-        <target>Annuleer</target>
+        <source>Search branches</source>
+        <target>Zoek branches</target>
         
       </trans-unit>
       <trans-unit id="_areYouSureToDelete.Text">
@@ -429,11 +429,6 @@ Weet u zeker dat u door wilt gaan?</target>
         <target>Verwijder branches die volledig gemerged zijn in branch</target>
         
       </trans-unit>
-      <trans-unit id="lblStatus.Text">
-        <source>Loading...</source>
-        <target>Laden...</target>
-        
-      </trans-unit>
       <trans-unit id="nameDataGridViewTextBoxColumn.HeaderText">
         <source>Name</source>
         <target>Naam</target>
@@ -463,7 +458,7 @@ Weet u zeker dat u door wilt gaan?</target>
   </file>
   <file datatype="plaintext" original="DeleteUnusedBranchesPlugin" source-language="en" target-language="nl">
     <body>
-      <trans-unit id="Description.Text">
+      <trans-unit id="Name.Text">
         <source>Delete obsolete branches</source>
         <target>Verwijder achterhaalde branches</target>
         
@@ -585,7 +580,7 @@ Weet u zeker dat u door wilt gaan?</target>
   </file>
   <file datatype="plaintext" original="FindLargeFilesPlugin" source-language="en" target-language="nl">
     <body>
-      <trans-unit id="Description.Text">
+      <trans-unit id="Name.Text">
         <source>Find large files</source>
         <target>Zoek grote bestanden</target>
         
@@ -697,11 +692,6 @@ Weet u zeker dat u door wilt gaan?</target>
         <target>%Publiceer</target>
         
       </trans-unit>
-      <trans-unit id="PublishDraft.Text">
-        <source>Submit review as draft</source>
-        <target>Review versturen als concept</target>
-        
-      </trans-unit>
       <trans-unit id="_publishCaption.Text">
         <source>Publish change</source>
         <target>Publiceer wijziging</target>
@@ -725,6 +715,18 @@ Weet u zeker dat u door wilt gaan?</target>
       <trans-unit id="labelBranch.Text">
         <source>Branch:</source>
         <target>Vertakking:</target>
+        
+      </trans-unit>
+      <trans-unit id="labelCc.Text">
+        <source>CC:</source>
+        
+      </trans-unit>
+      <trans-unit id="labelHashtag.Text">
+        <source>Hashtag:</source>
+        
+      </trans-unit>
+      <trans-unit id="labelPublishType.Text">
+        <source>Publish Type:</source>
         
       </trans-unit>
       <trans-unit id="labelRemote.Text">
@@ -995,9 +997,30 @@ To enable Gerrit support for a repository, a .gitreview file must be created. Th
       </trans-unit>
     </body>
   </file>
+  <file datatype="plaintext" original="GerritCapabilities" source-language="en" target-language="nl">
+    <body>
+      <trans-unit id="_publishTypeDraft.Text">
+        <source>Draft</source>
+        
+      </trans-unit>
+      <trans-unit id="_publishTypePrivate.Text">
+        <source>Private</source>
+        <target>Prive</target>
+        
+      </trans-unit>
+      <trans-unit id="_publishTypeReview.Text">
+        <source>For Review</source>
+        
+      </trans-unit>
+      <trans-unit id="_publishTypeWip.Text">
+        <source>Work-in-Progress</source>
+        
+      </trans-unit>
+    </body>
+  </file>
   <file datatype="plaintext" original="GerritPlugin" source-language="en" target-language="nl">
     <body>
-      <trans-unit id="Description.Text">
+      <trans-unit id="Name.Text">
         <source>Gerrit Code Review</source>
         <target>Gerrit Code Review</target>
         
@@ -1034,6 +1057,10 @@ To enable Gerrit support for a repository, a .gitreview file must be created. Th
       <trans-unit id="_installCommitMsgHookShortText.Text">
         <source>Install commit-msg hook</source>
         <target>Installeer commit-msg hook</target>
+        
+      </trans-unit>
+      <trans-unit id="_predefinedGerritVersion.Caption">
+        <source>Treat Gerrit as having version</source>
         
       </trans-unit>
       <trans-unit id="_publishGerritChange.Text">
@@ -1138,6 +1165,10 @@ To enable Gerrit support for a repository, a .gitreview file must be created. Th
         <source>Push after finish</source>
         
       </trans-unit>
+      <trans-unit id="cbSquash.Text">
+        <source>Squash</source>
+        
+      </trans-unit>
       <trans-unit id="gbManage.Text">
         <source>Manage existing branches:</source>
         <target>Beheer bestaande branches:</target>
@@ -1197,7 +1228,7 @@ To enable Gerrit support for a repository, a .gitreview file must be created. Th
   </file>
   <file datatype="plaintext" original="GitFlowPlugin" source-language="en" target-language="nl">
     <body>
-      <trans-unit id="Description.Text">
+      <trans-unit id="Name.Text">
         <source>GitFlow</source>
         <target>GitFlow</target>
         
@@ -1206,9 +1237,13 @@ To enable Gerrit support for a repository, a .gitreview file must be created. Th
   </file>
   <file datatype="plaintext" original="GitHub3Plugin" source-language="en" target-language="nl">
     <body>
-      <trans-unit id="Description.Text">
+      <trans-unit id="Name.Text">
         <source>GitHub</source>
         <target>GitHub</target>
+        
+      </trans-unit>
+      <trans-unit id="GitHubHost.Caption">
+        <source>GitHub (Enterprise) hostname</source>
         
       </trans-unit>
       <trans-unit id="OAuthToken.Caption">
@@ -1216,11 +1251,19 @@ To enable Gerrit support for a repository, a .gitreview file must be created. Th
         <target>OAuth Token</target>
         
       </trans-unit>
+      <trans-unit id="_tokenAlreadyExist.Text">
+        <source>You already have an OAuth token. To get a new one, delete your old one in Plugins &gt; Settings first.</source>
+        
+      </trans-unit>
+      <trans-unit id="_viewInWebSite.Text">
+        <source>View in {0}</source>
+        
+      </trans-unit>
     </body>
   </file>
   <file datatype="plaintext" original="GitImpactPlugin" source-language="en" target-language="nl">
     <body>
-      <trans-unit id="Description.Text">
+      <trans-unit id="Name.Text">
         <source>Impact Graph</source>
         <target>Impact Grafiek</target>
         
@@ -1229,7 +1272,7 @@ To enable Gerrit support for a repository, a .gitreview file must be created. Th
   </file>
   <file datatype="plaintext" original="GitStatisticsPlugin" source-language="en" target-language="nl">
     <body>
-      <trans-unit id="Description.Text">
+      <trans-unit id="Name.Text">
         <source>Statistics</source>
         <target>Statistieken</target>
         
@@ -1253,7 +1296,7 @@ To enable Gerrit support for a repository, a .gitreview file must be created. Th
   </file>
   <file datatype="plaintext" original="GourcePlugin" source-language="en" target-language="nl">
     <body>
-      <trans-unit id="Description.Text">
+      <trans-unit id="Name.Text">
         <source>Gource</source>
         <target>Gource</target>
         
@@ -1401,23 +1444,53 @@ Wilt het het pad opnieuw instellen?</target>
   </file>
   <file datatype="plaintext" original="JiraCommitHintPlugin" source-language="en" target-language="nl">
     <body>
-      <trans-unit id="Description.Text">
+      <trans-unit id="Name.Text">
         <source>Jira Commit Hint</source>
         <target>Jira Commit Hint</target>
         
       </trans-unit>
+      <trans-unit id="EmptyQueryResultCaption.Text">
+        <source>First Task Preview</source>
+        
+      </trans-unit>
+      <trans-unit id="EmptyQueryResultMessage.Text">
+        <source>[Empty Jira Query Result]</source>
+        
+      </trans-unit>
+      <trans-unit id="InvalidUrlCaption.Text">
+        <source>Invalid Jira url</source>
+        
+      </trans-unit>
+      <trans-unit id="InvalidUrlMessage.Text">
+        <source>A valid url is required to launch the Jira query helper</source>
+        
+      </trans-unit>
+      <trans-unit id="JiraFieldsLabel.Text">
+        <source>Jira fields</source>
+        <target>Jira velden</target>
+        
+      </trans-unit>
+      <trans-unit id="PreviewButtonText.Text">
+        <source>Preview</source>
+        <target>Voorbeeld</target>
+        
+      </trans-unit>
+      <trans-unit id="QueryHelperLinkText.Text">
+        <source>Open the query helper inside Jira</source>
+        
+      </trans-unit>
+      <trans-unit id="QueryHelperOpenErrorText.Text">
+        <source>Unable to open Jira query helper</source>
+        
+      </trans-unit>
       <trans-unit id="_credentialsSettings.Caption">
         <source>Jira credentials</source>
+        <target>Jira inloggegevens</target>
         
       </trans-unit>
       <trans-unit id="_enabledSettings.Caption">
         <source>Jira hint plugin enabled</source>
         <target>Jira hint plugin ge-enabled</target>
-        
-      </trans-unit>
-      <trans-unit id="_jiraFields.Caption">
-        <source>Jira fields</source>
-        <target>Jira velden</target>
         
       </trans-unit>
       <trans-unit id="_jqlQuerySettings.Caption">
@@ -1483,7 +1556,7 @@ Wilt het het pad opnieuw instellen?</target>
   </file>
   <file datatype="plaintext" original="ProxySwitcherPlugin" source-language="en" target-language="nl">
     <body>
-      <trans-unit id="Description.Text">
+      <trans-unit id="Name.Text">
         <source>Proxy Switcher</source>
         <target>Proxy Switcher</target>
         
@@ -1640,7 +1713,7 @@ branch namen of tag namen zijn)</target>
   </file>
   <file datatype="plaintext" original="ReleaseNotesGeneratorPlugin" source-language="en" target-language="nl">
     <body>
-      <trans-unit id="Description.Text">
+      <trans-unit id="Name.Text">
         <source>Release Notes Generator</source>
         <target>Release Notes Generator</target>
         

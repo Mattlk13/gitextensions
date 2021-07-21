@@ -9,7 +9,7 @@ using GitCommands.Git;
 using GitUI.CommandsDialogs.BrowseDialog;
 using GitUI.UserControls;
 using GitUIPluginInterfaces;
-using JetBrains.Annotations;
+using Microsoft;
 
 namespace GitUI.CommandsDialogs
 {
@@ -19,8 +19,7 @@ namespace GitUI.CommandsDialogs
         /// Locates the node by the label.
         /// </summary>
         /// <returns>The first node matching the label, if one found; otherwise <see langword="null"/>.</returns>
-        [CanBeNull]
-        TreeNode Find(TreeNodeCollection nodes, string label);
+        TreeNode? Find(TreeNodeCollection nodes, string label);
 
         /// <summary>
         /// Loads children items for the provided item in to the specified nodes.
@@ -50,7 +49,7 @@ namespace GitUI.CommandsDialogs
         private readonly IFileAssociatedIconProvider _iconProvider;
         private readonly Func<string> _getWorkingDir;
         private readonly IGitRevisionInfoProvider _revisionInfoProvider;
-        private readonly ConcurrentDictionary<string, IEnumerable<IGitItem>> _cachedItems = new ConcurrentDictionary<string, IEnumerable<IGitItem>>();
+        private readonly ConcurrentDictionary<string, IEnumerable<INamedGitItem>> _cachedItems = new();
 
         public RevisionFileTreeController(Func<string> getWorkingDir, IGitRevisionInfoProvider revisionInfoProvider, IFileAssociatedIconProvider iconProvider)
         {
@@ -63,7 +62,7 @@ namespace GitUI.CommandsDialogs
         /// Locates the node by the label.
         /// </summary>
         /// <returns>The first node matching the label, if one found; otherwise <see langword="null"/>.</returns>
-        public TreeNode Find(TreeNodeCollection nodes, string label)
+        public TreeNode? Find(TreeNodeCollection nodes, string label)
         {
             for (var i = 0; i < nodes.Count; i++)
             {
@@ -84,13 +83,15 @@ namespace GitUI.CommandsDialogs
         /// <remarks>The method DOES NOT check any input parameters for performance reasons.</remarks>
         public void LoadChildren(IGitItem item, TreeNodeCollection nodes, ImageList.ImageCollection imageCollection)
         {
+            Validates.NotNull(item.Guid);
+
             var childrenItems = _cachedItems.GetOrAdd(item.Guid, _revisionInfoProvider.LoadChildren(item));
-            if (childrenItems == null)
+            if (childrenItems is null)
             {
                 return;
             }
 
-            string workingDir = null;
+            string? workingDir = null;
             foreach (var childItem in childrenItems.OrderBy(gi => gi, new GitFileTreeComparer()))
             {
                 var subNode = nodes.Add(childItem.Name);
@@ -121,6 +122,7 @@ namespace GitUI.CommandsDialogs
                     case GitObjectType.Blob:
                         {
                             var extension = Path.GetExtension(gitItem.FileName);
+
                             if (string.IsNullOrWhiteSpace(extension))
                             {
                                 continue;
@@ -128,11 +130,11 @@ namespace GitUI.CommandsDialogs
 
                             if (!imageCollection.ContainsKey(extension))
                             {
-                                // a little optimisation - initialise the first time it is required
-                                workingDir = workingDir ?? _getWorkingDir();
+                                // lazy - initialise the first time used
+                                workingDir ??= _getWorkingDir();
 
                                 var fileIcon = _iconProvider.Get(workingDir, gitItem.FileName);
-                                if (fileIcon == null)
+                                if (fileIcon is null)
                                 {
                                     continue;
                                 }
@@ -149,9 +151,9 @@ namespace GitUI.CommandsDialogs
 
         public bool SelectFileOrFolder(NativeTreeView tree, string fileSubPath)
         {
-            var pathParts = new Queue<string>(fileSubPath.Split(Path.DirectorySeparatorChar));
+            Queue<string> pathParts = new(fileSubPath.Split(Path.DirectorySeparatorChar));
             var foundNode = FindSubNode(tree.Nodes, pathParts);
-            if (foundNode == null)
+            if (foundNode is null)
             {
                 return false;
             }
@@ -160,7 +162,7 @@ namespace GitUI.CommandsDialogs
             return true;
         }
 
-        private TreeNode FindSubNode(TreeNodeCollection nodes, Queue<string> pathParts)
+        private TreeNode? FindSubNode(TreeNodeCollection nodes, Queue<string> pathParts)
         {
             while (true)
             {
@@ -171,9 +173,9 @@ namespace GitUI.CommandsDialogs
                 }
 
                 var node = nodes.Cast<TreeNode>().SingleOrDefault(n =>
-                    n?.Tag is GitItem item && item.ObjectType == GitObjectType.Tree && item.Name == treeToFind);
+                    n?.Tag is GitItem { ObjectType: GitObjectType.Tree } item && item.Name == treeToFind);
 
-                if (node == null)
+                if (node is null)
                 {
                     return null;
                 }

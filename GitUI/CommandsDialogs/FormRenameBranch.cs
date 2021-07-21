@@ -10,13 +10,15 @@ namespace GitUI.CommandsDialogs
 {
     public sealed partial class FormRenameBranch : GitModuleForm
     {
-        private readonly TranslationString _branchRenameFailed = new TranslationString("Rename failed.");
+        private readonly TranslationString _branchRenameFailed = new("Rename failed.");
         private readonly IGitBranchNameNormaliser _branchNameNormaliser;
-        private readonly GitBranchNameOptions _gitBranchNameOptions = new GitBranchNameOptions(AppSettings.AutoNormaliseSymbol);
+        private readonly GitBranchNameOptions _gitBranchNameOptions = new(AppSettings.AutoNormaliseSymbol);
         private readonly string _oldName;
 
         [Obsolete("For VS designer and translation test only. Do not remove.")]
+#pragma warning disable CS8618 // Non-nullable field must contain a non-null value when exiting constructor. Consider declaring as nullable.
         private FormRenameBranch()
+#pragma warning restore CS8618 // Non-nullable field must contain a non-null value when exiting constructor. Consider declaring as nullable.
         {
             InitializeComponent();
         }

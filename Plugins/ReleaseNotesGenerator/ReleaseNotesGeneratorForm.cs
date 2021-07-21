@@ -10,21 +10,21 @@ using GitExtUtils;
 using GitUIPluginInterfaces;
 using ResourceManager;
 
-namespace ReleaseNotesGenerator
+namespace GitExtensions.Plugins.ReleaseNotesGenerator
 {
     /// <summary>
     /// Test on GE repository from "2.00" to "2.10". Should display 687 items.
     /// </summary>
     public partial class ReleaseNotesGeneratorForm : GitExtensionsFormBase
     {
-        private readonly TranslationString _commitLogFrom = new TranslationString("Commit log from '{0}' to '{1}' ({2}):");
-        private readonly TranslationString _fromCommitNotSpecified = new TranslationString("'From' commit must be specified");
-        private readonly TranslationString _toCommitNotSpecified = new TranslationString("'To' commit must be specified");
-        private readonly TranslationString _caption = new TranslationString("Invalid input");
+        private readonly TranslationString _commitLogFrom = new("Commit log from '{0}' to '{1}' ({2}):");
+        private readonly TranslationString _fromCommitNotSpecified = new("'From' commit must be specified");
+        private readonly TranslationString _toCommitNotSpecified = new("'To' commit must be specified");
+        private readonly TranslationString _caption = new("Invalid input");
 
         private const string MostRecentHint = "most recent changes are listed on top";
         private readonly GitUIEventArgs _gitUiCommands;
-        private IEnumerable<LogLine> _lastGeneratedLogLines;
+        private IEnumerable<LogLine> _lastGeneratedLogLines = Enumerable.Empty<LogLine>();
         private readonly IGitLogLineParser _gitLogLineParser;
 
         public ReleaseNotesGeneratorForm(GitUIEventArgs gitUiCommands)
@@ -39,7 +39,7 @@ namespace ReleaseNotesGenerator
         private void ReleaseNotesGeneratorForm_Load(object sender, EventArgs e)
         {
             Icon = Owner?.Icon;
-            textBoxResult_TextChanged(null, null);
+            textBoxResult_TextChanged(sender, e);
         }
 
         private void buttonGenerate_Click(object sender, EventArgs e)
@@ -48,19 +48,19 @@ namespace ReleaseNotesGenerator
 
             if (string.IsNullOrWhiteSpace(textBoxRevFrom.Text))
             {
-                MessageBox.Show(this, _fromCommitNotSpecified.Text, _caption.Text);
+                MessageBox.Show(this, _fromCommitNotSpecified.Text, _caption.Text, MessageBoxButtons.OK, MessageBoxIcon.Error);
                 textBoxRevFrom.Focus();
                 return;
             }
 
             if (string.IsNullOrWhiteSpace(_NO_TRANSLATE_textBoxRevTo.Text))
             {
-                MessageBox.Show(this, _toCommitNotSpecified.Text, _caption.Text);
+                MessageBox.Show(this, _toCommitNotSpecified.Text, _caption.Text, MessageBoxButtons.OK, MessageBoxIcon.Error);
                 _NO_TRANSLATE_textBoxRevTo.Focus();
                 return;
             }
 
-            var args = new GitArgumentBuilder("log")
+            GitArgumentBuilder args = new("log")
             {
                 string.Format(_NO_TRANSLATE_textBoxGitLogArguments.Text, textBoxRevFrom.Text, _NO_TRANSLATE_textBoxRevTo.Text)
             };
@@ -83,12 +83,12 @@ namespace ReleaseNotesGenerator
                 labelRevCount.Text = "n/a";
             }
 
-            textBoxResult_TextChanged(null, null);
+            textBoxResult_TextChanged(sender, e);
         }
 
         private void textBoxResult_TextChanged(object sender, EventArgs e)
         {
-            groupBoxCopy.Enabled = _lastGeneratedLogLines != null && _lastGeneratedLogLines.Any();
+            groupBoxCopy.Enabled = _lastGeneratedLogLines is not null && _lastGeneratedLogLines.Any();
         }
 
         private void buttonCopyOrigOutput_Click(object sender, EventArgs e)
@@ -123,7 +123,7 @@ namespace ReleaseNotesGenerator
             string colSeparatorFirstLine = separateColumnWithTabInsteadOfSpaces ? "\t" : " ";
             string colSeparatorRestLines = separateColumnWithTabInsteadOfSpaces ? "\t" : "        ";
 
-            var stringBuilder = new StringBuilder();
+            StringBuilder stringBuilder = new();
 
             foreach (var logLine in logLines)
             {
@@ -139,7 +139,7 @@ namespace ReleaseNotesGenerator
 
         private static string CreateHtmlTable(IEnumerable<LogLine> logLines)
         {
-            var stringBuilder = new StringBuilder();
+            StringBuilder stringBuilder = new();
             stringBuilder.Append("<table>\r\n");
             foreach (var logLine in logLines)
             {

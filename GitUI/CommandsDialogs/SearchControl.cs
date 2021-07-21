@@ -4,7 +4,6 @@ using System.Drawing;
 using System.Linq;
 using System.Windows.Forms;
 using GitCommands;
-using JetBrains.Annotations;
 
 namespace GitUI.CommandsDialogs
 {
@@ -12,10 +11,10 @@ namespace GitUI.CommandsDialogs
     {
         private readonly Func<string, IEnumerable<T>> _getCandidates;
         private readonly Action<Size> _onSizeChanged;
-        private readonly AsyncLoader _backgroundLoader = new AsyncLoader();
+        private readonly AsyncLoader _backgroundLoader = new();
         private bool _isUpdatingTextFromCode;
-        public event Action OnTextEntered;
-        public event Action OnCancelled;
+        public event Action? OnTextEntered;
+        public event Action? OnCancelled;
 
         public override string Text
         {
@@ -23,7 +22,7 @@ namespace GitUI.CommandsDialogs
             set => txtSearchBox.Text = value;
         }
 
-        public SearchControl([NotNull]Func<string, IEnumerable<T>> getCandidates, Action<Size> onSizeChanged)
+        public SearchControl(Func<string, IEnumerable<T>> getCandidates, Action<Size> onSizeChanged)
         {
             InitializeComponent();
 
@@ -48,6 +47,30 @@ namespace GitUI.CommandsDialogs
         public void CloseDropdown()
         {
             listBoxSearchResult.Visible = false;
+        }
+
+        public BorderStyle SearchBoxBorderStyle
+        {
+            get => txtSearchBox.BorderStyle;
+            set => txtSearchBox.BorderStyle = value;
+        }
+
+        public Color SearchBoxBorderDefaultColor
+        {
+            get => txtSearchBox.BorderDefaultColor;
+            set => txtSearchBox.BorderDefaultColor = value;
+        }
+
+        public Color SearchBoxBorderHoveredColor
+        {
+            get => txtSearchBox.BorderHoveredColor;
+            set => txtSearchBox.BorderHoveredColor = value;
+        }
+
+        public Color SearchBoxBorderFocusedColor
+        {
+            get => txtSearchBox.BorderFocusedColor;
+            set => txtSearchBox.BorderFocusedColor = value;
         }
 
         private void SearchForCandidates(IEnumerable<T> candidates)
@@ -84,7 +107,7 @@ namespace GitUI.CommandsDialogs
             listBoxSearchResult.Visible = true;
 
             var txtBoxOnScreen = PointToScreen(txtSearchBox.Location + new Size(0, txtSearchBox.Height));
-            if (ParentForm != null && !ParentForm.Controls.Contains(listBoxSearchResult))
+            if (ParentForm is not null && !ParentForm.Controls.Contains(listBoxSearchResult))
             {
                 ParentForm.Controls.Add(listBoxSearchResult);
                 var listBoxLocationOnScreen = txtBoxOnScreen;
@@ -111,7 +134,7 @@ namespace GitUI.CommandsDialogs
             listBoxSearchResult.BringToFront();
         }
 
-        public T SelectedItem => (T)listBoxSearchResult.SelectedItem;
+        public T? SelectedItem => (T?)listBoxSearchResult.SelectedItem;
 
         void IDisposable.Dispose()
         {
@@ -152,7 +175,7 @@ namespace GitUI.CommandsDialogs
         private void ItemSelectedFromList()
         {
             _isUpdatingTextFromCode = true;
-            if (listBoxSearchResult.SelectedItem != null)
+            if (listBoxSearchResult.SelectedItem is not null)
             {
                 txtSearchBox.Text = listBoxSearchResult.SelectedItem.ToString();
             }

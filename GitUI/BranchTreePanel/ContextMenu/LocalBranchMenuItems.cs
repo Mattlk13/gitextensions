@@ -26,7 +26,7 @@ namespace GitUI.BranchTreePanel.ContextMenu
         }
 
         /// <summary>
-        /// Filter menu entries that depend on the branch being active or not
+        /// Filter menu entries that depend on the branch being active or not.
         /// </summary>
         public IEnumerable<ToolStripItemWithKey> GetInactiveBranchItems()
         {
@@ -36,7 +36,7 @@ namespace GitUI.BranchTreePanel.ContextMenu
 
     public class LocalBranchMenuItemsStrings : Translate
     {
-        internal readonly TranslationString DeleteTooltip = new TranslationString("Delete the branch, which must be fully merged in its upstream branch or in HEAD");
+        internal readonly TranslationString DeleteTooltip = new("Delete the branch, which must be fully merged in its upstream branch or in HEAD");
 
         public void ApplyTo(MenuItemsStrings strings)
         {

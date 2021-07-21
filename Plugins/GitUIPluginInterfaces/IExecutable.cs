@@ -1,5 +1,5 @@
 using System.Text;
-using GitCommands;
+using GitExtUtils;
 using JetBrains.Annotations;
 
 namespace GitUIPluginInterfaces
@@ -22,18 +22,14 @@ namespace GitUIPluginInterfaces
         /// <param name="redirectOutput">Whether the standard output stream of the process will be read from.</param>
         /// <param name="outputEncoding">The <see cref="Encoding"/> to use when interpreting standard output and standard
         /// error, or <c>null</c> if <paramref name="redirectOutput"/> is <c>false</c>.</param>
+        /// <param name="useShellExecute">The value for the flag <c>ProcessStartInfo.UseShellExecute</c>.</param>
         /// <returns>The started process.</returns>
-        [NotNull]
         [MustUseReturnValue]
-        IProcess Start(ArgumentString arguments = default, bool createWindow = false, bool redirectInput = false, bool redirectOutput = false, [CanBeNull] Encoding outputEncoding = null);
-
-        /// <summary>
-        /// Launches a process for the executable and returns its output.
-        /// </summary>
-        /// <param name="arguments">The arguments to pass to the executable</param>
-        /// <returns>The concatenation of standard output and standard error.</returns>
-        [NotNull]
-        [MustUseReturnValue]
-        string GetOutput(ArgumentString arguments);
+        IProcess Start(ArgumentString arguments = default,
+                       bool createWindow = false,
+                       bool redirectInput = false,
+                       bool redirectOutput = false,
+                       Encoding? outputEncoding = null,
+                       bool useShellExecute = false);
     }
 }

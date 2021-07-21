@@ -1,6 +1,5 @@
 ﻿using System;
 using GitUIPluginInterfaces;
-using JetBrains.Annotations;
 
 namespace GitCommands.Settings
 {
@@ -8,12 +7,10 @@ namespace GitCommands.Settings
     {
         private readonly ICredentialsManager _credentialsManager = new CredentialsManager();
 
-        [CanBeNull]
-        public TLowerPriority LowerPriority { get; }
-        [NotNull]
+        public TLowerPriority? LowerPriority { get; }
         public TCache SettingsCache { get; }
 
-        public SettingsContainer([CanBeNull] TLowerPriority lowerPriority, [NotNull] TCache settingsCache)
+        public SettingsContainer(TLowerPriority? lowerPriority, TCache settingsCache)
         {
             LowerPriority = lowerPriority;
             SettingsCache = settingsCache;
@@ -23,7 +20,7 @@ namespace GitCommands.Settings
         {
             SettingsCache.LockedAction(() =>
                 {
-                    if (LowerPriority != null)
+                    if (LowerPriority is not null)
                     {
                         LowerPriority.LockedAction(action);
                     }
@@ -50,9 +47,9 @@ namespace GitCommands.Settings
         /// <summary>
         /// sets given value at the possible lowest priority level
         /// </summary>
-        public override void SetValue<T>(string name, T value, Func<T, string> encode)
+        public override void SetValue<T>(string name, T value, Func<T, string?> encode)
         {
-            if (LowerPriority == null || SettingsCache.HasValue(name))
+            if (LowerPriority is null || SettingsCache.HasValue(name))
             {
                 SettingsCache.SetValue(name, value, encode);
             }
@@ -69,7 +66,7 @@ namespace GitCommands.Settings
                 return true;
             }
 
-            if (LowerPriority != null && LowerPriority.TryGetValue(name, defaultValue, decode, out value))
+            if (LowerPriority is not null && LowerPriority.TryGetValue(name, defaultValue, decode, out value))
             {
                 return true;
             }

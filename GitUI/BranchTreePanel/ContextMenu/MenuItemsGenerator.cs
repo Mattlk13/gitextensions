@@ -2,6 +2,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using System.Windows.Forms;
+using GitExtUtils.GitUI.Theming;
 using GitUI.BranchTreePanel.Interfaces;
 using ResourceManager;
 
@@ -23,19 +24,19 @@ namespace GitUI.BranchTreePanel.ContextMenu
 
         private Dictionary<MenuItemKey, ToolStripItem> CreateItemsIndex()
         {
-            var itemsIndex = new Dictionary<MenuItemKey, ToolStripItem>();
+            Dictionary<MenuItemKey, ToolStripItem> itemsIndex = new();
             _items.Value.ForEach(r => itemsIndex.Add(r.Key, r.Item));
             return itemsIndex;
         }
 
         private List<ToolStripItemWithKey> CreateItems()
         {
-            var items = new List<ToolStripItemWithKey>();
+            List<ToolStripItemWithKey> items = new();
             Generate(items);
             return items;
         }
 
-        public MenuItemsStrings Strings { get; } = new MenuItemsStrings();
+        public MenuItemsStrings Strings { get; } = new();
 
         private void Generate(List<ToolStripItemWithKey> items)
         {
@@ -69,23 +70,23 @@ namespace GitUI.BranchTreePanel.ContextMenu
             }
 
             yield return _menuItemFactory.CreateMenuItem<ToolStripMenuItem, TNode>(
-                node => (node as IGitRefActions).Checkout(), Strings.Checkout, GetTooltip(MenuItemKey.GitRefCheckout), Properties.Images.BranchCheckout)
+                node => ((IGitRefActions)node).Checkout(), Strings.Checkout, GetTooltip(MenuItemKey.GitRefCheckout), Properties.Images.BranchCheckout)
                 .WithKey(MenuItemKey.GitRefCheckout);
 
             yield return _menuItemFactory.CreateMenuItem<ToolStripMenuItem, TNode>(
-               node => (node as IGitRefActions).Merge(), Strings.Merge, GetTooltip(MenuItemKey.GitRefMerge), Properties.Images.Merge)
+               node => ((IGitRefActions)node).Merge(), Strings.Merge, GetTooltip(MenuItemKey.GitRefMerge), Properties.Images.Merge)
                .WithKey(MenuItemKey.GitRefMerge);
 
             yield return _menuItemFactory.CreateMenuItem<ToolStripMenuItem, TNode>(
-                node => (node as IGitRefActions).Rebase(), Strings.Rebase, GetTooltip(MenuItemKey.GitRefRebase), Properties.Images.Rebase)
+                node => ((IGitRefActions)node).Rebase(), Strings.Rebase, GetTooltip(MenuItemKey.GitRefRebase), Properties.Images.Rebase)
                 .WithKey(MenuItemKey.GitRefRebase);
 
             yield return _menuItemFactory.CreateMenuItem<ToolStripMenuItem, TNode>(
-                node => (node as IGitRefActions).CreateBranch(), Strings.CreateBranch, GetTooltip(MenuItemKey.GitRefCreateBranch), Properties.Images.Branch)
+                node => ((IGitRefActions)node).CreateBranch(), Strings.CreateBranch, GetTooltip(MenuItemKey.GitRefCreateBranch), Properties.Images.Branch.AdaptLightness())
                 .WithKey(MenuItemKey.GitRefCreateBranch);
 
             yield return _menuItemFactory.CreateMenuItem<ToolStripMenuItem, TNode>(
-                node => (node as IGitRefActions).Reset(), Strings.Reset, GetTooltip(MenuItemKey.GitRefReset), Properties.Images.ResetCurrentBranchToHere)
+                node => ((IGitRefActions)node).Reset(), Strings.Reset, GetTooltip(MenuItemKey.GitRefReset), Properties.Images.ResetCurrentBranchToHere)
                 .WithKey(MenuItemKey.GitRefReset);
 
             yield return new ToolStripSeparator().WithKey(MenuItemKey.GitRefActionsSeparator);
@@ -96,7 +97,7 @@ namespace GitUI.BranchTreePanel.ContextMenu
             if (Implements<ICanRename>())
             {
                 yield return _menuItemFactory.CreateMenuItem<ToolStripMenuItem, TNode>(
-                    node => (node as ICanRename).Rename(), Strings.Rename, GetTooltip(MenuItemKey.Rename), Properties.Images.Renamed)
+                    node => ((ICanRename)node).Rename(), Strings.Rename, GetTooltip(MenuItemKey.Rename), Properties.Images.Renamed.AdaptLightness())
                     .WithKey(MenuItemKey.Rename);
             }
         }
@@ -106,7 +107,7 @@ namespace GitUI.BranchTreePanel.ContextMenu
             if (Implements<ICanDelete>())
             {
                 yield return _menuItemFactory.CreateMenuItem<ToolStripMenuItem, TNode>(
-                    node => (node as ICanDelete).Delete(), Strings.Delete, GetTooltip(MenuItemKey.Delete), Properties.Images.BranchDelete)
+                    node => ((ICanDelete)node).Delete(), Strings.Delete, GetTooltip(MenuItemKey.Delete), Properties.Images.BranchDelete)
                     .WithKey(MenuItemKey.Delete);
             }
         }

@@ -1,6 +1,4 @@
 ﻿using System;
-using System.ComponentModel;
-using System.Diagnostics;
 using System.Windows.Forms;
 
 namespace GitUI.UserControls
@@ -19,7 +17,7 @@ namespace GitUI.UserControls
         private DateTime _lastKeyNavigateTime = DateTime.MinValue;
         private readonly Func<DateTime> _getCurrentTime;
 
-        public event TreeViewEventHandler AfterSelect;
+        public event TreeViewEventHandler? AfterSelect;
 
         public NativeTreeViewExplorerNavigationDecorator(NativeTreeView treeView, Func<DateTime> getCurrentTime)
         {
@@ -39,7 +37,7 @@ namespace GitUI.UserControls
 
         private void OnKeyDown(object sender, KeyEventArgs e)
         {
-            // Supress the "ding" when Enter is pressed
+            // Suppress the "ding" when Enter is pressed
             if (e.KeyCode == Keys.Enter)
             {
                 e.SuppressKeyPress = true;
@@ -65,13 +63,13 @@ namespace GitUI.UserControls
         private void OnAfterSelect(object sender, TreeViewEventArgs e)
         {
             // If arrow key was used to navigate to this node, don't send OnSelected
-            int delta = (int)DateTime.Now.Subtract(_lastKeyNavigateTime).TotalMilliseconds;
-            if (delta >= 0 && delta < 500)
+            int delta = (int)_getCurrentTime().Subtract(_lastKeyNavigateTime).TotalMilliseconds;
+            if (delta is (>= 0 and < 500))
             {
                 return;
             }
 
-            AfterSelect(sender, e);
+            AfterSelect?.Invoke(sender, e);
         }
 
         private void OnNodeMouseClick(object sender, TreeNodeMouseClickEventArgs e)

@@ -6,11 +6,11 @@ using ResourceManager;
 namespace GitUI.CommandsDialogs.SettingsDialog
 {
     /// <summary>
-    /// Page to group other pages
+    /// Page to group other pages.
     /// </summary>
     public abstract class GroupSettingsPage : Translate, ISettingsPage
     {
-        public string Title { get; set; }
+        public string Title { get; }
 
         protected GroupSettingsPage(string title)
         {
@@ -23,7 +23,7 @@ namespace GitUI.CommandsDialogs.SettingsDialog
             return Title;
         }
 
-        public Control GuiControl => null;
+        public Control? GuiControl => null;
 
         public void OnPageShown()
         {

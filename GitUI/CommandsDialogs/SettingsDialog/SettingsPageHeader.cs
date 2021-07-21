@@ -22,16 +22,16 @@ namespace GitUI.CommandsDialogs.SettingsDialog
 
     public partial class SettingsPageHeader
     {
-        private readonly SettingsPageWithHeader _page;
+        private readonly SettingsPageWithHeader? _page;
 
-        public SettingsPageHeader(SettingsPageWithHeader page)
+        public SettingsPageHeader(SettingsPageWithHeader? page)
         {
             InitializeComponent();
             InitializeComplete();
 
             label1.Font = new System.Drawing.Font(label1.Font, System.Drawing.FontStyle.Bold);
 
-            if (page != null)
+            if (page is not null)
             {
                 settingsPagePanel.Controls.Add(page);
                 page.Dock = DockStyle.Fill;
@@ -104,7 +104,7 @@ namespace GitUI.CommandsDialogs.SettingsDialog
         {
             if (GlobalRB.Checked)
             {
-                _page.SetGlobalSettings();
+                _page?.SetGlobalSettings();
             }
         }
     }

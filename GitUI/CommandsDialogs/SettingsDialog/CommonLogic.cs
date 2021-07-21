@@ -6,7 +6,7 @@ using System.Windows.Forms;
 using GitCommands;
 using GitCommands.Settings;
 using GitUIPluginInterfaces;
-using JetBrains.Annotations;
+using Microsoft;
 using Microsoft.Win32;
 using ResourceManager;
 
@@ -15,90 +15,65 @@ namespace GitUI.CommandsDialogs.SettingsDialog
     public sealed class CommonLogic : Translate
     {
         private static readonly TranslationString _cantReadRegistry =
-            new TranslationString("Git Extensions has insufficient permissions to check the registry.");
+            new("Git Extensions has insufficient permissions to check the registry.");
 
         private readonly TranslationString _selectFile =
-            new TranslationString("Select file");
+            new("Select file");
 
         public readonly RepoDistSettingsSet RepoDistSettingsSet;
         public readonly ConfigFileSettingsSet ConfigFileSettingsSet;
-        [CanBeNull] public readonly GitModule Module;
+        public readonly GitModule Module;
 
-        public CommonLogic([CanBeNull] GitModule module)
+        private CommonLogic()
         {
+            // For translation only
+            Module = null!;
+            RepoDistSettingsSet = null!;
+            ConfigFileSettingsSet = null!;
+        }
+
+        public CommonLogic(GitModule module)
+        {
+            Requires.NotNull(module, nameof(module));
+
             Module = module;
 
-            if (module != null)
-            {
-                var repoDistGlobalSettings = RepoDistSettings.CreateGlobal(false);
-                var repoDistPulledSettings = RepoDistSettings.CreateDistributed(Module, false);
-                var repoDistLocalSettings = RepoDistSettings.CreateLocal(Module, false);
-                var repoDistEffectiveSettings = new RepoDistSettings(
-                    new RepoDistSettings(repoDistGlobalSettings, repoDistPulledSettings.SettingsCache, SettingLevel.Distributed),
-                    repoDistLocalSettings.SettingsCache,
-                    SettingLevel.Effective);
+            var repoDistGlobalSettings = RepoDistSettings.CreateGlobal(false);
+            var repoDistPulledSettings = RepoDistSettings.CreateDistributed(module, false);
+            var repoDistLocalSettings = RepoDistSettings.CreateLocal(module, false);
+            RepoDistSettings repoDistEffectiveSettings = new(
+                new RepoDistSettings(repoDistGlobalSettings, repoDistPulledSettings.SettingsCache, SettingLevel.Distributed),
+                repoDistLocalSettings.SettingsCache,
+                SettingLevel.Effective);
 
-                var configFileGlobalSettings = ConfigFileSettings.CreateGlobal(false);
-                var configFileLocalSettings = ConfigFileSettings.CreateLocal(Module, false);
-                var configFileEffectiveSettings = new ConfigFileSettings(
-                    configFileGlobalSettings, configFileLocalSettings.SettingsCache, SettingLevel.Effective);
+            var configFileGlobalSettings = ConfigFileSettings.CreateGlobal(false);
+            var configFileLocalSettings = ConfigFileSettings.CreateLocal(module, false);
+            ConfigFileSettings configFileEffectiveSettings = new(
+                configFileGlobalSettings, configFileLocalSettings.SettingsCache, SettingLevel.Effective);
 
-                RepoDistSettingsSet = new RepoDistSettingsSet(
-                    repoDistEffectiveSettings,
-                    repoDistLocalSettings,
-                    repoDistPulledSettings,
-                    repoDistGlobalSettings);
+            RepoDistSettingsSet = new RepoDistSettingsSet(
+                repoDistEffectiveSettings,
+                repoDistLocalSettings,
+                repoDistPulledSettings,
+                repoDistGlobalSettings);
 
-                ConfigFileSettingsSet = new ConfigFileSettingsSet(
-                    configFileEffectiveSettings,
-                    configFileLocalSettings,
-                    configFileGlobalSettings);
-            }
+            ConfigFileSettingsSet = new ConfigFileSettingsSet(
+                configFileEffectiveSettings,
+                configFileLocalSettings,
+                configFileGlobalSettings);
         }
 
         public const string GitExtensionsShellEx32Name = "GitExtensionsShellEx32.dll";
         public const string GitExtensionsShellEx64Name = "GitExtensionsShellEx64.dll";
 
-        public string GetGlobalDiffTool()
+        public static string GetRegistryValue(RegistryKey root, string subkey, string? key)
         {
-            return ConfigFileSettingsSet.GlobalSettings.GetValue("diff.guitool");
-        }
-
-        public void SetGlobalDiffTool(string value)
-        {
-            ConfigFileSettingsSet.GlobalSettings.SetValue("diff.guitool", value);
-        }
-
-        public bool IsDiffTool(string toolName)
-        {
-            return GetGlobalDiffTool().Equals(toolName,
-                StringComparison.CurrentCultureIgnoreCase);
-        }
-
-        public string GetGlobalMergeTool()
-        {
-            return ConfigFileSettingsSet.GlobalSettings.GetValue("merge.tool");
-        }
-
-        public void SetGlobalMergeTool(string value)
-        {
-            ConfigFileSettingsSet.GlobalSettings.SetValue("merge.tool", value);
-        }
-
-        public bool IsMergeTool(string toolName)
-        {
-            return GetGlobalMergeTool().Equals(toolName,
-                StringComparison.CurrentCultureIgnoreCase);
-        }
-
-        public static string GetRegistryValue(RegistryKey root, string subkey, string key)
-        {
-            string value = null;
+            string? value = null;
             try
             {
                 var registryKey = root.OpenSubKey(subkey, writable: false);
 
-                if (registryKey != null)
+                if (registryKey is not null)
                 {
                     using (registryKey)
                     {
@@ -108,14 +83,13 @@ namespace GitUI.CommandsDialogs.SettingsDialog
             }
             catch (UnauthorizedAccessException)
             {
-                MessageBox.Show(_cantReadRegistry.Text);
+                MessageBox.Show(_cantReadRegistry.Text, TranslatedStrings.Error, MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
 
             return value ?? "";
         }
 
-        [CanBeNull]
-        public string GetGlobalEditor()
+        public string? GetGlobalEditor()
         {
             return GetEditorOptions().FirstOrDefault(o => !string.IsNullOrEmpty(o));
 
@@ -130,21 +104,13 @@ namespace GitUI.CommandsDialogs.SettingsDialog
 
         public string SelectFile(string initialDirectory, string filter, string prev)
         {
-            using (var dialog = new System.Windows.Forms.OpenFileDialog
+            using System.Windows.Forms.OpenFileDialog dialog = new()
             {
                 Filter = filter,
                 InitialDirectory = initialDirectory,
                 Title = _selectFile.Text
-            })
-            {
-                return dialog.ShowDialog() == DialogResult.OK ? dialog.FileName : prev;
-            }
-        }
-
-        [CanBeNull]
-        public Encoding ComboToEncoding(ComboBox combo)
-        {
-            return combo.SelectedItem as Encoding;
+            };
+            return dialog.ShowDialog() == DialogResult.OK ? dialog.FileName : prev;
         }
 
         public void FillEncodings(ComboBox combo)

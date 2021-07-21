@@ -1,9 +1,7 @@
 ﻿using System;
 using System.Windows.Forms;
-using GitCommands;
 using GitUI.UserControls.RevisionGrid;
 using GitUIPluginInterfaces;
-using JetBrains.Annotations;
 
 namespace GitUI.HelperDialogs
 {
@@ -15,14 +13,14 @@ namespace GitUI.HelperDialogs
             InitializeComponent();
         }
 
-        private FormChooseCommit([NotNull] GitUICommands commands)
+        private FormChooseCommit(GitUICommands commands)
             : base(commands)
         {
             InitializeComponent();
             InitializeComplete();
         }
 
-        public FormChooseCommit([NotNull] GitUICommands commands, [CanBeNull] string preselectCommit, bool showArtificial = false)
+        public FormChooseCommit(GitUICommands commands, string? preselectCommit, bool showArtificial = false)
             : this(commands)
         {
             revisionGrid.MultiSelect = false;
@@ -31,14 +29,14 @@ namespace GitUI.HelperDialogs
             if (!string.IsNullOrEmpty(preselectCommit))
             {
                 var objectId = Module.RevParse(preselectCommit);
-                if (objectId != null)
+                if (objectId is not null)
                 {
-                    revisionGrid.InitialObjectId = objectId;
+                    revisionGrid.SelectedId = objectId;
                 }
             }
         }
 
-        public GitRevision SelectedRevision { get; private set; }
+        public GitRevision? SelectedRevision { get; private set; }
 
         protected override void OnLoad(EventArgs e)
         {
@@ -61,7 +59,7 @@ namespace GitUI.HelperDialogs
 
         private void revisionGrid_DoubleClickRevision(object sender, DoubleClickRevisionEventArgs e)
         {
-            if (e.Revision != null)
+            if (e.Revision is not null)
             {
                 SelectedRevision = e.Revision;
                 DialogResult = DialogResult.OK;
@@ -102,7 +100,7 @@ namespace GitUI.HelperDialogs
 
             var parents = SelectedRevision.ParentIds;
 
-            if (parents == null || parents.Count == 0)
+            if (parents is null || parents.Count == 0)
             {
                 return;
             }

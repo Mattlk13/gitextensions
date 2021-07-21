@@ -2,7 +2,6 @@
 using System.Drawing;
 using System.Threading.Tasks;
 using GitExtUtils;
-using JetBrains.Annotations;
 
 namespace GitUI.Avatars
 {
@@ -13,26 +12,22 @@ namespace GitUI.Avatars
     /// <para>Decorates an inner cache, delegating to it as needed.</para>
     /// <para>If an image is available in memory, the inner cache can be bypassed.</para>
     /// </remarks>
-    public sealed class AvatarMemoryCache : IAvatarProvider
+    public sealed class AvatarMemoryCache : IAvatarProvider, IAvatarCacheCleaner
     {
         private readonly MruCache<(string email, int imageSize), Image> _cache;
         private readonly IAvatarProvider _inner;
 
-        public AvatarMemoryCache([NotNull] IAvatarProvider inner, int capacity = 30)
+        public AvatarMemoryCache(IAvatarProvider inner, int capacity = 30)
         {
             _inner = inner ?? throw new ArgumentNullException(nameof(inner));
             _cache = new MruCache<(string email, int imageSize), Image>(capacity);
         }
 
         /// <inheritdoc />
-        event Action IAvatarProvider.CacheCleared
-        {
-            add => _inner.CacheCleared += value;
-            remove => _inner.CacheCleared -= value;
-        }
+        public event EventHandler? CacheCleared;
 
         /// <inheritdoc />
-        public async Task<Image> GetAvatarAsync(string email, string name, int imageSize)
+        public async Task<Image?> GetAvatarAsync(string email, string? name, int imageSize)
         {
             lock (_cache)
             {
@@ -44,12 +39,15 @@ namespace GitUI.Avatars
 
             var image = await _inner.GetAvatarAsync(email, name, imageSize);
 
-            lock (_cache)
+            if (image is not null)
             {
-                _cache.Add((email, imageSize), image);
-
-                return image;
+                lock (_cache)
+                {
+                    _cache.Add((email, imageSize), image);
+                }
             }
+
+            return image;
         }
 
         /// <inheritdoc />
@@ -60,7 +58,8 @@ namespace GitUI.Avatars
                 _cache.Clear();
             }
 
-            return _inner.ClearCacheAsync();
+            CacheCleared?.Invoke(this, EventArgs.Empty);
+            return Task.CompletedTask;
         }
     }
 }

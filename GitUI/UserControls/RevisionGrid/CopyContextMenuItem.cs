@@ -3,18 +3,18 @@ using System.Collections.Generic;
 using System.Drawing;
 using System.Linq;
 using System.Windows.Forms;
-using GitCommands;
 using GitExtUtils;
+using GitExtUtils.GitUI.Theming;
 using GitUI.Properties;
-using JetBrains.Annotations;
+using GitUIPluginInterfaces;
 using ResourceManager;
 
 namespace GitUI.UserControls.RevisionGrid
 {
     public sealed class CopyContextMenuItem : ToolStripMenuItem
     {
-        private readonly TranslationString _copyToClipboardText = new TranslationString("&Copy to clipboard");
-        [CanBeNull] private Func<IReadOnlyList<GitRevision>> _revisionFunc;
+        private readonly TranslationString _copyToClipboardText = new("&Copy to clipboard");
+        private Func<IReadOnlyList<GitRevision>>? _revisionFunc;
         private uint _itemNumber;
 
         public CopyContextMenuItem()
@@ -22,21 +22,21 @@ namespace GitUI.UserControls.RevisionGrid
             Image = Images.CopyToClipboard;
             Text = _copyToClipboardText.Text;
 
-            // Create a dummy menu, so that the shortcut keys work.
-            OnDropDownOpening(null, null);
-
             DropDownOpening += OnDropDownOpening;
         }
 
         public void SetRevisionFunc(Func<IReadOnlyList<GitRevision>> revisionFunc)
         {
             _revisionFunc = revisionFunc;
+
+            // Add dummy item for the menu entry to appear expandable (triangle on the right)
+            DropDownItems.Add(new ToolStripMenuItem());
         }
 
         private void AddItem(string displayText, Func<GitRevision, string> extractRevisionText, Image image, char? hotkey)
         {
             var textToCopy = ExtractRevisionTexts(extractRevisionText);
-            if (textToCopy == null)
+            if (textToCopy is null)
             {
                 return;
             }
@@ -45,7 +45,7 @@ namespace GitUI.UserControls.RevisionGrid
             AddItem(displayText, textToCopy.Join("\n"), image, hotkey);
         }
 
-        private void AddItem([NotNull] string displayText, [NotNull] string textToCopy, Image image, char? hotkey)
+        private void AddItem(string displayText, string textToCopy, Image image, char? hotkey)
         {
             if (hotkey.HasValue)
             {
@@ -60,9 +60,9 @@ namespace GitUI.UserControls.RevisionGrid
                 displayText = PrependItemNumber(displayText);
             }
 
-            var item = new ToolStripMenuItem
+            ToolStripMenuItem item = new()
             {
-                Text = displayText,
+                Text = displayText.TrimEnd('\r', '\n'),
                 ShowShortcutKeys = true,
                 Image = image
             };
@@ -75,15 +75,15 @@ namespace GitUI.UserControls.RevisionGrid
             DropDownItems.Add(item);
         }
 
-        private string[] ExtractRevisionTexts(Func<GitRevision, string> extractRevisionText)
+        private string[]? ExtractRevisionTexts(Func<GitRevision, string>? extractRevisionText)
         {
-            if (extractRevisionText == null)
+            if (extractRevisionText is null)
             {
                 return null;
             }
 
             var gitRevisions = _revisionFunc?.Invoke();
-            if (gitRevisions == null || gitRevisions.Count == 0)
+            if (gitRevisions is null || gitRevisions.Count == 0)
             {
                 return null;
             }
@@ -94,27 +94,19 @@ namespace GitUI.UserControls.RevisionGrid
         private void OnDropDownOpening(object sender, EventArgs e)
         {
             var revisions = _revisionFunc?.Invoke();
-            if (revisions == null || revisions.Count == 0)
+            if (revisions is null || revisions.Count == 0)
             {
-                if (sender == null)
-                {
-                    // create the initial dummy menu on a dummy revision
-                    revisions = new List<GitRevision> { new GitRevision(GitUIPluginInterfaces.ObjectId.WorkTreeId) };
-                }
-                else
-                {
-                    HideDropDown();
-                    return;
-                }
+                HideDropDown();
+                return;
             }
 
             DropDownItems.Clear();
 
-            List<string> branchNames = new List<string>();
-            List<string> tagNames = new List<string>();
+            List<string> branchNames = new();
+            List<string> tagNames = new();
             foreach (var revision in revisions)
             {
-                var refLists = new GitRefListsForRevision(revision);
+                GitRefListsForRevision refLists = new(revision);
                 branchNames.AddRange(refLists.GetAllBranchNames());
                 tagNames.AddRange(refLists.GetAllTagNames());
             }
@@ -124,13 +116,13 @@ namespace GitUI.UserControls.RevisionGrid
             // Add items for branches
             if (branchNames.Any())
             {
-                var caption = new ToolStripMenuItem { Text = Strings.Branches };
+                ToolStripMenuItem caption = new() { Text = TranslatedStrings.Branches };
                 MenuUtil.SetAsCaptionMenuItem(caption, Owner);
                 DropDownItems.Add(caption);
 
                 foreach (var name in branchNames)
                 {
-                    AddItem(name, textToCopy: name, Images.Branch, hotkey: null);
+                    AddItem(name, textToCopy: name, Images.Branch.AdaptLightness(), hotkey: null);
                 }
 
                 DropDownItems.Add(new ToolStripSeparator());
@@ -139,7 +131,7 @@ namespace GitUI.UserControls.RevisionGrid
             // Add items for tags
             if (tagNames.Any())
             {
-                var caption = new ToolStripMenuItem { Text = Strings.Tags };
+                ToolStripMenuItem caption = new() { Text = TranslatedStrings.Tags };
                 MenuUtil.SetAsCaptionMenuItem(caption, Owner);
                 DropDownItems.Add(caption);
 
@@ -153,18 +145,18 @@ namespace GitUI.UserControls.RevisionGrid
 
             // Add other items
             int count = revisions.Count();
-            AddItem(ResourceManager.Strings.GetCommitHash(count), r => r.Guid, Images.CommitId, 'C');
-            AddItem(ResourceManager.Strings.GetMessage(count), r => r.Body ?? r.Subject, Images.Message, 'M');
-            AddItem(ResourceManager.Strings.GetAuthor(count), r => $"{r.Author} <{r.AuthorEmail}>", Images.Author, 'A');
+            AddItem(ResourceManager.TranslatedStrings.GetCommitHash(count), r => r.Guid, Images.CommitId, 'C');
+            AddItem(ResourceManager.TranslatedStrings.GetMessage(count), r => r.Body ?? r.Subject, Images.Message, 'M');
+            AddItem(ResourceManager.TranslatedStrings.GetAuthor(count), r => $"{r.Author} <{r.AuthorEmail}>", Images.Author, 'A');
 
             if (count == 1 && revisions.First().AuthorDate == revisions.First().CommitDate)
             {
-                AddItem(ResourceManager.Strings.Date, r => r.AuthorDate.ToString(), Images.Date, 'D');
+                AddItem(ResourceManager.TranslatedStrings.Date, r => r.AuthorDate.ToString(), Images.Date, 'D');
             }
             else
             {
-                AddItem(ResourceManager.Strings.GetAuthorDate(count), r => r.AuthorDate.ToString(), Images.Date, 'T');
-                AddItem(ResourceManager.Strings.GetCommitDate(count), r => r.CommitDate.ToString(), Images.Date, 'D');
+                AddItem(ResourceManager.TranslatedStrings.GetAuthorDate(count), r => r.AuthorDate.ToString(), Images.Date, 'T');
+                AddItem(ResourceManager.TranslatedStrings.GetCommitDate(count), r => r.CommitDate.ToString(), Images.Date, 'D');
             }
         }
 

@@ -1,6 +1,6 @@
 using System.Collections.Generic;
-using GitCommands;
-using JetBrains.Annotations;
+using System.Diagnostics.CodeAnalysis;
+using GitUIPluginInterfaces;
 
 namespace GitUI
 {
@@ -13,25 +13,18 @@ namespace GitUI
         ///
         /// Two rows selected:
         /// A - first selected row
-        /// B - second selected row
+        /// B - second selected row.
         /// </summary>
-        [ContractAnnotation("revisions:null=>false,extraDiffArgs:null,firstRevision:null,secondRevision:null,error:notnull")]
-        [ContractAnnotation("=>false,extraDiffArgs:null,firstRevision:null,secondRevision:null,error:notnull")]
-        [ContractAnnotation("=>true,extraDiffArgs:notnull,firstRevision:notnull,secondRevision:notnull,error:null")]
         public static bool TryGet(
-            IReadOnlyList<GitRevision> revisions,
+            IReadOnlyList<GitRevision?>? revisions,
             RevisionDiffKind diffKind,
-            out string extraDiffArgs,
-            out string firstRevision,
-            out string secondRevision,
-            out string error)
+            [NotNullWhen(returnValue: true)] out string? firstRevision,
+            out string? secondRevision,
+            [NotNullWhen(returnValue: false)] out string? error)
         {
             // NOTE Order in revisions is that first clicked is last in array
 
-            // Detect rename and copy
-            extraDiffArgs = "-M -C";
-
-            if (revisions == null)
+            if (revisions is null)
             {
                 error = "Unexpected null revision argument to difftool";
                 firstRevision = null;
@@ -47,7 +40,9 @@ namespace GitUI
                 return false;
             }
 
-            if (revisions[0] == null || (revisions.Count == 2 && revisions[1] == null))
+            var revision0 = revisions[0];
+
+            if (revision0 is null)
             {
                 error = "Unexpected single null argument to difftool";
                 firstRevision = null;
@@ -55,12 +50,21 @@ namespace GitUI
                 return false;
             }
 
+            if (revisions.Count == 2 && revisions[1] is null && diffKind == RevisionDiffKind.DiffBLocal)
+            {
+                error = "Unexpected second null argument to difftool for DiffB";
+                firstRevision = null;
+                secondRevision = null;
+                return false;
+            }
+
             if (diffKind == RevisionDiffKind.DiffAB)
             {
+                // If revisions[1]?.Guid is null, the "commit before the initial" is used as firstRev
                 firstRevision = revisions.Count == 1
-                    ? GetParentRef(revisions[0])
-                    : revisions[1].Guid;
-                secondRevision = revisions[0].Guid;
+                    ? GetParentRef(revision0)
+                    : revisions[1]?.Guid ?? "--root";
+                secondRevision = revision0.Guid;
             }
             else
             {
@@ -69,21 +73,13 @@ namespace GitUI
 
                 if (diffKind == RevisionDiffKind.DiffBLocal)
                 {
-                    firstRevision = revisions[0].Guid;
-                }
-                else if (diffKind == RevisionDiffKind.DiffBParentLocal)
-                {
-                    firstRevision = GetParentRef(revisions[0]);
+                    firstRevision = revision0.Guid;
                 }
                 else if (revisions.Count == 1)
                 {
                     if (diffKind == RevisionDiffKind.DiffALocal)
                     {
-                        firstRevision = GetParentRef(revisions[0]);
-                    }
-                    else if (diffKind == RevisionDiffKind.DiffAParentLocal)
-                    {
-                        firstRevision = GetParentRef(revisions[0]) + "^";
+                        firstRevision = GetParentRef(revision0);
                     }
                     else
                     {
@@ -94,11 +90,7 @@ namespace GitUI
                 }
                 else if (diffKind == RevisionDiffKind.DiffALocal)
                 {
-                    firstRevision = revisions[1].Guid;
-                }
-                else if (diffKind == RevisionDiffKind.DiffAParentLocal)
-                {
-                    firstRevision = GetParentRef(revisions[1]);
+                    firstRevision = revisions[1]?.Guid ?? "--root";
                 }
                 else
                 {
@@ -111,9 +103,9 @@ namespace GitUI
             error = null;
             return true;
 
-            string GetParentRef(GitRevision revision)
+            static string GetParentRef(GitRevision revision)
             {
-                return revision.FirstParentGuid?.ToString() ?? revision.Guid + '^';
+                return revision.FirstParentId?.ToString() ?? revision.Guid + '^';
             }
         }
     }

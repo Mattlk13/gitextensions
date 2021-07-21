@@ -1,7 +1,7 @@
 ﻿using Newtonsoft.Json.Linq;
 using RestSharp;
 
-namespace Bitbucket
+namespace GitExtensions.Plugins.Bitbucket
 {
     internal class Commit
     {
@@ -16,9 +16,9 @@ namespace Bitbucket
             };
         }
 
-        public string Hash { get; set; }
-        public string Message { get; set; }
-        public string AuthorName { get; set; }
+        public string? Hash { get; set; }
+        public string? Message { get; set; }
+        public string? AuthorName { get; set; }
         public bool IsMerge { get; set; }
     }
 
@@ -34,7 +34,7 @@ namespace Bitbucket
             _branch = branchName;
         }
 
-        protected override object RequestBody => null;
+        protected override object? RequestBody => null;
 
         protected override Method RequestMethod => Method.GET;
 

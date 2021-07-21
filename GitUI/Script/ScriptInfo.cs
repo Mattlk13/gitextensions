@@ -1,25 +1,6 @@
-﻿using JetBrains.Annotations;
-
-namespace GitUI.Script
+﻿namespace GitUI.Script
 {
-    public enum ScriptEvent
-    {
-        None,
-        BeforeCommit,
-        AfterCommit,
-        BeforePull,
-        AfterPull,
-        BeforePush,
-        AfterPush,
-        ShowInUserMenuBar,
-        BeforeCheckout,
-        AfterCheckout,
-        BeforeMerge,
-        AfterMerge,
-        BeforeFetch,
-        AfterFetch
-    }
-
+    // WARNING: This class is serialized to XML!
     public class ScriptInfo
     {
         public ScriptInfo()
@@ -30,11 +11,11 @@ namespace GitUI.Script
 
         public bool Enabled { get; set; }
 
-        public string Name { get; set; }
+        public string? Name { get; set; }
 
-        public string Command { get; set; }
+        public string? Command { get; set; }
 
-        public string Arguments { get; set; }
+        public string? Arguments { get; set; }
 
         public bool AddToRevisionGridContextMenu { get; set; }
 
@@ -51,18 +32,22 @@ namespace GitUI.Script
         /// <summary>
         /// Gets or sets the icon name.
         /// </summary>
-        public string Icon { get; set; }
+        public string? Icon { get; set; }
 
         /// <summary>
         /// Gets the associated bitmap.
         /// </summary>
-        /// <returns>Bitmap image</returns>
-        [CanBeNull]
-        public System.Drawing.Bitmap GetIcon()
+        /// <returns>Bitmap image.</returns>
+        public System.Drawing.Bitmap? GetIcon()
         {
+            if (string.IsNullOrWhiteSpace(Icon))
+            {
+                return null;
+            }
+
             // Get all resources
             System.Resources.ResourceManager rm
-                = new System.Resources.ResourceManager("GitUI.Properties.Images",
+                = new("GitUI.Properties.Images",
                     System.Reflection.Assembly.GetExecutingAssembly());
 
             // return icon

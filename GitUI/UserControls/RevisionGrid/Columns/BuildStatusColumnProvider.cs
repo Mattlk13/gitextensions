@@ -1,10 +1,15 @@
-﻿using System;
+using System;
+using System.Diagnostics.CodeAnalysis;
 using System.Drawing;
 using System.Drawing.Drawing2D;
 using System.Windows.Forms;
 using GitCommands;
+using GitCommands.Settings;
 using GitExtUtils.GitUI;
+using GitExtUtils.GitUI.Theming;
+using GitUIPluginInterfaces;
 using GitUIPluginInterfaces.BuildServerIntegration;
+using GitUIPluginInterfaces.Settings;
 
 namespace GitUI.UserControls.RevisionGrid.Columns
 {
@@ -35,12 +40,14 @@ namespace GitUI.UserControls.RevisionGrid.Columns
 
         public override void Refresh(int rowHeight, in VisibleRowRange range)
         {
-            var settings = _module().EffectiveSettings.BuildServer;
-
             var showIcon = AppSettings.ShowBuildStatusIconColumn;
             var showText = AppSettings.ShowBuildStatusTextColumn;
-            var columnVisible = settings.EnableIntegration.ValueOrDefault &&
-                                (showIcon || showText);
+
+            IBuildServerSettings buildServerSettings = _module().GetEffectiveSettings()
+                .BuildServer();
+
+            var columnVisible = buildServerSettings.EnableIntegration
+                && (showIcon || showText);
 
             Column.Visible = columnVisible;
 
@@ -71,7 +78,7 @@ namespace GitUI.UserControls.RevisionGrid.Columns
 
         public override void OnCellPainting(DataGridViewCellPaintingEventArgs e, GitRevision revision, int rowHeight, in CellStyle style)
         {
-            if (revision.BuildStatus == null)
+            if (revision.BuildStatus is null)
             {
                 return;
             }
@@ -82,13 +89,14 @@ namespace GitUI.UserControls.RevisionGrid.Columns
             {
                 size = DpiUtil.Scale(new Size(8, 8));
 
-                var location = new Point(
+                Point location = new(
                     e.CellBounds.Left + (size.Width / 2),
                     e.CellBounds.Top + ((e.CellBounds.Height - size.Height) / 2));
 
                 var container = e.Graphics.BeginContainer();
                 e.Graphics.SmoothingMode = SmoothingMode.AntiAlias;
-                e.Graphics.FillEllipse(GetBrush(), new Rectangle(location, size));
+                using var brush = CreateCircleBrush();
+                e.Graphics.FillEllipse(brush, new Rectangle(location, size));
                 e.Graphics.EndContainer(container);
             }
             else
@@ -110,43 +118,61 @@ namespace GitUI.UserControls.RevisionGrid.Columns
             {
                 var isSelected = _gridView.Rows[e.RowIndex].Selected;
 
+                Color customColor;
                 switch (revision.BuildStatus.Status)
                 {
-                    case BuildInfo.BuildStatus.Success:
-                        return isSelected ? Color.LightGreen : Color.DarkGreen;
-                    case BuildInfo.BuildStatus.Failure:
-                        return isSelected ? Color.Red : Color.DarkRed;
-                    case BuildInfo.BuildStatus.InProgress:
-                        return isSelected ? Color.LightBlue : Color.Blue;
-                    case BuildInfo.BuildStatus.Unstable:
-                        return Color.OrangeRed;
-                    case BuildInfo.BuildStatus.Stopped:
-                        return isSelected ? Color.LightGray : Color.Gray;
                     case BuildInfo.BuildStatus.Unknown:
                         return foreColor;
+
+                    case BuildInfo.BuildStatus.Success:
+                        customColor = isSelected ? Color.LightGreen : Color.DarkGreen;
+                        break;
+                    case BuildInfo.BuildStatus.Failure:
+                        customColor = isSelected ? Color.Red : Color.DarkRed;
+                        break;
+                    case BuildInfo.BuildStatus.InProgress:
+                        customColor = isSelected ? Color.LightBlue : Color.Blue;
+                        break;
+                    case BuildInfo.BuildStatus.Unstable:
+                        customColor = Color.OrangeRed;
+                        break;
+                    case BuildInfo.BuildStatus.Stopped:
+                        customColor = isSelected ? Color.LightGray : Color.Gray;
+                        break;
+
                     default:
                         throw new InvalidOperationException("Unsupported build status enum value.");
                 }
+
+                return customColor.AdaptTextColor();
             }
 
-            Brush GetBrush()
+            Brush CreateCircleBrush()
             {
+                Color color;
                 switch (revision.BuildStatus.Status)
                 {
                     case BuildInfo.BuildStatus.Success:
-                        return Brushes.LightGreen;
+                        color = Color.LightGreen;
+                        break;
                     case BuildInfo.BuildStatus.Failure:
-                        return Brushes.Red;
+                        color = Color.Red;
+                        break;
                     case BuildInfo.BuildStatus.InProgress:
-                        return Brushes.DodgerBlue;
+                        color = Color.DodgerBlue;
+                        break;
                     case BuildInfo.BuildStatus.Unstable:
-                        return Brushes.DarkOrange;
+                        color = Color.DarkOrange;
+                        break;
                     case BuildInfo.BuildStatus.Stopped:
                     case BuildInfo.BuildStatus.Unknown:
-                        return Brushes.Gray;
+                        color = Color.Gray;
+                        break;
                     default:
                         throw new InvalidOperationException("Unsupported build status enum value.");
                 }
+
+                return new SolidBrush(color.AdaptBackColor());
             }
         }
 
@@ -158,12 +184,12 @@ namespace GitUI.UserControls.RevisionGrid.Columns
             e.FormattingApplied = true;
         }
 
-        public override bool TryGetToolTip(DataGridViewCellMouseEventArgs e, GitRevision revision, out string toolTip)
+        public override bool TryGetToolTip(DataGridViewCellMouseEventArgs e, GitRevision revision, [NotNullWhen(returnValue: true)] out string? toolTip)
         {
-            if (revision.BuildStatus != null)
+            if (revision.BuildStatus is not null)
             {
                 toolTip = revision.BuildStatus.Tooltip ?? revision.BuildStatus.Description;
-                return true;
+                return toolTip is not null;
             }
 
             return base.TryGetToolTip(e, revision, out toolTip);

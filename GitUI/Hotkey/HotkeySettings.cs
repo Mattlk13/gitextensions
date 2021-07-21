@@ -6,16 +6,16 @@ using ResourceManager;
 namespace GitUI.Hotkey
 {
     /// <summary>
-    /// Stores all hotkey mappings of one target
+    /// Stores all hotkey mappings of one target.
     /// </summary>
     [Serializable]
     public class HotkeySettings
     {
         [XmlArray]
-        public HotkeyCommand[] Commands { get; set; }
+        public HotkeyCommand[]? Commands { get; set; }
 
         [XmlAttribute]
-        public string Name { get; set; }
+        public string? Name { get; set; }
 
         public HotkeySettings()
         {

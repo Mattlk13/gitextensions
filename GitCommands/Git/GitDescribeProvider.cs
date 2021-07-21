@@ -27,7 +27,7 @@ namespace GitCommands.Git
         /// <inheritdoc />
         public (string precedingTag, string commitCount) Get(ObjectId revision)
         {
-            string description = GetModule().GetDescribe(revision);
+            string? description = GetModule().GetDescribe(revision);
             if (string.IsNullOrEmpty(description))
             {
                 return (string.Empty, string.Empty);
@@ -60,7 +60,7 @@ namespace GitCommands.Git
             {
                 var module = _getModule();
 
-                if (module == null)
+                if (module is null)
                 {
                     throw new ArgumentException($"Require a valid instance of {nameof(IGitModule)}");
                 }

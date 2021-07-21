@@ -7,46 +7,8 @@ namespace System.Linq
 {
     public static class LinqExtensions
     {
-        [NotNull]
-        [MustUseReturnValue]
-        public static HashSet<T> ToHashSet<T>([NotNull] this IEnumerable<T> source, IEqualityComparer<T> comparer = null) => new HashSet<T>(source, comparer ?? EqualityComparer<T>.Default);
-
-        [NotNull]
-        [MustUseReturnValue]
-        public static HashSet<TKey> ToHashSet<TSource, TKey>(
-            [NotNull] this IEnumerable<TSource> source,
-            [NotNull] Func<TSource, TKey> keySelector)
-        {
-            if (keySelector == null)
-            {
-                throw new ArgumentNullException(nameof(keySelector));
-            }
-
-            var result = new HashSet<TKey>();
-
-            foreach (var element in source)
-            {
-                var key = keySelector(element);
-
-                if (key == null)
-                {
-                    throw new ArgumentException(
-                        "Key selector produced a key that is null. See exception data for source.",
-                        nameof(keySelector))
-                    {
-                        Data = { { "source", element } }
-                    };
-                }
-
-                result.Add(key);
-            }
-
-            return result;
-        }
-
         [Pure]
-        [NotNull]
-        public static string Join([NotNull] this IEnumerable<string> source, [NotNull] string separator)
+        public static string Join(this IEnumerable<string> source, string separator)
         {
             return string.Join(separator, source);
         }
@@ -61,12 +23,11 @@ namespace System.Linq
         /// <param name="comparer">A function to compare keys.</param>
         /// <returns>An <see cref="IOrderedEnumerable{TElement}"/> whose elements are sorted according to a key.</returns>
         /// <exception cref="ArgumentNullException"><paramref name="source"/> or <paramref name="keySelector"/> is <c>null</c>.</exception>
-        [NotNull]
         [LinqTunnel]
         public static IOrderedEnumerable<TSource> OrderBy<TSource, TKey>(
-            [NotNull] this IEnumerable<TSource> source,
-            [NotNull] Func<TSource, TKey> keySelector,
-            [NotNull] Func<TKey, TKey, int> comparer)
+            this IEnumerable<TSource> source,
+            Func<TSource, TKey> keySelector,
+            Func<TKey, TKey, int> comparer)
         {
             return source.OrderBy(keySelector, new DelegateComparer<TKey>(comparer));
         }
@@ -94,15 +55,15 @@ namespace System.Linq
         /// <param name="transformer">A transform function to apply to each element.</param>
         /// <exception cref="ArgumentNullException"><paramref name="source"/> or <paramref name="transformer"/> is <c>null</c>.</exception>
         public static void Transform<TSource>(
-            [NotNull] this TSource[] source,
-            [NotNull, InstantHandle] Func<TSource, TSource> transformer)
+            this TSource[] source,
+            [InstantHandle] Func<TSource, TSource> transformer)
         {
-            if (source == null)
+            if (source is null)
             {
                 throw new ArgumentNullException(nameof(source));
             }
 
-            if (transformer == null)
+            if (transformer is null)
             {
                 throw new ArgumentNullException(nameof(transformer));
             }
@@ -113,7 +74,7 @@ namespace System.Linq
             }
         }
 
-        public static void AddAll<T>([NotNull] this IList<T> list, [NotNull, InstantHandle] IEnumerable<T> elementsToAdd)
+        public static void AddAll<T>(this IList<T> list, [InstantHandle] IEnumerable<T> elementsToAdd)
         {
             foreach (T t in elementsToAdd)
             {
@@ -121,7 +82,7 @@ namespace System.Linq
             }
         }
 
-        public static void ForEach<T>([NotNull] this IEnumerable<T> enumerable, [NotNull, InstantHandle] Action<T> action)
+        public static void ForEach<T>(this IEnumerable<T> enumerable, [InstantHandle] Action<T> action)
         {
             foreach (T t in enumerable)
             {
@@ -137,8 +98,7 @@ namespace System.Linq
         }
 
         [Pure]
-        [NotNull]
-        public static IReadOnlyList<T> AsReadOnlyList<T>([NotNull] this IEnumerable<T> source)
+        public static IReadOnlyList<T> AsReadOnlyList<T>(this IEnumerable<T> source)
         {
             switch (source)
             {
@@ -160,30 +120,28 @@ namespace System.Linq
                 }
             }
 
-            using (var e = source.GetEnumerator())
+            using var e = source.GetEnumerator();
+            if (!e.MoveNext())
             {
-                if (!e.MoveNext())
-                {
-                    return Array.Empty<T>();
-                }
-
-                var list = new List<T>();
-
-                do
-                {
-                    list.Add(e.Current);
-                }
-                while (e.MoveNext());
-
-                return list;
+                return Array.Empty<T>();
             }
+
+            List<T> list = new();
+
+            do
+            {
+                list.Add(e.Current);
+            }
+            while (e.MoveNext());
+
+            return list;
         }
 
         [Pure]
         [MustUseReturnValue]
         public static int IndexOf<T>(
-            [NotNull] this IEnumerable<T> source,
-            [NotNull, InstantHandle] Func<T, bool> predicate)
+            this IEnumerable<T> source,
+            [InstantHandle] Func<T, bool> predicate)
         {
             var index = 0;
 
@@ -203,8 +161,8 @@ namespace System.Linq
         [Pure]
         [MustUseReturnValue]
         public static TResult[] ToArray<TSource, TResult>(
-            [NotNull] this IReadOnlyList<TSource> source,
-            [NotNull, InstantHandle] Func<TSource, TResult> map)
+            this IReadOnlyList<TSource> source,
+            [InstantHandle] Func<TSource, TResult> map)
         {
             var array = new TResult[source.Count];
 
@@ -214,6 +172,32 @@ namespace System.Linq
             }
 
             return array;
+        }
+
+        [Pure]
+        [MustUseReturnValue]
+        public static IEnumerable<T> WhereNotNull<T>(this IEnumerable<T?> source)
+        {
+            foreach (var item in source)
+            {
+                if (item is not null)
+                {
+                    yield return item;
+                }
+            }
+        }
+
+        [Pure]
+        [MustUseReturnValue]
+        public static IEnumerable<string> WhereNotNullOrWhiteSpace(this IEnumerable<string?> source)
+        {
+            foreach (var item in source)
+            {
+                if (!string.IsNullOrWhiteSpace(item))
+                {
+                    yield return item;
+                }
+            }
         }
     }
 }

@@ -9,25 +9,25 @@ namespace GitUI.CommandsDialogs.RepoHosting
 {
     internal static class DiscussionHtmlCreator
     {
-        public static string CreateFor(IPullRequestInformation currentPullRequestInfo, List<IDiscussionEntry> entries = null)
+        public static string CreateFor(IPullRequestInformation currentPullRequestInfo, List<IDiscussionEntry>? entries = null)
         {
-            var html = new StringBuilder();
+            StringBuilder html = new();
             AddLine(html, "<html><body><style type='text/css'>");
             html.Append(CssData);
             AddLine(html, "</style>");
 
-            if (entries != null)
+            if (entries is not null)
             {
                 foreach (var entry in entries)
                 {
                     var cde = entry as ICommitDiscussionEntry;
 
-                    AddLine(html, "<div class='entry {0}'>", cde == null ? "commentEntry" : " commitEntry");
+                    AddLine(html, "<div class='entry {0}'>", cde is null ? "commentEntry" : " commitEntry");
 
                     AddLine(html, "<div class='heading'>");
                     AddLine(html, "<span class='created'>{0}</span>\r\n", entry.Created);
                     AddLine(html, "<span class='author'>{0}</span>\r\n", entry.Author);
-                    if (cde != null)
+                    if (cde is not null)
                     {
                         AddLine(html, "<span class='commit'>Commit:  {0}</span>\r\n", cde.Sha);
                     }
@@ -44,16 +44,16 @@ namespace GitUI.CommandsDialogs.RepoHosting
             return html.ToString();
         }
 
-        private static void AddLine(StringBuilder html, string input, params object[] p)
+        private static void AddLine(StringBuilder html, string input, params object?[] p)
         {
-            html.AppendFormat(input + "\r\n", (from el in p select (el == null) ? "[UNKNOWN]" : el.ToString().Replace("\r", "").Replace("\n", "<br/>\n").Replace("\"", "&quot;")).ToArray());
+            html.AppendFormat(input + "\r\n", (from el in p select (el is null) ? "[UNKNOWN]" : el.ToString().Replace("\r", "").Replace("\n", "<br/>\n").Replace("\"", "&quot;")).ToArray());
         }
 
         private static string CssData
         {
             get
             {
-                if (_cssData == null)
+                if (_cssData is null)
                 {
                     _cssData = _cssDataRaw;
                     foreach (var elem in SystemInfoReplacement)
@@ -66,13 +66,13 @@ namespace GitUI.CommandsDialogs.RepoHosting
             }
         }
 
-        private static List<KeyValuePair<string, string>> _systemInfoReplacement;
+        private static List<KeyValuePair<string, string>>? _systemInfoReplacement;
 
         private static IEnumerable<KeyValuePair<string, string>> SystemInfoReplacement
         {
             get
             {
-                if (_systemInfoReplacement == null)
+                if (_systemInfoReplacement is null)
                 {
                     var props = typeof(SystemColors).GetProperties(BindingFlags.Static | BindingFlags.Public | BindingFlags.GetProperty).ToList();
 
@@ -94,7 +94,7 @@ namespace GitUI.CommandsDialogs.RepoHosting
             }
         }
 
-        private static string _cssData;
+        private static string? _cssData;
         private const string _cssDataRaw = @"
 body {
     background: SC.Control;

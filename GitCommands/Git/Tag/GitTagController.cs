@@ -2,6 +2,8 @@
 using System.IO;
 using System.IO.Abstractions;
 using System.Windows.Forms;
+using GitCommands.Git.Commands;
+using GitCommands.Git.Extensions;
 using GitUIPluginInterfaces;
 
 namespace GitCommands.Git.Tag
@@ -41,26 +43,26 @@ namespace GitCommands.Git.Tag
         /// <returns>the true if the tag is created.</returns>
         public bool CreateTag(GitCreateTagArgs args, IWin32Window parentWindow)
         {
-            if (parentWindow == null)
+            if (parentWindow is null)
             {
                 throw new ArgumentNullException(nameof(parentWindow));
             }
 
-            string tagMessageFileName = null;
+            string? tagMessageFileName = null;
             if (args.Operation.CanProvideMessage())
             {
                 tagMessageFileName = Path.Combine(GetWorkingDirPath(), "TAGMESSAGE");
                 _fileSystem.File.WriteAllText(tagMessageFileName, args.TagMessage);
             }
 
-            var createTagCmd = new GitCreateTagCmd(args, tagMessageFileName);
+            GitCreateTagCmd createTagCmd = new(args, tagMessageFileName);
             try
             {
                 return _uiCommands.StartCommandLineProcessDialog(parentWindow, createTagCmd);
             }
             finally
             {
-                if (tagMessageFileName != null && _fileSystem.File.Exists(tagMessageFileName))
+                if (tagMessageFileName is not null && _fileSystem.File.Exists(tagMessageFileName))
                 {
                     _fileSystem.File.Delete(tagMessageFileName);
                 }

@@ -1,21 +1,23 @@
-﻿using System.ComponentModel.Composition;
+﻿using System;
+using System.ComponentModel.Composition;
+using GitExtensions.Plugins.ProxySwitcher.Properties;
 using GitUIPluginInterfaces;
-using ProxySwitcher.Properties;
 using ResourceManager;
 
-namespace ProxySwitcher
+namespace GitExtensions.Plugins.ProxySwitcher
 {
     [Export(typeof(IGitPlugin))]
     public class ProxySwitcherPlugin : GitPluginBase
     {
-        public readonly StringSetting Username = new StringSetting("Username", string.Empty);
-        public readonly StringSetting Password = new StringSetting("Password", string.Empty);
-        public readonly StringSetting HttpProxy = new StringSetting("HTTP proxy", string.Empty);
-        public readonly StringSetting HttpProxyPort = new StringSetting("HTTP proxy port", "8080");
+        public readonly StringSetting Username = new("Username", string.Empty);
+        public readonly StringSetting Password = new("Password", string.Empty);
+        public readonly StringSetting HttpProxy = new("HTTP proxy", string.Empty);
+        public readonly StringSetting HttpProxyPort = new("HTTP proxy port", "8080");
 
-        public ProxySwitcherPlugin()
+        public ProxySwitcherPlugin() : base(true)
         {
-            SetNameAndDescription("Proxy Switcher");
+            Id = new Guid("C2A1C7A4-D519-4BD1-859B-6CE7DB9325FB");
+            Name = "Proxy Switcher";
             Translate();
             Icon = Resources.IconProxySwitcher;
         }
@@ -30,10 +32,8 @@ namespace ProxySwitcher
 
         public override bool Execute(GitUIEventArgs args)
         {
-            using (var form = new ProxySwitcherForm(this, Settings, args))
-            {
-                form.ShowDialog(args.OwnerForm);
-            }
+            using ProxySwitcherForm form = new(this, Settings, args);
+            form.ShowDialog(args.OwnerForm);
 
             return false;
         }

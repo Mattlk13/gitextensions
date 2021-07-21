@@ -1,9 +1,10 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Drawing;
 using System.Linq;
-using GitCommands;
+using GitExtUtils.GitUI.Theming;
+using GitUI.Theming;
 using ICSharpCode.TextEditor;
 
 namespace GitUI.Editor.Diff
@@ -31,7 +32,7 @@ namespace GitUI.Editor.Diff
             {
                 if (_visible && _diffLines.Any())
                 {
-                    int maxDigits = (int)Math.Log10(MaxLineNumber) + 1;
+                    int maxDigits = MaxLineNumber > 0 ? ((int)Math.Log10(MaxLineNumber) + 1) : 0;
                     return TextHorizontalMargin + (textArea.TextView.WideSpaceWidth * ((2 * maxDigits) + /* a space behind each number */ 2));
                 }
 
@@ -40,9 +41,9 @@ namespace GitUI.Editor.Diff
         }
 
         /// <summary>
-        /// returns the according line numbers or null if the caretLine is not mapped
+        /// returns the according line numbers or null if the caretLine is not mapped.
         /// </summary>
-        /// <param name="caretLine">0-based (in contrast to the displayed line numbers which are 1-based)</param>
+        /// <param name="caretLine">0-based (in contrast to the displayed line numbers which are 1-based).</param>
         public DiffLineInfo GetLineInfo(int caretLine)
         {
             DiffLineInfo diffLine;
@@ -64,7 +65,7 @@ namespace GitUI.Editor.Diff
             for (var y = 0; y < ((DrawingPosition.Height + textArea.TextView.VisibleLineDrawingRemainder) / fontHeight) + 1; ++y)
             {
                 var ypos = drawingPosition.Y + (fontHeight * y) - textArea.TextView.VisibleLineDrawingRemainder;
-                var backgroundRectangle = new Rectangle(drawingPosition.X, ypos, drawingPosition.Width, fontHeight);
+                Rectangle backgroundRectangle = new(drawingPosition.X, ypos, drawingPosition.Width, fontHeight);
                 if (!rect.IntersectsWith(backgroundRectangle))
                 {
                     continue;
@@ -92,17 +93,17 @@ namespace GitUI.Editor.Diff
                         case DiffLineType.Context:
                             break;
                         case DiffLineType.Plus:
-                            brush = new SolidBrush(AppSettings.DiffAddedColor);
+                            brush = new SolidBrush(AppColor.DiffAdded.GetThemeColor());
                             break;
                         case DiffLineType.Minus:
-                            brush = new SolidBrush(AppSettings.DiffRemovedColor);
+                            brush = new SolidBrush(AppColor.DiffRemoved.GetThemeColor());
                             break;
                         case DiffLineType.Header:
-                            brush = new SolidBrush(AppSettings.DiffSectionColor);
+                            brush = new SolidBrush(AppColor.DiffSection.GetThemeColor());
                             break;
                     }
 
-                    Debug.Assert(brush != null, string.Format("brush != null, unknow diff line style {0}", diffLine.LineType));
+                    Debug.Assert(brush is not null, string.Format("brush is not null, unknow diff line style {0}", diffLine.LineType));
                     g.FillRectangle(brush, new Rectangle(0, backgroundRectangle.Top, leftWidth, backgroundRectangle.Height));
 
                     g.FillRectangle(brush, new Rectangle(leftWidth, backgroundRectangle.Top, rightWidth, backgroundRectangle.Height));
@@ -128,7 +129,7 @@ namespace GitUI.Editor.Diff
 
         public void DisplayLineNumFor(string diff)
         {
-            var result = new DiffLineNumAnalyzer().Analyze(diff);
+            DiffLinesInfo result = new DiffLineNumAnalyzer().Analyze(diff);
             _diffLines = result.DiffLines;
             MaxLineNumber = result.MaxLineNumber;
         }

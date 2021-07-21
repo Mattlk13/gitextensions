@@ -1,46 +1,53 @@
 ﻿using System;
 using System.ComponentModel;
-using System.Diagnostics;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 using GitUI.HelperDialogs;
 using GitUIPluginInterfaces;
-using JetBrains.Annotations;
+using Microsoft;
 using Microsoft.VisualStudio.Threading;
 
 namespace GitUI.UserControls
 {
     public partial class CommitPickerSmallControl : GitModuleControl
     {
+        /// <summary>
+        /// Occurs whenever the selected commit hash changes.
+        /// </summary>
+        public event EventHandler? SelectedObjectIdChanged;
+
         public CommitPickerSmallControl()
         {
             InitializeComponent();
             InitializeComplete();
         }
 
-        [CanBeNull]
         [Browsable(false)]
         [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
-        public ObjectId SelectedObjectId { get; private set; }
+        public ObjectId? SelectedObjectId { get; private set; }
 
         /// <summary>
-        /// shows a message box if commitHash is invalid
+        /// shows a message box if commitHash is invalid.
         /// </summary>
-        public void SetSelectedCommitHash(string commitHash)
+        public void SetSelectedCommitHash(string? commitHash)
         {
             var oldCommitHash = SelectedObjectId;
 
             SelectedObjectId = Module.RevParse(commitHash);
 
-            if (SelectedObjectId == null && !commitHash.IsNullOrWhiteSpace())
+            if (SelectedObjectId is null && !string.IsNullOrWhiteSpace(commitHash))
             {
                 SelectedObjectId = oldCommitHash;
-                MessageBox.Show("The given commit hash is not valid for this repository and was therefore discarded.");
+                MessageBox.Show("The given commit hash is not valid for this repository and was therefore discarded.", TranslatedStrings.Error, MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+            else
+            {
+                SelectedObjectIdChanged?.Invoke(this, EventArgs.Empty);
             }
 
             var isArtificialCommitForEmptyRepo = commitHash == "HEAD";
 
-            if (SelectedObjectId == null || isArtificialCommitForEmptyRepo)
+            if (SelectedObjectId is null || isArtificialCommitForEmptyRepo)
             {
                 textBoxCommitHash.Text = "";
                 lbCommits.Text = "";
@@ -55,7 +62,7 @@ namespace GitUI.UserControls
 
                         var currentCheckout = Module.GetCurrentCheckout();
 
-                        Debug.Assert(currentCheckout != null, "currentCheckout != null");
+                        Validates.NotNull(currentCheckout);
 
                         var text = Module.GetCommitCountString(currentCheckout.ToString(), SelectedObjectId.ToString());
 
@@ -68,12 +75,10 @@ namespace GitUI.UserControls
 
         private void buttonPickCommit_Click(object sender, EventArgs e)
         {
-            using (var chooseForm = new FormChooseCommit(UICommands, SelectedObjectId?.ToString()))
+            using FormChooseCommit chooseForm = new(UICommands, SelectedObjectId?.ToString());
+            if (chooseForm.ShowDialog(this) == DialogResult.OK && chooseForm.SelectedRevision is not null)
             {
-                if (chooseForm.ShowDialog(this) == DialogResult.OK && chooseForm.SelectedRevision != null)
-                {
-                    SetSelectedCommitHash(chooseForm.SelectedRevision.Guid);
-                }
+                SetSelectedCommitHash(chooseForm.SelectedRevision.Guid);
             }
         }
 

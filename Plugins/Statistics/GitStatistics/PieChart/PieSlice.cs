@@ -2,8 +2,9 @@ using System;
 using System.Collections.Generic;
 using System.Drawing;
 using System.Drawing.Drawing2D;
+using Microsoft;
 
-namespace GitStatistics.PieChart
+namespace GitExtensions.Plugins.GitStatistics.PieChart
 {
     /// <summary>
     ///   Object representing 3D pie.
@@ -38,27 +39,27 @@ namespace GitStatistics.PieChart
         /// <summary>
         ///   <c>Brush</c> used to render slice ending cut side.
         /// </summary>
-        protected Brush BrushEndSide;
+        protected Brush? BrushEndSide;
 
         /// <summary>
         ///   <c>Brush</c> used to render pie slice periphery (cylinder outer surface).
         /// </summary>
-        protected Brush BrushPeripherySurface;
+        protected Brush? BrushPeripherySurface;
 
         /// <summary>
         ///   <c>Brush</c> used to render slice starting cut side.
         /// </summary>
-        protected Brush BrushStartSide;
+        protected Brush? BrushStartSide;
 
         /// <summary>
         ///   <c>Brush</c> used to render slice top surface.
         /// </summary>
-        protected Brush BrushSurface;
+        protected Brush? BrushSurface;
 
         /// <summary>
         ///   <c>Brush</c> used to render slice top surface when highlighted.
         /// </summary>
-        protected Brush BrushSurfaceHighlighted;
+        protected Brush? BrushSurfaceHighlighted;
 
         /// <summary>
         ///   <c>PointF</c> corresponding to pie slice center.
@@ -78,7 +79,7 @@ namespace GitStatistics.PieChart
         /// <summary>
         ///   <c>Pen</c> object used to draw pie slice edges.
         /// </summary>
-        protected Pen Pen;
+        protected Pen? Pen;
 
         /// <summary>
         ///   <c>PointF</c> on the periphery corresponding to the end cut
@@ -285,7 +286,7 @@ namespace GitStatistics.PieChart
                 xBoundingRect, yBoundingRect, widthBoundingRect, heightBoundingRect,
                 sliceHeight, startAngle, sweepAngle, surfaceColor, shadowStyle, edgeColorType)
         {
-            Pen.Width = edgeLineWidth;
+            Pen!.Width = edgeLineWidth;
         }
 
         /// <summary>
@@ -358,7 +359,7 @@ namespace GitStatistics.PieChart
         /// </summary>
         public virtual void Dispose()
         {
-            if (Pen != null)
+            if (Pen is not null)
             {
                 Pen.Dispose();
                 Pen = null;
@@ -469,7 +470,9 @@ namespace GitStatistics.PieChart
         /// </param>
         internal void DrawVisibleStartSide(Graphics graphics)
         {
-            StartSide?.Draw(graphics, Pen, BrushStartSide);
+            Validates.NotNull(Pen);
+            Validates.NotNull(BrushStartSide);
+            StartSide.Draw(graphics, Pen, BrushStartSide);
         }
 
         /// <summary>
@@ -480,7 +483,9 @@ namespace GitStatistics.PieChart
         /// </param>
         internal void DrawVisibleEndSide(Graphics graphics)
         {
-            EndSide?.Draw(graphics, Pen, BrushEndSide);
+            Validates.NotNull(Pen);
+            Validates.NotNull(BrushEndSide);
+            EndSide.Draw(graphics, Pen, BrushEndSide);
         }
 
         /// <summary>
@@ -491,6 +496,8 @@ namespace GitStatistics.PieChart
         /// </param>
         internal void DrawVisiblePeriphery(Graphics graphics)
         {
+            Validates.NotNull(Pen);
+            Validates.NotNull(BrushPeripherySurface);
             var peripherySurfaceBounds = GetVisiblePeripherySurfaceBounds();
             foreach (var surfaceBounds in peripherySurfaceBounds)
             {
@@ -513,6 +520,9 @@ namespace GitStatistics.PieChart
         /// </param>
         internal void DrawTop(Graphics graphics)
         {
+            Validates.NotNull(BrushSurface);
+            Validates.NotNull(Pen);
+
             graphics.FillPie(
                 BrushSurface,
                 BoundingRectangle.X,
@@ -532,7 +542,7 @@ namespace GitStatistics.PieChart
         /// </returns>
         internal RectangleF GetFittingRectangle()
         {
-            var boundingRectangle = new RectangleF(PointStart.X, PointStart.Y, 0, 0);
+            RectangleF boundingRectangle = new(PointStart.X, PointStart.Y, 0, 0);
             if ((StartAngle == 0F) || (StartAngle + SweepAngle >= 360))
             {
                 GraphicsUtil.IncludePointX(ref boundingRectangle, BoundingRectangle.Right);
@@ -712,25 +722,25 @@ namespace GitStatistics.PieChart
         /// </summary>
         protected void DisposeBrushes()
         {
-            if (BrushSurface != null)
+            if (BrushSurface is not null)
             {
                 BrushSurface.Dispose();
                 BrushSurface = null;
             }
 
-            if (BrushStartSide != null)
+            if (BrushStartSide is not null)
             {
                 BrushStartSide.Dispose();
                 BrushStartSide = null;
             }
 
-            if (BrushEndSide != null)
+            if (BrushEndSide is not null)
             {
                 BrushEndSide.Dispose();
                 BrushEndSide = null;
             }
 
-            if (BrushPeripherySurface != null)
+            if (BrushPeripherySurface is not null)
             {
                 BrushPeripherySurface.Dispose();
                 BrushPeripherySurface = null;
@@ -953,28 +963,17 @@ namespace GitStatistics.PieChart
         /// </summary>
         private void InitializeSides()
         {
-            if (StartAngle > 90 && StartAngle < 270)
-            {
-                StartSide =
-                    new Quadrilateral(
+            StartSide = StartAngle is (> 90 and < 270)
+                ? new Quadrilateral(
                         Center, PointStart, PointStartBelow, CenterBelow,
-                        SweepAngle != 180);
-            }
-            else
-            {
-                StartSide = Quadrilateral.Empty;
-            }
+                        SweepAngle != 180)
+                : Quadrilateral.Empty;
 
-            if (EndAngle > 270 || EndAngle < 90)
-            {
-                EndSide = new Quadrilateral(
+            EndSide = EndAngle is (> 270 or < 90)
+                ? new Quadrilateral(
                     Center, PointEnd, PointEndBelow, CenterBelow,
-                    SweepAngle != 180);
-            }
-            else
-            {
-                EndSide = Quadrilateral.Empty;
-            }
+                    SweepAngle != 180)
+                : Quadrilateral.Empty;
         }
 
         /// <summary>
@@ -985,7 +984,7 @@ namespace GitStatistics.PieChart
         /// </returns>
         private IEnumerable<PeripherySurfaceBounds> GetVisiblePeripherySurfaceBounds()
         {
-            var peripherySurfaceBounds = new List<PeripherySurfaceBounds>();
+            List<PeripherySurfaceBounds> peripherySurfaceBounds = new();
 
             // outer periphery side is visible only when startAngle or endAngle
             // is between 0 and 180 degrees
@@ -996,9 +995,9 @@ namespace GitStatistics.PieChart
                 if (StartAngle < 180)
                 {
                     var fi1 = StartAngle;
-                    var x1 = new PointF(PointStart.X, PointStart.Y);
+                    PointF x1 = new(PointStart.X, PointStart.Y);
                     var fi2 = EndAngle;
-                    var x2 = new PointF(PointEnd.X, PointEnd.Y);
+                    PointF x2 = new(PointEnd.X, PointEnd.Y);
                     if (StartAngle + SweepAngle > 180)
                     {
                         fi2 = 180;
@@ -1013,9 +1012,9 @@ namespace GitStatistics.PieChart
                 if (StartAngle + SweepAngle > 360)
                 {
                     const float fi1 = 0;
-                    var x1 = new PointF(BoundingRectangle.Right, Center.Y);
+                    PointF x1 = new(BoundingRectangle.Right, Center.Y);
                     var fi2 = EndAngle;
-                    var x2 = new PointF(PointEnd.X, PointEnd.Y);
+                    PointF x2 = new(PointEnd.X, PointEnd.Y);
                     if (fi2 > 180)
                     {
                         fi2 = 180;
@@ -1053,7 +1052,7 @@ namespace GitStatistics.PieChart
             float startAngle, float endAngle,
             PointF pointStart, PointF pointEnd)
         {
-            var path = new GraphicsPath();
+            GraphicsPath path = new();
             path.AddArc(BoundingRectangle, startAngle, endAngle - startAngle);
             path.AddLine(pointEnd.X, pointEnd.Y, pointEnd.X, pointEnd.Y + SliceHeight);
             path.AddArc(

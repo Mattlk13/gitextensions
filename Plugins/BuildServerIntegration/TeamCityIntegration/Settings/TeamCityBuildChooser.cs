@@ -2,13 +2,14 @@
 using System.Drawing;
 using System.Linq;
 using System.Windows.Forms;
+using Microsoft;
 
 namespace TeamCityIntegration.Settings
 {
     public partial class TeamCityBuildChooser : Form
     {
-        private readonly TeamCityAdapter _teamCityAdapter = new TeamCityAdapter();
-        private TreeNode _previouslySelectedProject;
+        private readonly TeamCityAdapter _teamCityAdapter = new();
+        private TreeNode? _previouslySelectedProject;
         public string TeamCityProjectName { get; private set; }
         public string TeamCityBuildIdFilter { get; private set; }
 
@@ -21,9 +22,13 @@ namespace TeamCityIntegration.Settings
             _teamCityAdapter.InitializeHttpClient(teamCityServerUrl);
 
             var rootProject = _teamCityAdapter.GetProjectsTree();
-            var rootTreeNode = LoadTreeView(treeViewTeamCityProjects, rootProject);
 
-            rootTreeNode.Expand();
+            if (rootProject is not null)
+            {
+                var rootTreeNode = LoadTreeView(treeViewTeamCityProjects, rootProject);
+
+                rootTreeNode.Expand();
+            }
         }
 
         private void TeamCityBuildChooser_Load(object sender, EventArgs e)
@@ -33,7 +38,7 @@ namespace TeamCityIntegration.Settings
 
         private void ReselectPreviouslySelectedBuild()
         {
-            if (_previouslySelectedProject == null)
+            if (_previouslySelectedProject is null)
             {
                 return;
             }
@@ -53,7 +58,7 @@ namespace TeamCityIntegration.Settings
 
         private TreeNode ConvertProjectInTreeNode(Project project)
         {
-            var projectNode = new TreeNode(project.Name)
+            TreeNode projectNode = new(project.Name)
             {
                 Name = project.Name,
                 Tag = project,
@@ -81,12 +86,14 @@ namespace TeamCityIntegration.Settings
         private void LoadProjectBuilds(TreeNode treeNode)
         {
             var project = (Project)treeNode.Tag;
-            if (project.Builds == null)
+            if (project.Builds is null)
             {
+                Validates.NotNull(project.Id);
+
                 project.Builds = _teamCityAdapter.GetProjectBuilds(project.Id);
 
                 // Remove "Loading..." node
-                if (treeNode.Nodes.Count == 1 && treeNode.Nodes[0].Tag == null)
+                if (treeNode.Nodes.Count == 1 && treeNode.Nodes[0].Tag is null)
                 {
                     treeNode.Nodes.RemoveAt(0);
                 }
@@ -94,7 +101,7 @@ namespace TeamCityIntegration.Settings
                 var buildNodes = project.Builds.Select(b => new TreeNode(b.DisplayName)
                 {
                     Name = b.Id,
-                    ForeColor = Color.Blue,
+                    ForeColor = SystemColors.Highlight,
                     Tag = b
                 }).OrderBy(b => b.Name).ToArray();
                 treeNode.Nodes.AddRange(buildNodes);
@@ -115,6 +122,9 @@ namespace TeamCityIntegration.Settings
         {
             if (treeViewTeamCityProjects.SelectedNode?.Tag is Build build)
             {
+                Validates.NotNull(build.ParentProject);
+                Validates.NotNull(build.Id);
+
                 TeamCityProjectName = build.ParentProject;
                 TeamCityBuildIdFilter = build.Id;
 

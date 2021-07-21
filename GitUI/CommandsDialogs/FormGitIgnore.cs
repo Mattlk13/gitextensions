@@ -12,10 +12,10 @@ namespace GitUI.CommandsDialogs
     public sealed partial class FormGitIgnore : GitModuleForm
     {
         private readonly TranslationString _gitignoreOnlyInWorkingDirSupportedCaption =
-            new TranslationString("No working directory");
+            new("No working directory");
 
         private readonly TranslationString _saveFileQuestionCaption =
-            new TranslationString("Save changes?");
+            new("Save changes?");
 
         private readonly bool _localExclude;
         private string _originalGitIgnoreFileContent = string.Empty;
@@ -64,7 +64,9 @@ namespace GitUI.CommandsDialogs
         private readonly IGitIgnoreDialogModel _dialogModel;
 
         [Obsolete("For VS designer and translation test only. Do not remove.")]
+#pragma warning disable CS8618 // Non-nullable field must contain a non-null value when exiting constructor. Consider declaring as nullable.
         private FormGitIgnore()
+#pragma warning restore CS8618 // Non-nullable field must contain a non-null value when exiting constructor. Consider declaring as nullable.
         {
             InitializeComponent();
         }
@@ -91,7 +93,7 @@ namespace GitUI.CommandsDialogs
             return new GitIgnoreModel(Module);
         }
 
-        private string ExcludeFile => _dialogModel.ExcludeFile;
+        private string? ExcludeFile => _dialogModel.ExcludeFile;
 
         protected override void OnRuntimeLoad(EventArgs e)
         {
@@ -118,7 +120,7 @@ namespace GitUI.CommandsDialogs
             {
                 if (File.Exists(ExcludeFile))
                 {
-                    _NO_TRANSLATE_GitIgnoreEdit.ViewFileAsync(ExcludeFile);
+                    _NO_TRANSLATE_GitIgnoreEdit.ViewFileAsync(ExcludeFile!);
                 }
             }
             catch (Exception ex)
@@ -135,7 +137,7 @@ namespace GitUI.CommandsDialogs
 
         private bool SaveGitIgnore()
         {
-            if (!HasUnsavedChanges())
+            if (!HasUnsavedChanges() || ExcludeFile is null)
             {
                 return false;
             }
@@ -161,7 +163,7 @@ namespace GitUI.CommandsDialogs
             catch (Exception ex)
             {
                 MessageBox.Show(this, _dialogModel.CannotAccessFile + Environment.NewLine + ex.Message,
-                    _dialogModel.CannotAccessFileCaption);
+                    _dialogModel.CannotAccessFileCaption, MessageBoxButtons.OK, MessageBoxIcon.Error);
                 return false;
             }
         }
@@ -194,7 +196,7 @@ namespace GitUI.CommandsDialogs
                 return;
             }
 
-            MessageBox.Show(this, _dialogModel.FileOnlyInWorkingDirSupported, _gitignoreOnlyInWorkingDirSupportedCaption.Text);
+            MessageBox.Show(this, _dialogModel.FileOnlyInWorkingDirSupported, _gitignoreOnlyInWorkingDirSupportedCaption.Text, MessageBoxButtons.OK, MessageBoxIcon.Error);
             Close();
         }
 
@@ -241,12 +243,12 @@ namespace GitUI.CommandsDialogs
 
         private void lnkGitIgnorePatterns_LinkClicked(object sender, LinkLabelLinkClickedEventArgs e)
         {
-            Process.Start(@"https://github.com/github/gitignore");
+            OsShellUtil.OpenUrlInDefaultBrowser(@"https://github.com/github/gitignore");
         }
 
         private void lnkGitIgnoreGenerate_LinkClicked(object sender, LinkLabelLinkClickedEventArgs e)
         {
-            Process.Start(@"https://www.gitignore.io/");
+            OsShellUtil.OpenUrlInDefaultBrowser(@"https://www.gitignore.io/");
         }
 
         private void btnCancel_Click(object sender, EventArgs e)

@@ -18,7 +18,7 @@ namespace GitCommands
             ShowException(null, e, info, canIgnore);
         }
 
-        public static void ShowException(IWin32Window owner, Exception e, string info, bool canIgnore)
+        public static void ShowException(IWin32Window? owner, Exception e, string info, bool canIgnore)
         {
             if (!(canIgnore && IsIgnorable(e)))
             {
@@ -33,7 +33,7 @@ namespace GitCommands
 
         public static string ToStringWithData(this Exception e)
         {
-            var sb = new StringBuilder();
+            StringBuilder sb = new();
             sb.AppendLine(e.ToString());
             sb.AppendLine();
             foreach (DictionaryEntry entry in e.Data)

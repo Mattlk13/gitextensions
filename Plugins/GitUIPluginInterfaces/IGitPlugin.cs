@@ -1,19 +1,22 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Drawing;
-using JetBrains.Annotations;
 
 namespace GitUIPluginInterfaces
 {
     public interface IGitPlugin
     {
-        string Name { get; }
+        Guid Id { get; }
 
-        string Description { get; }
+        string? Name { get; }
 
-        [CanBeNull]
-        Image Icon { get; }
+        string? Description { get; }
 
-        IGitPluginSettingsContainer SettingsContainer { get; set; }
+        Image? Icon { get; }
+
+        IGitPluginSettingsContainer? SettingsContainer { get; set; }
+
+        bool HasSettings { get; }
 
         IEnumerable<ISetting> GetSettings();
 
@@ -21,6 +24,9 @@ namespace GitUIPluginInterfaces
 
         void Unregister(IGitUICommands gitUiCommands);
 
+        /// <summary>
+        /// Runs the plugin and returns whether the RevisionGrid should be refreshed.
+        /// </summary>
         bool Execute(GitUIEventArgs args);
     }
 }

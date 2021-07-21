@@ -6,18 +6,18 @@ namespace GitUIPluginInterfaces
 {
     public class ChoiceSetting : ISetting
     {
-        public ChoiceSetting(string name, IList<string> values, string defaultValue = null)
+        public ChoiceSetting(string name, IList<string> values, string? defaultValue = null)
             : this(name, name, values, defaultValue)
         {
         }
 
-        public ChoiceSetting(string name, string caption, IList<string> values, string defaultValue = null)
+        public ChoiceSetting(string name, string caption, IList<string> values, string? defaultValue = null)
         {
             Name = name;
             Caption = caption;
             DefaultValue = defaultValue;
             Values = values;
-            if (DefaultValue == null && values.Any())
+            if (DefaultValue is null && values.Any())
             {
                 DefaultValue = values.First();
             }
@@ -25,9 +25,9 @@ namespace GitUIPluginInterfaces
 
         public string Name { get; }
         public string Caption { get; }
-        public string DefaultValue { get; set; }
-        public IList<string> Values { get; set; }
-        public ComboBox CustomControl { get; set; }
+        public string? DefaultValue { get; }
+        public IList<string> Values { get; }
+        public ComboBox? CustomControl { get; set; }
 
         public ISettingControlBinding CreateControlBinding()
         {
@@ -36,25 +36,25 @@ namespace GitUIPluginInterfaces
 
         private class ComboBoxBinding : SettingControlBinding<ChoiceSetting, ComboBox>
         {
-            public ComboBoxBinding(ChoiceSetting setting, ComboBox customControl)
+            public ComboBoxBinding(ChoiceSetting setting, ComboBox? customControl)
                 : base(setting, customControl)
             {
             }
 
             public override ComboBox CreateControl()
             {
-                var comboBox = new ComboBox { DropDownStyle = ComboBoxStyle.DropDownList };
-                comboBox.Items.AddRange(Setting.Values.ToArray());
-                return comboBox;
+                Setting.CustomControl = new ComboBox { DropDownStyle = ComboBoxStyle.DropDownList };
+                Setting.CustomControl.Items.AddRange(Setting.Values.ToArray());
+                return Setting.CustomControl;
             }
 
             public override void LoadSetting(ISettingsSource settings, ComboBox control)
             {
-                string settingVal = settings.SettingLevel == SettingLevel.Effective
+                string? settingVal = settings.SettingLevel == SettingLevel.Effective
                     ? Setting.ValueOrDefault(settings)
                     : Setting[settings];
 
-                control.SelectedIndex = Setting.Values.IndexOf(settingVal);
+                control.SelectedIndex = settingVal is null ? -1 : Setting.Values.IndexOf(settingVal);
 
                 if (control.SelectedIndex == -1)
                 {
@@ -77,15 +77,14 @@ namespace GitUIPluginInterfaces
             }
         }
 
-        public string ValueOrDefault(ISettingsSource settings)
+        public string? ValueOrDefault(ISettingsSource settings)
         {
             return this[settings] ?? DefaultValue;
         }
 
-        public string this[ISettingsSource settings]
+        public string? this[ISettingsSource settings]
         {
             get => settings.GetString(Name, null);
-
             set => settings.SetString(Name, value);
         }
     }

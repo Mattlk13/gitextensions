@@ -6,25 +6,22 @@ namespace GitUI.CommandsDialogs.SettingsDialog.RevisionLinks
 {
     public sealed class CloudProviderExternalLinkDefinitionExtractorFactory : ICloudProviderExternalLinkDefinitionExtractorFactory
     {
-        public ICloudProviderExternalLinkDefinitionExtractor Get(CloudProviderKind cloudProviderKind)
+        public ICloudProviderExternalLinkDefinitionExtractor? Get(CloudProviderKind cloudProviderKind)
         {
-            switch (cloudProviderKind)
+            return cloudProviderKind switch
             {
-                case CloudProviderKind.GitHub:
-                    return new GitHubExternalLinkDefinitionExtractor();
-                case CloudProviderKind.AzureDevOps:
-                    return new AzureDevopsExternalLinkDefinitionExtractor();
-            }
-
-            return null;
+                CloudProviderKind.GitHub => new GitHubExternalLinkDefinitionExtractor(),
+                CloudProviderKind.AzureDevOps => new AzureDevopsExternalLinkDefinitionExtractor(),
+                _ => null
+            };
         }
 
         public IEnumerable<ICloudProviderExternalLinkDefinitionExtractor> GetAllExtractor()
         {
             var cloudProviderKinds = Enum.GetValues(typeof(CloudProviderKind)).OfType<CloudProviderKind>();
-            var cloudProviderExternalLinkDefinitionExtractorFactory = new CloudProviderExternalLinkDefinitionExtractorFactory();
+            CloudProviderExternalLinkDefinitionExtractorFactory cloudProviderExternalLinkDefinitionExtractorFactory = new();
             return cloudProviderKinds.Select(c => cloudProviderExternalLinkDefinitionExtractorFactory.Get(c))
-                .Where(e => e != null);
+                .WhereNotNull();
         }
     }
 }

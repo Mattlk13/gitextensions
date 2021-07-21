@@ -13,7 +13,7 @@
         /// <param name="disposing">true if managed resources should be disposed; otherwise, false.</param>
         protected override void Dispose(bool disposing)
         {
-            if (disposing && (components != null))
+            if (disposing && (components is not null))
             {
                 components.Dispose();
             }
@@ -66,6 +66,7 @@
             this.Controls.Add(this.btnCompare);
             this.Controls.Add(this.branchSelector);
             this.Name = "FormCompareToBranch";
+            this.SizeGripStyle = System.Windows.Forms.SizeGripStyle.Hide;
             this.Text = "Compare to branch";
             this.ResumeLayout(false);
             this.PerformLayout();

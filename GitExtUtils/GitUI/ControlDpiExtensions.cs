@@ -3,15 +3,14 @@ using System.ComponentModel;
 using System.Drawing;
 using System.Windows.Forms;
 using GitExtUtils.GitUI;
-using JetBrains.Annotations;
 
 namespace GitUI
 {
     public static class ControlDpiExtensions
     {
-        public static void AdjustForDpiScaling([NotNull] this Control control)
+        public static void AdjustForDpiScaling(this Control control)
         {
-            if (control == null)
+            if (control is null)
             {
                 throw new ArgumentNullException(nameof(control));
             }
@@ -34,7 +33,7 @@ namespace GitUI
                 {
                     case ButtonBase button:
                     {
-                        if (isDpiScaled && button.Image != null)
+                        if (isDpiScaled && button.Image is not null)
                         {
                             button.Image = DpiUtil.Scale(button.Image);
                             button.Padding = DpiUtil.Scale(new Padding(4, 0, 4, 0));
@@ -45,7 +44,7 @@ namespace GitUI
 
                     case PictureBox pictureBox:
                     {
-                        if (isDpiScaled && pictureBox.Image != null)
+                        if (isDpiScaled && pictureBox.Image is not null)
                         {
                             pictureBox.Image = DpiUtil.Scale(pictureBox.Image);
                         }
@@ -70,7 +69,7 @@ namespace GitUI
 
                     case SplitContainer splitContainer:
                     {
-                        const int splitterWidth = 8;
+                        const int splitterWidth = 6;
 
                         if (!isDpiScaled)
                         {
@@ -82,7 +81,7 @@ namespace GitUI
                             splitContainer.SplitterWidth = DpiUtil.Scale(splitterWidth);
                         }
 
-                        splitContainer.BackColor = ColorHelper.GetSplitterColor();
+                        splitContainer.BackColor = Color.Transparent;
                         break;
                     }
 

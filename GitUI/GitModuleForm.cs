@@ -1,10 +1,10 @@
 ﻿using System;
 using System.ComponentModel;
+using System.Diagnostics.CodeAnalysis;
 using System.Windows.Forms;
 using GitCommands;
 using GitUI.Infrastructure.Telemetry;
 using GitUI.Script;
-using JetBrains.Annotations;
 
 namespace GitUI
 {
@@ -14,14 +14,16 @@ namespace GitUI
     public class GitModuleForm : GitExtensionsForm, IGitUICommandsSource
     {
         /// <inheritdoc />
-        public event EventHandler<GitUICommandsChangedEventArgs> UICommandsChanged;
+        public event EventHandler<GitUICommandsChangedEventArgs>? UICommandsChanged;
 
         /// <summary>
         /// Indicates that the process is run by unit tests runner.
         /// </summary>
         internal static bool IsUnitTestActive { get; set; }
 
-        [CanBeNull] private GitUICommands _uiCommands;
+        public virtual RevisionGridControl? RevisionGridControl { get => null; }
+
+        private GitUICommands? _uiCommands;
 
         /// <inheritdoc />
         [Browsable(false)]
@@ -45,30 +47,34 @@ namespace GitUI
         }
 
         /// <summary>Gets a <see cref="GitModule"/> reference.</summary>
-        [NotNull]
         [Browsable(false)]
         public GitModule Module => UICommands.Module;
 
         [Obsolete("For VS designer and translation test only. Do not remove.")]
         protected GitModuleForm()
         {
-            if (LicenseManager.UsageMode != LicenseUsageMode.Designtime && !IsUnitTestActive)
+            if (!IsDesignMode && !IsUnitTestActive)
             {
                 throw new InvalidOperationException(
                     "This constructor is only to be called by the Visual Studio designer, and the translation unit tests.");
             }
         }
 
-        protected GitModuleForm([NotNull] GitUICommands commands)
-            : base(enablePositionRestore: true)
+        protected GitModuleForm(GitUICommands? commands, bool enablePositionRestore)
+            : base(enablePositionRestore)
         {
             _uiCommands = commands;
             DiagnosticsClient.TrackPageView(GetType().FullName);
         }
 
+        protected GitModuleForm([NotNull] GitUICommands commands)
+            : this(commands, enablePositionRestore: true)
+        {
+        }
+
         protected override CommandStatus ExecuteCommand(int command)
         {
-            var result = ScriptRunner.ExecuteScriptCommand(this, Module, command, UICommands);
+            var result = ScriptRunner.ExecuteScriptCommand(this, Module, command, UICommands, RevisionGridControl);
 
             if (!result.Executed)
             {

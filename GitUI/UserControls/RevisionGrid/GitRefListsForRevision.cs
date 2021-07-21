@@ -1,9 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using GitCommands;
 using GitUIPluginInterfaces;
-using JetBrains.Annotations;
 
 namespace GitUI.UserControls.RevisionGrid
 {
@@ -14,14 +12,14 @@ namespace GitUI.UserControls.RevisionGrid
         private readonly IGitRef[] _branchesWithNoIdenticalRemotes;
         private readonly IGitRef[] _tags;
 
-        public GitRefListsForRevision([NotNull] GitRevision revision)
+        public GitRefListsForRevision(GitRevision revision)
         {
-            if (revision == null)
+            if (revision is null)
             {
                 throw new ArgumentNullException(nameof(revision));
             }
 
-            if (revision.Refs == null)
+            if (revision.Refs is null)
             {
                 throw new ArgumentNullException(nameof(revision.Refs));
             }
@@ -34,6 +32,8 @@ namespace GitUI.UserControls.RevisionGrid
 
             _tags = revision.Refs.Where(h => h.IsTag).ToArray();
         }
+
+        public IReadOnlyList<IGitRef> LocalBranches => _localBranches;
 
         public IReadOnlyList<IGitRef> AllBranches => _allBranches;
 

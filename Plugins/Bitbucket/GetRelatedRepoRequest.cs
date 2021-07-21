@@ -2,7 +2,7 @@
 using Newtonsoft.Json.Linq;
 using RestSharp;
 
-namespace Bitbucket
+namespace GitExtensions.Plugins.Bitbucket
 {
     internal class Repository
     {
@@ -17,10 +17,10 @@ namespace Bitbucket
             };
         }
 
-        public string Id { get; set; }
-        public string ProjectKey { get; set; }
-        public string ProjectName { get; set; }
-        public string RepoName { get; set; }
+        public string? Id { get; set; }
+        public string? ProjectKey { get; set; }
+        public string? ProjectName { get; set; }
+        public string? RepoName { get; set; }
         public string DisplayName => string.Format("{0}/{1}", ProjectName, RepoName);
     }
 
@@ -30,7 +30,7 @@ namespace Bitbucket
         {
         }
 
-        protected override object RequestBody => null;
+        protected override object? RequestBody => null;
 
         protected override Method RequestMethod => Method.GET;
 
@@ -40,7 +40,7 @@ namespace Bitbucket
 
         protected override List<Repository> ParseResponse(JObject json)
         {
-            var result = new List<Repository>();
+            List<Repository> result = new();
             foreach (JObject val in json["values"])
             {
                 result.Add(Repository.Parse(val));

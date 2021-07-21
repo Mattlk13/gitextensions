@@ -5,16 +5,16 @@ using System.Drawing.Drawing2D;
 using System.Linq;
 using System.Windows.Forms;
 
-namespace GitStatistics.PieChart
+namespace GitExtensions.Plugins.GitStatistics.PieChart
 {
     /// <summary>
     ///   A PieChartControl for showing statistics.
     /// </summary>
     public class PieChartControl : Panel
     {
-        private readonly ToolTip _toolTip = new ToolTip();
+        private readonly ToolTip _toolTip = new();
         private float _bottomMargin;
-        private Color[] _colors;
+        private Color[]? _colors;
         private int _defaultToolTipAutoPopDelay;
         private EdgeColorType _edgeColorType = EdgeColorType.SystemColor;
         private float _edgeLineWidth = 1F;
@@ -22,14 +22,14 @@ namespace GitStatistics.PieChart
         private int _highlightedIndex = -1;
         private float _initialAngle;
         private float _leftMargin;
-        private PieChart3D _pieChart;
+        private PieChart3D? _pieChart;
         private float[] _relativeSliceDisplacements = { 0F };
         private float _rightMargin;
         private ShadowStyle _shadowStyle = ShadowStyle.GradualShadow;
         private float _sliceRelativeHeight;
-        private object[] _tags;
+        private object[]? _tags;
         private float _topMargin;
-        private decimal[] _values;
+        private decimal[] _values = Array.Empty<decimal>();
 
         /// <summary>
         ///   Initializes the <c>PieChartControl</c>.
@@ -46,7 +46,7 @@ namespace GitStatistics.PieChart
         ///   Gets or sets the tool tips.
         /// </summary>
         /// <value>The tool tips.</value>
-        public string[] ToolTips { get; set; }
+        public string[]? ToolTips { get; set; }
 
         /// <summary>
         ///   Sets the initial angle from which pies are drawn.
@@ -207,7 +207,7 @@ namespace GitStatistics.PieChart
         /// </param>
         protected void DoDraw(Graphics graphics)
         {
-            if (_values == null || _values.Length <= 0 || !HasNonZeroValue())
+            if (_values.Length == 0 || !HasNonZeroValue())
             {
                 return;
             }
@@ -223,7 +223,7 @@ namespace GitStatistics.PieChart
             }
 
             _pieChart?.Dispose();
-            if (_colors != null && _colors.Length > 0)
+            if (_colors is not null && _colors.Length > 0)
             {
                 _pieChart = new PieChart3D(_leftMargin, _topMargin, width, height, _values, _colors,
                                            _sliceRelativeHeight);
@@ -267,7 +267,7 @@ namespace GitStatistics.PieChart
         protected override void OnMouseMove(MouseEventArgs e)
         {
             base.OnMouseMove(e);
-            if (_pieChart == null)
+            if (_pieChart is null)
             {
                 return;
             }
@@ -275,7 +275,7 @@ namespace GitStatistics.PieChart
             var index = _pieChart.FindPieSliceUnderPoint(new PointF(e.X, e.Y));
             if (index != -1)
             {
-                if (ToolTips == null || ToolTips.Length <= index || ToolTips[index].Length == 0)
+                if (ToolTips is null || ToolTips.Length <= index || ToolTips[index].Length == 0)
                 {
                     _toolTip.SetToolTip(this, _values[index].ToString());
                 }
@@ -295,12 +295,12 @@ namespace GitStatistics.PieChart
 
         protected override void OnMouseDown(MouseEventArgs e)
         {
-            if (_pieChart != null)
+            if (_pieChart is not null)
             {
                 var index = _pieChart.FindPieSliceUnderPoint(new PointF(e.X, e.Y));
                 if (index != -1)
                 {
-                    if (ToolTips == null || ToolTips.Length <= index || ToolTips[index].Length == 0)
+                    if (ToolTips is null || ToolTips.Length <= index || ToolTips[index].Length == 0)
                     {
                         _toolTip.SetToolTip(this, _values[index].ToString());
                     }
@@ -324,6 +324,6 @@ namespace GitStatistics.PieChart
             base.OnMouseDown(e);
         }
 
-        public event EventHandler<SliceSelectedArgs> SliceSelected;
+        public event EventHandler<SliceSelectedArgs>? SliceSelected;
     }
 }

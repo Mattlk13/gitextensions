@@ -1,11 +1,10 @@
 ﻿using System;
 using System.Diagnostics;
 using System.IO;
-using System.Linq;
 using System.Text.RegularExpressions;
 using GitCommands;
+using GitExtUtils;
 using GitUIPluginInterfaces;
-using JetBrains.Annotations;
 
 namespace GitUI.CommandsDialogs
 {
@@ -40,39 +39,37 @@ namespace GitUI.CommandsDialogs
                 "{0}"
             };
 
-            private static readonly Regex RawDataRegex = new Regex(@"^((dangling|missing|unreachable) (commit|blob|tree|tag)|warning in tree) ([a-f\d]{40})(.)*$", RegexOptions.Compiled);
-            private static readonly Regex LogRegex = new Regex(@"^([^,]+), (.*), (.+), (\d+), (.+)?$", RegexOptions.Compiled | RegexOptions.Singleline);
-            private static readonly Regex TagRegex = new Regex(@"^object (.+)\ntype commit\ntag (.+)\ntagger (.+) <.*> (.+) .*\n\n(.*)\n", RegexOptions.Compiled | RegexOptions.Multiline);
+            private static readonly Regex RawDataRegex = new(@"^((dangling|missing|unreachable) (commit|blob|tree|tag)|warning in tree) ([a-f\d]{40})(.)*$", RegexOptions.Compiled);
+            private static readonly Regex LogRegex = new(@"^([^,]+), (.*), (.+), (\d+), (.+)?$", RegexOptions.Compiled | RegexOptions.Singleline);
+            private static readonly Regex TagRegex = new(@"^object (.+)\ntype commit\ntag (.+)\ntagger (.+) <.*> (.+) .*\n\n(.*)\n", RegexOptions.Compiled | RegexOptions.Multiline);
 
             public LostObjectType ObjectType { get; }
 
             /// <summary>
             /// Id (SHA-1 hash) of the lost object.
             /// </summary>
-            [NotNull]
             public ObjectId ObjectId { get; }
 
             /// <summary>
             /// Id (SHA-1 hash) of parent commit to the lost object.
             /// </summary>
-            [CanBeNull]
-            public ObjectId Parent { get; private set; }
+            public ObjectId? Parent { get; private set; }
 
             /// <summary>
             /// Diagnostics and object type.
             /// </summary>
             public string RawType { get; }
 
-            public string Author { get; private set; }
-            public string Subject { get; private set; }
+            public string? Author { get; private set; }
+            public string? Subject { get; private set; }
             public DateTime? Date { get; private set; }
 
             /// <summary>
-            /// Tag name (for a tag object)
+            /// Tag name (for a tag object).
             /// </summary>
-            public string TagName { get; set; }
+            public string? TagName { get; set; }
 
-            private LostObject(LostObjectType objectType, string rawType, [NotNull] ObjectId objectId)
+            private LostObject(LostObjectType objectType, string rawType, ObjectId objectId)
             {
                 // TODO use enum for RawType
                 ObjectType = objectType;
@@ -80,8 +77,7 @@ namespace GitUI.CommandsDialogs
                 ObjectId = objectId ?? throw new ArgumentNullException(nameof(objectId));
             }
 
-            [CanBeNull]
-            public static LostObject TryParse(GitModule module, string raw)
+            public static LostObject? TryParse(GitModule module, string raw)
             {
                 if (string.IsNullOrEmpty(raw))
                 {
@@ -106,7 +102,7 @@ namespace GitUI.CommandsDialogs
                 var rawType = matchedGroups[1].Value;
                 var objectType = GetObjectType(matchedGroups[3]);
                 var objectId = ObjectId.Parse(raw, matchedGroups[4]);
-                var result = new LostObject(objectType, rawType, objectId);
+                LostObject result = new(objectType, rawType, objectId);
 
                 if (objectType == LostObjectType.Commit)
                 {
@@ -116,12 +112,12 @@ namespace GitUI.CommandsDialogs
                     {
                         result.Author = module.ReEncodeStringFromLossless(logPatternMatch.Groups[1].Value);
                         string encodingName = logPatternMatch.Groups[2].Value;
-                        result.Subject = module.ReEncodeCommitMessage(logPatternMatch.Groups[3].Value, encodingName);
+                        result.Subject = module.ReEncodeCommitMessage(logPatternMatch.Groups[3].Value, encodingName) ?? "";
                         result.Date = DateTimeUtils.ParseUnixTime(logPatternMatch.Groups[4].Value);
                         if (logPatternMatch.Groups.Count >= 5)
                         {
-                            var parentId = logPatternMatch.Groups[5].Value.Split(new[] { ' ' }, StringSplitOptions.RemoveEmptyEntries).FirstOrDefault();
-                            if (parentId != null)
+                            var parentId = logPatternMatch.Groups[5].Value.LazySplit(' ', StringSplitOptions.RemoveEmptyEntries).FirstOrDefault();
+                            if (parentId is not null)
                             {
                                 result.Parent = ObjectId.Parse(parentId);
                             }
@@ -165,14 +161,14 @@ namespace GitUI.CommandsDialogs
                         return LostObjectType.Other;
                     }
 
-                    switch (matchedGroup.Value)
+                    return matchedGroup.Value switch
                     {
-                        case "commit": return LostObjectType.Commit;
-                        case "blob": return LostObjectType.Blob;
-                        case "tree": return LostObjectType.Tree;
-                        case "tag": return LostObjectType.Tag;
-                        default: return LostObjectType.Other;
-                    }
+                        "commit" => LostObjectType.Commit,
+                        "blob" => LostObjectType.Blob,
+                        "tree" => LostObjectType.Tree,
+                        "tag" => LostObjectType.Tag,
+                        _ => LostObjectType.Other
+                    };
                 }
             }
         }

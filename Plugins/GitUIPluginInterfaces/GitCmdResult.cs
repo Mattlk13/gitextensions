@@ -4,15 +4,15 @@ namespace GitUIPluginInterfaces
 {
     public struct CmdResult
     {
-        public string StdOutput;
-        public string StdError;
+        public string? StdOutput;
+        public string? StdError;
         public int ExitCode;
 
         public bool ExitedSuccessfully => ExitCode == 0;
 
         public string GetString()
         {
-            var sb = new StringBuilder();
+            StringBuilder sb = new();
 
             if (!string.IsNullOrEmpty(StdOutput))
             {

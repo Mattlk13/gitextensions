@@ -22,35 +22,35 @@ namespace GitUI.SpellChecker
             }
 
             var lineNumber = rtb.GetLineFromCharIndex(index);
-            var lineIndex = NativeMethods.SendMessageInt(rtb.Handle, NativeMethods.EM_LINEINDEX, new IntPtr(lineNumber), IntPtr.Zero).ToInt32();
-            var lineLength = NativeMethods.SendMessageInt(rtb.Handle, NativeMethods.EM_LINELENGTH, new IntPtr(index), IntPtr.Zero).ToInt32();
+            var lineIndex = NativeMethods.SendMessageW(rtb.Handle, NativeMethods.EM_LINEINDEX, (IntPtr)lineNumber, IntPtr.Zero).ToInt32();
+            var lineLength = NativeMethods.SendMessageW(rtb.Handle, NativeMethods.EM_LINELENGTH, (IntPtr)index, IntPtr.Zero).ToInt32();
 
-            var charRange = new NativeMethods.CHARRANGE
+            NativeMethods.CHARRANGE charRange = new()
             {
                 cpMin = lineIndex,
                 cpMax = lineIndex + lineLength
             };
 
-            var rect = new NativeMethods.RECT
+            NativeMethods.RECT rect = new()
             {
-                Top = 0,
-                Bottom = (int)AnInch,
-                Left = 0,
-                Right = 10000000 ////(int)(rtb.Width * anInch + 20);
+                top = 0,
+                bottom = (int)AnInch,
+                left = 0,
+                right = 10000000 ////(int)(rtb.Width * anInch + 20);
             };
 
-            var rectPage = new NativeMethods.RECT
+            NativeMethods.RECT rectPage = new()
             {
-                Top = 0,
-                Bottom = (int)AnInch,
-                Left = 0,
-                Right = 10000000 ////(int)(rtb.Width * anInch + 20);
+                top = 0,
+                bottom = (int)AnInch,
+                left = 0,
+                right = 10000000 ////(int)(rtb.Width * anInch + 20);
             };
 
             var canvas = Graphics.FromHwnd(rtb.Handle);
             var canvasHdc = canvas.GetHdc();
 
-            var formatRange = new NativeMethods.FORMATRANGE
+            NativeMethods.FORMATRANGE formatRange = new()
             {
                 chrg = charRange,
                 hdc = canvasHdc,
@@ -59,12 +59,12 @@ namespace GitUI.SpellChecker
                 rcPage = rectPage
             };
 
-            NativeMethods.SendMessage(rtb.Handle, NativeMethods.EM_FORMATRANGE, IntPtr.Zero, ref formatRange);
+            NativeMethods.SendMessageW(rtb.Handle, NativeMethods.EM_FORMATRANGE, IntPtr.Zero, ref formatRange);
 
             canvas.ReleaseHdc(canvasHdc);
             canvas.Dispose();
 
-            return (int)((formatRange.rc.Bottom - formatRange.rc.Top) / AnInch);
+            return (int)((formatRange.rc.bottom - formatRange.rc.top) / AnInch);
         }
     }
 }

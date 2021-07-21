@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Drawing;
+using System.IO;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
@@ -9,8 +10,10 @@ using System.Windows.Forms;
 using GitCommands;
 using GitCommands.Git;
 using GitCommands.Submodules;
+using GitUI.CommandsDialogs;
 using GitUI.Properties;
-using JetBrains.Annotations;
+using GitUIPluginInterfaces;
+using Microsoft;
 using Microsoft.VisualStudio.Threading;
 using ResourceManager;
 
@@ -18,11 +21,6 @@ namespace GitUI.BranchTreePanel
 {
     partial class RepoObjectsTree
     {
-        // If true, display submodules as a tree of folders and nodes; otherwise, display a single node per module
-        // as in the Submodules menu.
-        // TODO: Possibly expose this as a user option, or just get rid of it.
-        private static bool UseFolderTree = true;
-
         // Top-level nodes used to group SubmoduleNodes
         private class SubmoduleFolderNode : Node
         {
@@ -50,25 +48,27 @@ namespace GitUI.BranchTreePanel
         // Node representing a submodule
         private class SubmoduleNode : Node
         {
-            public SubmoduleInfo Info { get; }
+            public SubmoduleInfo Info { get; set; }
             public bool IsCurrent { get; }
+            public IReadOnlyList<GitItemStatus>? GitStatus { get; }
             public string LocalPath { get; }
             public string SuperPath { get; }
             public string SubmoduleName { get; }
             public string BranchText { get; }
 
-            public SubmoduleNode(Tree tree, SubmoduleInfo submoduleInfo, bool isCurrent, string localPath, string superPath)
+            public SubmoduleNode(Tree tree, SubmoduleInfo submoduleInfo, bool isCurrent, IReadOnlyList<GitItemStatus>? gitStatus, string localPath, string superPath)
                 : base(tree)
             {
                 Info = submoduleInfo;
                 IsCurrent = isCurrent;
+                GitStatus = gitStatus;
                 LocalPath = localPath;
                 SuperPath = superPath;
 
                 // Extract submodule name and branch
                 // e.g. Info.Text = "Externals/conemu-inside [no branch]"
                 // Note that the branch portion won't be there if the user hasn't yet init'd + updated the submodule.
-                var pathAndBranch = Info.Text.Split(new char[] { ' ' }, 2);
+                var pathAndBranch = Info.Text.Split(Delimiters.Space, 2);
                 Trace.Assert(pathAndBranch.Length >= 1);
                 SubmoduleName = pathAndBranch[0].SubstringAfterLast('/'); // Remove path
                 BranchText = pathAndBranch.Length == 2 ? " " + pathAndBranch[1] : "";
@@ -76,22 +76,13 @@ namespace GitUI.BranchTreePanel
 
             public void RefreshDetails()
             {
-                if (Info.Detailed != null && Tree.TreeViewNode.TreeView != null)
-                {
-                    ApplyText();
-                    ApplyStyle();
-                }
+                ApplyStatus();
             }
 
             public bool CanOpen => !IsCurrent;
 
             protected override string DisplayText()
             {
-                if (!UseFolderTree)
-                {
-                    return Info.Text;
-                }
-
                 return SubmoduleName + BranchText + Info.Detailed?.AddedAndRemovedText;
             }
 
@@ -102,7 +93,18 @@ namespace GitUI.BranchTreePanel
 
             public void Open()
             {
+                if (Info.Detailed?.RawStatus is not null)
+                {
+                    UICommands.BrowseSetWorkingDir(Info.Path, ObjectId.WorkTreeId, Info.Detailed.RawStatus.OldCommit);
+                    return;
+                }
+
                 UICommands.BrowseSetWorkingDir(Info.Path);
+            }
+
+            public void LaunchGitExtensions()
+            {
+                GitUICommands.LaunchBrowse(workingDir: Info.Path.EnsureTrailingPathSeparator(), ObjectId.WorkTreeId, Info?.Detailed?.RawStatus?.OldCommit);
             }
 
             internal override void OnSelected()
@@ -124,60 +126,74 @@ namespace GitUI.BranchTreePanel
             {
                 base.ApplyStyle();
 
-                Trace.Assert(TreeViewNode != null);
-
                 if (IsCurrent)
                 {
                     TreeViewNode.NodeFont = new Font(AppSettings.Font, FontStyle.Bold);
                 }
 
-                if (Info.Detailed == null)
-                {
-                    TreeViewNode.ImageKey = TreeViewNode.SelectedImageKey = nameof(Images.FolderSubmodule);
-                }
-                else
-                {
-                    TreeViewNode.ImageKey = GetSubmoduleItemImage(Info.Detailed);
-                }
+                // Note that status is applied also after the tree is created, when status is applied
+                ApplyStatus();
+            }
 
+            private void ApplyStatus()
+            {
+                TreeViewNode.ToolTipText = DisplayText();
+                TreeViewNode.ImageKey = GetSubmoduleItemImage(Info?.Detailed);
                 TreeViewNode.SelectedImageKey = TreeViewNode.ImageKey;
 
                 return;
 
-                // NOTE: Copied and adapated from FormBrowse.GetSubmoduleItemImage
-                string GetSubmoduleItemImage(DetailedSubmoduleInfo details)
+                // NOTE: Copied and adapted from FormBrowse.GetSubmoduleItemImage
+                static string GetSubmoduleItemImage(DetailedSubmoduleInfo? details)
                 {
-                    if (details.Status == null)
+                    return (details?.Status, details?.IsDirty) switch
                     {
-                        return nameof(Images.FolderSubmodule);
-                    }
-
-                    if (details.Status == SubmoduleStatus.FastForward)
-                    {
-                        return details.IsDirty ? nameof(Images.SubmoduleRevisionUpDirty) : nameof(Images.SubmoduleRevisionUp);
-                    }
-
-                    if (details.Status == SubmoduleStatus.Rewind)
-                    {
-                        return details.IsDirty ? nameof(Images.SubmoduleRevisionDownDirty) : nameof(Images.SubmoduleRevisionDown);
-                    }
-
-                    if (details.Status == SubmoduleStatus.NewerTime)
-                    {
-                        return details.IsDirty ? nameof(Images.SubmoduleRevisionSemiUpDirty) : nameof(Images.SubmoduleRevisionSemiUp);
-                    }
-
-                    if (details.Status == SubmoduleStatus.OlderTime)
-                    {
-                        return details.IsDirty ? nameof(Images.SubmoduleRevisionSemiDownDirty) : nameof(Images.SubmoduleRevisionSemiDown);
-                    }
-
-                    return details.IsDirty ? nameof(Images.SubmoduleDirty) : nameof(Images.FileStatusModified);
+                        (SubmoduleStatus.FastForward, true) => nameof(Images.SubmoduleRevisionUpDirty),
+                        (SubmoduleStatus.FastForward, false) => nameof(Images.SubmoduleRevisionUp),
+                        (SubmoduleStatus.Rewind, true) => nameof(Images.SubmoduleRevisionDownDirty),
+                        (SubmoduleStatus.Rewind, false) => nameof(Images.SubmoduleRevisionDown),
+                        (SubmoduleStatus.NewerTime, true) => nameof(Images.SubmoduleRevisionSemiUpDirty),
+                        (SubmoduleStatus.NewerTime, false) => nameof(Images.SubmoduleRevisionSemiUp),
+                        (SubmoduleStatus.OlderTime, true) => nameof(Images.SubmoduleRevisionSemiDownDirty),
+                        (SubmoduleStatus.OlderTime, false) => nameof(Images.SubmoduleRevisionSemiDown),
+                        (_, true) => nameof(Images.SubmoduleDirty),
+                        (_, false) => nameof(Images.FileStatusModified),
+                        _ => nameof(Images.FolderSubmodule)
+                    };
                 }
+            }
+
+            internal async Task SetStatusToolTipAsync(CancellationToken token)
+            {
+                string toolTip;
+                if (Info.Detailed?.RawStatus is not null)
+                {
+                    // Prefer submodule status, shows ahead/behind
+                    toolTip = LocalizationHelpers.ProcessSubmoduleStatus(
+                        new GitModule(Info.Path),
+                        Info.Detailed.RawStatus,
+                        moduleIsParent: false,
+                        limitOutput: true);
+                }
+                else if (GitStatus is not null)
+                {
+                    ArtificialCommitChangeCount changeCount = new();
+                    changeCount.Update(GitStatus);
+                    toolTip = changeCount.GetSummary();
+                }
+                else
+                {
+                    // No data need to be set
+                    return;
+                }
+
+                await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync(token);
+                token.ThrowIfCancellationRequested();
+                TreeViewNode.ToolTipText = toolTip;
             }
         }
 
-        // Used temporarily to faciliate building a tree
+        // Used temporarily to facilitate building a tree
         private class DummyNode : Node
         {
             public DummyNode() : base(null)
@@ -187,23 +203,35 @@ namespace GitUI.BranchTreePanel
 
         private sealed class SubmoduleTree : Tree
         {
-            private SubmoduleStatusEventArgs _currentSubmoduleInfo;
+            private SubmoduleStatusEventArgs? _currentSubmoduleInfo;
+            private Nodes? _currentNodes = null;
 
             public SubmoduleTree(TreeNode treeNode, IGitUICommandsSource uiCommands)
                 : base(treeNode, uiCommands)
             {
+                SubmoduleStatusProvider.Default.StatusUpdating += Provider_StatusUpdating;
                 SubmoduleStatusProvider.Default.StatusUpdated += Provider_StatusUpdated;
             }
 
             protected override Task OnAttachedAsync()
             {
                 var e = _currentSubmoduleInfo;
-                if (e != null)
+                if (e is not null)
                 {
                     OnStatusUpdated(e);
                 }
 
                 return Task.CompletedTask;
+            }
+
+            protected override Task<Nodes> LoadNodesAsync(CancellationToken token)
+            {
+                return Task.FromResult(new Nodes(null));
+            }
+
+            private void Provider_StatusUpdating(object sender, EventArgs e)
+            {
+                _currentNodes = null;
             }
 
             private void Provider_StatusUpdated(object sender, SubmoduleStatusEventArgs e)
@@ -220,24 +248,68 @@ namespace GitUI.BranchTreePanel
             {
                 ThreadHelper.JoinableTaskFactory.RunAsync(async () =>
                 {
-                    CancellationTokenSource cts = null;
-                    Task<Nodes> loadNodesTask = null;
-                    await ReloadNodesAsync(token =>
+                    CancellationTokenSource? cts = null;
+                    Task<Nodes>? loadNodesTask = null;
+                    if (e.StructureUpdated)
                     {
-                        cts = CancellationTokenSource.CreateLinkedTokenSource(e.Token, token);
-                        loadNodesTask = LoadNodesAsync(e.Info, cts.Token);
-                        return loadNodesTask;
-                    }).ConfigureAwait(false);
+                        _currentNodes = null;
+                    }
 
-                    if (cts != null && loadNodesTask != null)
+                    if (_currentNodes is not null)
                     {
-                        var loadedNodes = await loadNodesTask;
-                        await LoadNodeDetailsAsync(cts.Token, loadedNodes).ConfigureAwaitRunInline();
+                        // Structure is up-to-date, update status
+                        var infos = e.Info.AllSubmodules.ToDictionary(info => info.Path, info => info);
+                        Validates.NotNull(e.Info.TopProject);
+                        infos[e.Info.TopProject.Path] = e.Info.TopProject;
+                        var nodes = _currentNodes.DepthEnumerator<SubmoduleNode>().ToList();
+                        foreach (var node in nodes)
+                        {
+                            if (infos.ContainsKey(node.Info.Path))
+                            {
+                                node.Info = infos[node.Info.Path];
+                                infos.Remove(node.Info.Path);
+                            }
+                            else
+                            {
+                                // structure no longer matching
+                                Debug.Assert(true, $"Status info with {1 + e.Info.AllSubmodules.Count} records do not match current nodes ({nodes.Count})");
+                                _currentNodes = null;
+                                break;
+                            }
+                        }
+
+                        if (infos.Count > 0)
+                        {
+                            Debug.Fail($"{infos.Count} status info records remains after matching current nodes, structure seem to mismatch ({nodes.Count}/{e.Info.AllSubmodules.Count})");
+                            _currentNodes = null;
+                        }
+                    }
+
+                    if (_currentNodes is null)
+                    {
+                        await ReloadNodesAsync(token =>
+                        {
+                            cts = CancellationTokenSource.CreateLinkedTokenSource(e.Token, token);
+                            loadNodesTask = LoadNodesAsync(e.Info, cts.Token);
+                            return loadNodesTask;
+                        }).ConfigureAwait(false);
+                    }
+
+                    if (cts is not null && loadNodesTask is not null)
+                    {
+                        _currentNodes = await loadNodesTask;
+                    }
+
+                    if (_currentNodes is not null)
+                    {
+                        var token = cts?.Token ?? e.Token;
+                        await LoadNodeDetailsAsync(_currentNodes, token).ConfigureAwaitRunInline();
+                        LoadNodeToolTips(_currentNodes, token);
                     }
 
                     Interlocked.CompareExchange(ref _currentSubmoduleInfo, null, e);
-                }).FileAndForget();
-            }
+            }).FileAndForget();
+        }
 
             private async Task<Nodes> LoadNodesAsync(SubmoduleInfoResult info, CancellationToken token)
             {
@@ -247,12 +319,12 @@ namespace GitUI.BranchTreePanel
                 return FillSubmoduleTree(info);
             }
 
-            private async Task LoadNodeDetailsAsync(CancellationToken token, Nodes loadedNodes)
+            private async Task LoadNodeDetailsAsync(Nodes loadedNodes, CancellationToken token)
             {
                 await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync(token);
                 token.ThrowIfCancellationRequested();
 
-                if (TreeViewNode.TreeView != null)
+                if (TreeViewNode.TreeView is not null)
                 {
                     TreeViewNode.TreeView.BeginUpdate();
                     try
@@ -266,6 +338,28 @@ namespace GitUI.BranchTreePanel
                 }
             }
 
+            private void LoadNodeToolTips(Nodes loadedNodes, CancellationToken token)
+            {
+                if (TreeViewNode.TreeView is null)
+                {
+                    return;
+                }
+
+                loadedNodes.DepthEnumerator<SubmoduleNode>()
+#pragma warning disable VSTHRD101 // Avoid unsupported async delegates
+                    .ForEach(async node =>
+                    {
+                        try
+                        {
+                            await node.SetStatusToolTipAsync(token).ConfigureAwait(false);
+                        }
+                        catch (OperationCanceledException)
+                        {
+                        }
+                    });
+#pragma warning restore VSTHRD101 // Avoid unsupported async delegates
+            }
+
             protected override void PostFillTreeViewNode(bool firstTime)
             {
                 if (firstTime)
@@ -276,36 +370,31 @@ namespace GitUI.BranchTreePanel
 
             private Nodes FillSubmoduleTree(SubmoduleInfoResult result)
             {
-                var threadModule = (GitModule)result.Module;
+                Validates.NotNull(result.TopProject);
 
-                var submoduleNodes = new List<SubmoduleNode>();
+                var threadModule = (GitModule?)result.Module;
 
-                // We always want to display submodules rooted from the top project. If the currently open project is the top project,
-                // OurSubmodules contains all child submodules recursively; otherwise, if we're currently in a submodule, SuperSubmodules
-                // contains all submodule info relative to the top project.
-                if (result.SuperSubmodules?.Count > 0)
-                {
-                    CreateSubmoduleNodes(result.SuperSubmodules, threadModule, ref submoduleNodes);
-                }
-                else
-                {
-                    CreateSubmoduleNodes(result.OurSubmodules, threadModule, ref submoduleNodes);
-                }
+                Validates.NotNull(threadModule);
 
-                var nodes = new Nodes(this);
-                AddNodesToTree(ref nodes, submoduleNodes, threadModule, result.TopProject);
+                List<SubmoduleNode> submoduleNodes = new();
+
+                // We always want to display submodules rooted from the top project.
+                CreateSubmoduleNodes(result, threadModule, ref submoduleNodes);
+
+                Nodes nodes = new(this);
+                AddTopAndNodesToTree(ref nodes, submoduleNodes, threadModule, result);
                 return nodes;
             }
 
-            private void CreateSubmoduleNodes(IEnumerable<SubmoduleInfo> submodules, GitModule threadModule, ref List<SubmoduleNode> nodes)
+            private void CreateSubmoduleNodes(SubmoduleInfoResult result, GitModule threadModule, ref List<SubmoduleNode> nodes)
             {
-                // result.OurSubmodules/SuperSubmodules contain a recursive list of submodules, but don't provide info about the super
+                // result.OurSubmodules/AllSubmodules contain a recursive list of submodules, but don't provide info about the super
                 // project path. So we deduce these by substring matching paths against an ordered list of all paths.
-                var modulePaths = submodules.Select(info => info.Path).ToList();
+                var modulePaths = result.AllSubmodules.Select(info => info.Path).ToList();
 
                 // Add current and parent module paths
                 var parentModule = threadModule;
-                while (parentModule != null)
+                while (parentModule is not null)
                 {
                     modulePaths.Add(parentModule.WorkingDir);
                     parentModule = parentModule.SuperprojectModule;
@@ -314,13 +403,18 @@ namespace GitUI.BranchTreePanel
                 // Sort descending so we find the nearest outer folder first
                 modulePaths = modulePaths.OrderByDescending(path => path).ToList();
 
-                foreach (var submoduleInfo in submodules)
+                foreach (var submoduleInfo in result.AllSubmodules)
                 {
                     string superPath = GetSubmoduleSuperPath(submoduleInfo.Path);
-                    string localPath = PathUtil.GetDirectoryName(submoduleInfo.Path.Substring(superPath.Length).ToPosixPath());
+                    string localPath = Path.GetDirectoryName(submoduleInfo.Path.Substring(superPath.Length)).ToPosixPath();
 
                     var isCurrent = submoduleInfo.Bold;
-                    nodes.Add(new SubmoduleNode(this, submoduleInfo, isCurrent, localPath, superPath));
+                    nodes.Add(new SubmoduleNode(this,
+                        submoduleInfo,
+                        isCurrent,
+                        isCurrent ? result.CurrentSubmoduleStatus : null,
+                        localPath,
+                        superPath));
                 }
 
                 return;
@@ -328,7 +422,7 @@ namespace GitUI.BranchTreePanel
                 string GetSubmoduleSuperPath(string submodulePath)
                 {
                     var superPath = modulePaths.Find(path => submodulePath != path && submodulePath.Contains(path));
-                    Trace.Assert(superPath != null);
+                    Validates.NotNull(superPath);
                     return superPath;
                 }
             }
@@ -338,18 +432,12 @@ namespace GitUI.BranchTreePanel
                 return node.SuperPath.SubstringAfter(topModule.WorkingDir).ToPosixPath() + node.LocalPath;
             }
 
-            private void AddNodesToTree(
+            private void AddTopAndNodesToTree(
                 ref Nodes nodes,
                 List<SubmoduleNode> submoduleNodes,
                 GitModule threadModule,
-                SubmoduleInfo topProject)
+                SubmoduleInfoResult result)
             {
-                if (!UseFolderTree)
-                {
-                    nodes.AddNodes(submoduleNodes);
-                    return;
-                }
-
                 // Create tree of SubmoduleFolderNode for each path directory and add input SubmoduleNodes as leaves.
 
                 // Example of (SuperPath + LocalPath).ToPosixPath() for all nodes:
@@ -380,7 +468,7 @@ namespace GitUI.BranchTreePanel
                 var topModule = threadModule.GetTopModule();
 
                 // Build a mapping of top-module-relative path to node
-                var pathToNodes = new Dictionary<string, Node>();
+                Dictionary<string, Node> pathToNodes = new();
 
                 // Add existing SubmoduleNodes
                 foreach (var node in submoduleNodes)
@@ -391,7 +479,7 @@ namespace GitUI.BranchTreePanel
                 // Create and add missing SubmoduleFolderNodes
                 foreach (var node in submoduleNodes)
                 {
-                    var parts = GetNodeRelativePath(topModule, node).Split('/');
+                    var parts = GetNodeRelativePath(topModule, node).Split(Delimiters.ForwardSlash);
                     for (int i = 0; i < parts.Length - 1; ++i)
                     {
                         var path = string.Join("/", parts.Take(i + 1));
@@ -403,12 +491,12 @@ namespace GitUI.BranchTreePanel
                 }
 
                 // Now build the tree
-                var rootNode = new DummyNode();
-                var nodesInTree = new HashSet<Node>();
+                DummyNode rootNode = new();
+                HashSet<Node> nodesInTree = new();
                 foreach (var node in submoduleNodes)
                 {
                     Node parentNode = rootNode;
-                    var parts = GetNodeRelativePath(topModule, node).Split('/');
+                    var parts = GetNodeRelativePath(topModule, node).Split(Delimiters.ForwardSlash);
                     for (int i = 0; i < parts.Length; ++i)
                     {
                         var path = string.Join("/", parts.Take(i + 1));
@@ -425,8 +513,16 @@ namespace GitUI.BranchTreePanel
                     }
                 }
 
+                Validates.NotNull(result.TopProject);
+
                 // Add top-module node, and move children of root to it
-                var topModuleNode = new SubmoduleNode(this, topProject, topProject.Bold, "", topProject.Path);
+                SubmoduleNode topModuleNode = new(
+                    this,
+                    result.TopProject,
+                    result.TopProject.Bold,
+                    result.TopProject.Bold ? result.CurrentSubmoduleStatus : null,
+                    "",
+                    result.TopProject.Path);
                 topModuleNode.Nodes.AddNodes(rootNode.Nodes);
                 nodes.AddNode(topModuleNode);
             }
@@ -441,6 +537,11 @@ namespace GitUI.BranchTreePanel
                 node.Open();
             }
 
+            public void OpenSubmoduleInGitExtensions(IWin32Window owner, SubmoduleNode node)
+            {
+                node.LaunchGitExtensions();
+            }
+
             public void ManageSubmodules(IWin32Window owner)
             {
                 UICommands.StartSubmodulesDialog(owner);
@@ -449,6 +550,38 @@ namespace GitUI.BranchTreePanel
             public void SynchronizeSubmodules(IWin32Window owner)
             {
                 UICommands.StartSyncSubmodulesDialog(owner);
+            }
+
+            public void ResetSubmodule(IWin32Window owner, SubmoduleNode node)
+            {
+                FormResetChanges.ActionEnum resetType = FormResetChanges.ShowResetDialog(owner, true, true);
+                if (resetType == FormResetChanges.ActionEnum.Cancel)
+                {
+                    return;
+                }
+
+                GitModule module = new(node.Info.Path);
+
+                // Reset all changes.
+                module.Reset(ResetMode.Hard);
+
+                // Also delete new files, if requested.
+                if (resetType == FormResetChanges.ActionEnum.ResetAndDelete)
+                {
+                    module.Clean(CleanMode.OnlyNonIgnored, directories: true);
+                }
+            }
+
+            public void StashSubmodule(IWin32Window owner, SubmoduleNode node)
+            {
+                GitUICommands uiCmds = new(new GitModule(node.Info.Path));
+                uiCmds.StashSave(owner, AppSettings.IncludeUntrackedFilesInManualStash);
+            }
+
+            public void CommitSubmodule(IWin32Window owner, SubmoduleNode node)
+            {
+                GitUICommands submodulCommands = new(node.Info.Path.EnsureTrailingPathSeparator());
+                submodulCommands.StartCommitDialog(owner);
             }
         }
     }

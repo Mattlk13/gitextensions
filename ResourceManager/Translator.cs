@@ -12,7 +12,7 @@ namespace ResourceManager
 
         // Try to cache the translation as long as possible
         private static IDictionary<string, TranslationFile> _translation = new Dictionary<string, TranslationFile>();
-        private static string _name;
+        private static string? _name;
 
         public static IDictionary<string, TranslationFile> GetTranslation(string translationName)
         {
@@ -50,7 +50,7 @@ namespace ResourceManager
 
         public static string[] GetAllTranslations()
         {
-            var translations = new List<string>();
+            List<string> translations = new();
             try
             {
                 string translationDir = GetTranslationDir();

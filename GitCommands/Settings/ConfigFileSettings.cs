@@ -1,22 +1,20 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using System.Text;
-using GitCommands.Config;
 using GitUIPluginInterfaces;
-using JetBrains.Annotations;
 
 namespace GitCommands.Settings
 {
-    public class ConfigFileSettings : SettingsContainer<ConfigFileSettings, ConfigFileSettingsCache>, IConfigFileSettings
+    public sealed class ConfigFileSettings : SettingsContainer<ConfigFileSettings, ConfigFileSettingsCache>, IConfigFileSettings, IConfigValueStore
     {
-        public ConfigFileSettings(ConfigFileSettings lowerPriority, ConfigFileSettingsCache settingsCache,
+        public ConfigFileSettings(ConfigFileSettings? lowerPriority, ConfigFileSettingsCache settingsCache,
             SettingLevel settingLevel)
             : base(lowerPriority, settingsCache)
         {
             core = new CorePath(this);
-            mergetool = new MergeToolPath(this);
             SettingLevel = settingLevel;
         }
 
@@ -30,7 +28,7 @@ namespace GitCommands.Settings
             return CreateLocal(module, null, SettingLevel.Local, allowCache);
         }
 
-        private static ConfigFileSettings CreateLocal(GitModule module, ConfigFileSettings lowerPriority,
+        private static ConfigFileSettings CreateLocal(GitModule module, ConfigFileSettings? lowerPriority,
             SettingLevel settingLevel, bool allowCache = true)
         {
             return new ConfigFileSettings(lowerPriority,
@@ -43,7 +41,7 @@ namespace GitCommands.Settings
             return CreateGlobal(null, allowCache);
         }
 
-        public static ConfigFileSettings CreateGlobal(ConfigFileSettings lowerPriority, bool allowCache = true)
+        public static ConfigFileSettings CreateGlobal(ConfigFileSettings? lowerPriority, bool allowCache = true)
         {
             string configPath = Path.Combine(EnvironmentConfiguration.GetHomeDir(), ".config", "git", "config");
             if (!File.Exists(configPath))
@@ -55,8 +53,7 @@ namespace GitCommands.Settings
                 SettingLevel.Global);
         }
 
-        [CanBeNull]
-        public static ConfigFileSettings CreateSystemWide(bool allowCache = true)
+        public static ConfigFileSettings? CreateSystemWide(bool allowCache = true)
         {
             // Git 2.xx
             string configPath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.CommonApplicationData), "Git", "config");
@@ -75,7 +72,6 @@ namespace GitCommands.Settings
         }
 
         public readonly CorePath core;
-        public readonly MergeToolPath mergetool;
 
         public string GetValue(string setting)
         {
@@ -87,9 +83,9 @@ namespace GitCommands.Settings
             return SettingsCache.GetValues(setting);
         }
 
-        public void SetValue(string setting, [CanBeNull] string value)
+        public void SetValue(string setting, string? value)
         {
-            if (value.IsNullOrEmpty())
+            if (string.IsNullOrEmpty(value))
             {
                 // to remove setting
                 value = null;
@@ -98,9 +94,15 @@ namespace GitCommands.Settings
             SetString(setting, value);
         }
 
-        public void SetPathValue(string setting, [NotNull] string value)
+        public void SetPathValue(string setting, string? value)
         {
-            SetValue(setting, ConfigSection.FixPath(value));
+            // for using unc paths -> these need to be backward slashes
+            if (!string.IsNullOrWhiteSpace(value) && !value.StartsWith("\\\\"))
+            {
+                value = value.ToPosixPath();
+            }
+
+            SetValue(setting, value);
         }
 
         public IReadOnlyList<IConfigSection> GetConfigSections()
@@ -127,21 +129,18 @@ namespace GitCommands.Settings
             SettingsCache.RemoveConfigSection(configSectionName, performSave);
         }
 
-        [CanBeNull]
+        [MaybeNull]
         public Encoding FilesEncoding
         {
             get => GetEncoding("i18n.filesEncoding");
             set => SetEncoding("i18n.filesEncoding", value);
         }
 
-        [CanBeNull]
-        public Encoding CommitEncoding => GetEncoding("i18n.commitEncoding");
+        public Encoding? CommitEncoding => GetEncoding("i18n.commitEncoding");
 
-        [CanBeNull]
-        public Encoding LogOutputEncoding => GetEncoding("i18n.logoutputencoding");
+        public Encoding? LogOutputEncoding => GetEncoding("i18n.logoutputencoding");
 
-        [CanBeNull]
-        private Encoding GetEncoding(string settingName)
+        private Encoding? GetEncoding(string settingName)
         {
             string encodingName = GetValue(settingName);
 
@@ -168,7 +167,7 @@ namespace GitCommands.Settings
             }
         }
 
-        private void SetEncoding(string settingName, [CanBeNull] Encoding encoding)
+        private void SetEncoding(string settingName, Encoding? encoding)
         {
             SetValue(settingName, encoding?.HeaderName);
         }
@@ -176,23 +175,12 @@ namespace GitCommands.Settings
 
     public class CorePath : SettingsPath
     {
-        public readonly EnumNullableSetting<AutoCRLFType> autocrlf;
+        public readonly ISetting<AutoCRLFType?> autocrlf;
 
         public CorePath(ConfigFileSettings container)
             : base(container, "core")
         {
-            autocrlf = new EnumNullableSetting<AutoCRLFType>("autocrlf", this);
-        }
-    }
-
-    public class MergeToolPath : SettingsPath
-    {
-        public readonly BoolNullableSetting keepBackup;
-
-        public MergeToolPath(ConfigFileSettings container)
-            : base(container, "mergetool")
-        {
-            keepBackup = new BoolNullableSetting("keepBackup", this, true);
+            autocrlf = Setting.Create<AutoCRLFType>(this, nameof(autocrlf));
         }
     }
 }

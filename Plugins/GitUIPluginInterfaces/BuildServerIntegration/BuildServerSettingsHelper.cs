@@ -1,4 +1,5 @@
 using System;
+using System.Diagnostics.CodeAnalysis;
 using System.Text.RegularExpressions;
 
 namespace GitUIPluginInterfaces.BuildServerIntegration
@@ -18,11 +19,16 @@ namespace GitUIPluginInterfaces.BuildServerIntegration
             }
         }
 
-        public static bool IsUrlValid(string url)
+        public static bool IsUrlValid([NotNullWhen(returnValue: true)] string? url)
         {
+            if (url is null)
+            {
+                return false;
+            }
+
             try
             {
-                var uri = new Uri(url);
+                _ = new Uri(url);
                 return true;
             }
             catch

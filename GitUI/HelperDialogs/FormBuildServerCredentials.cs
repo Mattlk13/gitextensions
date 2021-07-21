@@ -13,14 +13,11 @@ namespace GitUI.HelperDialogs
             labelHeader.Text = string.Format(labelHeader.Text, buildServerUniqueKey);
         }
 
-        public IBuildServerCredentials BuildServerCredentials { get; set; }
+        public IBuildServerCredentials? BuildServerCredentials { get; set; }
 
         private void buttonOK_Click(object sender, EventArgs e)
         {
-            if (BuildServerCredentials == null)
-            {
-                BuildServerCredentials = new BuildServerCredentials();
-            }
+            BuildServerCredentials ??= new BuildServerCredentials();
 
             BuildServerCredentials.UseGuestAccess = radioButtonGuestAccess.Checked;
             BuildServerCredentials.Username = textBoxUserName.Text;
@@ -31,7 +28,7 @@ namespace GitUI.HelperDialogs
 
         private void FormBuildServerCredentials_Load(object sender, EventArgs e)
         {
-            if (BuildServerCredentials != null)
+            if (BuildServerCredentials is not null)
             {
                 radioButtonGuestAccess.Checked = BuildServerCredentials.UseGuestAccess;
                 radioButtonAuthenticatedUser.Checked = !BuildServerCredentials.UseGuestAccess;

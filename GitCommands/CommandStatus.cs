@@ -1,6 +1,6 @@
 ﻿namespace GitCommands
 {
-    public struct CommandStatus
+    public readonly struct CommandStatus
     {
         public CommandStatus(bool executed, bool needsGridRefresh)
         {
@@ -8,7 +8,7 @@
             NeedsGridRefresh = needsGridRefresh;
         }
 
-        public static implicit operator CommandStatus(bool executed) => new CommandStatus(executed, false);
+        public static implicit operator CommandStatus(bool executed) => new(executed, false);
 
         public bool Executed { get; }
 

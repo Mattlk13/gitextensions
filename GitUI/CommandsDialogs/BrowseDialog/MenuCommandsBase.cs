@@ -1,6 +1,7 @@
-﻿using System.Collections.Generic;
-using System.Linq;
+﻿using System;
+using System.Collections.Generic;
 using GitCommands;
+using Microsoft;
 using ResourceManager;
 
 namespace GitUI.CommandsDialogs.BrowseDialog
@@ -8,7 +9,11 @@ namespace GitUI.CommandsDialogs.BrowseDialog
     internal abstract class MenuCommandsBase : ITranslate
     {
         // for translation category
-        protected string TranslationCategoryName { get; set; }
+        protected abstract string TranslationCategoryName { get; }
+
+        void IDisposable.Dispose()
+        {
+        }
 
         public void Translate()
         {
@@ -32,7 +37,11 @@ namespace GitUI.CommandsDialogs.BrowseDialog
 
         private IEnumerable<(string name, object item)> GetMenuCommandsForTranslationImpl()
         {
-            return GetMenuCommandsForTranslation().Select(menu => (menu.Name, (object)menu));
+            foreach (MenuCommand menuCommand in GetMenuCommandsForTranslation())
+            {
+                Validates.NotNull(menuCommand.Name);
+                yield return (menuCommand.Name, menuCommand);
+            }
         }
     }
 }

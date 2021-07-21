@@ -7,7 +7,7 @@ namespace GitCommands.Git
     /// </summary>
     public sealed class GitBranchNameOptions
     {
-        public GitBranchNameOptions(string replacementToken)
+        public GitBranchNameOptions(string? replacementToken)
         {
             if (!string.IsNullOrEmpty(replacementToken))
             {

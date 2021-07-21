@@ -10,25 +10,27 @@ namespace GitUI.CommandsDialogs
     public partial class FormGitAttributes : GitModuleForm
     {
         private readonly TranslationString _noWorkingDir =
-            new TranslationString(".gitattributes is only supported when there is a working directory.");
+            new(".gitattributes is only supported when there is a working directory.");
         private readonly TranslationString _noWorkingDirCaption =
-            new TranslationString("No working directory");
+            new("No working directory");
 
         private readonly TranslationString _cannotAccessGitattributes =
-            new TranslationString("Failed to save .gitattributes." + Environment.NewLine + "Check if file is accessible.");
+            new("Failed to save .gitattributes." + Environment.NewLine + "Check if file is accessible.");
         private readonly TranslationString _cannotAccessGitattributesCaption =
-            new TranslationString("Failed to save .gitattributes");
+            new("Failed to save .gitattributes");
 
         private readonly TranslationString _saveFileQuestion =
-            new TranslationString("Save changes to .gitattributes?");
+            new("Save changes to .gitattributes?");
         private readonly TranslationString _saveFileQuestionCaption =
-            new TranslationString("Save changes?");
+            new("Save changes?");
 
         public string GitAttributesFile = string.Empty;
         private readonly IFullPathResolver _fullPathResolver;
 
         [Obsolete("For VS designer and translation test only. Do not remove.")]
+#pragma warning disable CS8618 // Non-nullable field must contain a non-null value when exiting constructor. Consider declaring as nullable.
         private FormGitAttributes()
+#pragma warning restore CS8618 // Non-nullable field must contain a non-null value when exiting constructor. Consider declaring as nullable.
         {
             InitializeComponent();
         }
@@ -55,7 +57,7 @@ namespace GitUI.CommandsDialogs
                 var path = _fullPathResolver.Resolve(".gitattributes");
                 if (File.Exists(path))
                 {
-                    _NO_TRANSLATE_GitAttributesText.ViewFileAsync(path);
+                    _NO_TRANSLATE_GitAttributesText.ViewFileAsync(path!);
                 }
             }
             catch (Exception ex)
@@ -76,7 +78,7 @@ namespace GitUI.CommandsDialogs
             {
                 FileInfoExtensions
                     .MakeFileTemporaryWritable(
-                        _fullPathResolver.Resolve(".gitattributes"),
+                        _fullPathResolver.Resolve(".gitattributes")!, // catch NRE below
                         x =>
                         {
                             GitAttributesFile = _NO_TRANSLATE_GitAttributesText.GetText();
@@ -93,7 +95,7 @@ namespace GitUI.CommandsDialogs
             catch (Exception ex)
             {
                 MessageBox.Show(this, _cannotAccessGitattributes.Text + Environment.NewLine + ex.Message,
-                    _cannotAccessGitattributesCaption.Text);
+                    _cannotAccessGitattributesCaption.Text, MessageBoxButtons.OK, MessageBoxIcon.Error);
                 return false;
             }
         }
@@ -136,7 +138,7 @@ namespace GitUI.CommandsDialogs
                 return;
             }
 
-            MessageBox.Show(this, _noWorkingDir.Text, _noWorkingDirCaption.Text);
+            MessageBox.Show(this, _noWorkingDir.Text, _noWorkingDirCaption.Text, MessageBoxButtons.OK, MessageBoxIcon.Error);
             Close();
         }
 

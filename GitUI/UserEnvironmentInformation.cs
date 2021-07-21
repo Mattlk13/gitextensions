@@ -11,7 +11,7 @@ namespace GitUI
     {
         private static bool _alreadySet;
         private static bool _dirty;
-        private static string _sha;
+        private static string? _sha;
 
         public static void CopyInformation() => ClipboardUtil.TrySetText(GetInformation());
 
@@ -22,7 +22,7 @@ namespace GitUI
                 throw new InvalidOperationException($"{nameof(Initialise)} must be called first");
             }
 
-            string gitVer;
+            string? gitVer;
             try
             {
                 gitVer = GitVersion.Current?.Full;
@@ -35,7 +35,7 @@ namespace GitUI
             var gitVersionInfo = GetGitVersionInfo(gitVer, GitVersion.LastSupportedVersion, GitVersion.LastRecommendedVersion);
 
             // Build and open FormAbout design to make sure info still looks good if you change this code.
-            StringBuilder sb = new StringBuilder();
+            StringBuilder sb = new();
 
             sb.AppendLine($"- Git Extensions {AppSettings.ProductVersion}");
             sb.AppendLine($"- Build {_sha}{(_dirty ? " (Dirty)" : "")}");
@@ -47,14 +47,14 @@ namespace GitUI
             return sb.ToString();
         }
 
-        public static string GetGitVersionInfo(string gitVersion, GitVersion lastSupportedVersion, GitVersion recommendedVersion)
+        public static string GetGitVersionInfo(string? gitVersion, GitVersion lastSupportedVersion, GitVersion recommendedVersion)
         {
             if (string.IsNullOrWhiteSpace(gitVersion))
             {
                 return $"- (minimum: {lastSupportedVersion}, recommended: {recommendedVersion})";
             }
 
-            var actualVersion = new GitVersion(gitVersion);
+            GitVersion actualVersion = new(gitVersion);
             if (actualVersion < lastSupportedVersion)
             {
                 return $"{gitVersion} (minimum: {lastSupportedVersion}, please update!)";

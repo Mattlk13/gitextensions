@@ -1,31 +1,29 @@
 ﻿using System;
-using System.Diagnostics;
 using System.Drawing;
 using System.Linq;
 using System.Windows.Forms;
 using GitCommands;
 using GitCommands.Git;
 using GitExtUtils.GitUI;
+using GitExtUtils.GitUI.Theming;
 using GitUI.Properties;
 using ResourceManager;
 
 namespace GitUI.CommandsDialogs.BrowseDialog.DashboardControl
 {
+    [ThemeAware]
     public partial class Dashboard : GitModuleControl
     {
-        private readonly TranslationString _cloneFork = new TranslationString("Clone {0} repository");
-        private readonly TranslationString _cloneRepository = new TranslationString("Clone repository");
-        private readonly TranslationString _createRepository = new TranslationString("Create new repository");
-        private readonly TranslationString _develop = new TranslationString("Develop");
-        private readonly TranslationString _donate = new TranslationString("Donate");
-        private readonly TranslationString _issues = new TranslationString("Issues");
-        private readonly TranslationString _openRepository = new TranslationString("Open repository");
-        private readonly TranslationString _translate = new TranslationString("Translate");
-        private readonly TranslationString _showCurrentBranch = new TranslationString("Show current branch");
+        private readonly TranslationString _cloneFork = new("Clone {0} repository");
+        private readonly TranslationString _cloneRepository = new("Clone repository");
+        private readonly TranslationString _createRepository = new("Create new repository");
+        private readonly TranslationString _develop = new("Develop");
+        private readonly TranslationString _donate = new("Donate");
+        private readonly TranslationString _issues = new("Issues");
+        private readonly TranslationString _openRepository = new("Open repository");
+        private readonly TranslationString _translate = new("Translate");
 
-        private DashboardTheme _selectedTheme;
-
-        public event EventHandler<GitModuleEventArgs> GitModuleChanged;
+        public event EventHandler<GitModuleEventArgs>? GitModuleChanged;
 
         public Dashboard()
         {
@@ -63,32 +61,35 @@ namespace GitUI.CommandsDialogs.BrowseDialog.DashboardControl
 
         public void RefreshContent()
         {
+            DashboardTheme selectedTheme = ColorHelper.IsLightTheme() ? DashboardTheme.Light : DashboardTheme.Dark;
+
             InitDashboardLayout();
             ApplyTheme();
             userRepositoriesList.ShowRecentRepositories();
 
             void ApplyTheme()
             {
-                _selectedTheme = ColorHelper.IsLightTheme() ? DashboardTheme.Light : DashboardTheme.Dark;
+                BackgroundImage = selectedTheme.BackgroundImage;
 
-                BackColor = _selectedTheme.Primary;
-                pnlLogo.BackColor = _selectedTheme.PrimaryVeryDark;
-                flpnlStart.BackColor = _selectedTheme.PrimaryLight;
-                flpnlContribute.BackColor = _selectedTheme.PrimaryVeryLight;
-                lblContribute.ForeColor = _selectedTheme.SecondaryHeadingText;
-                userRepositoriesList.BranchNameColor = _selectedTheme.SecondaryText;
-                userRepositoriesList.FavouriteColor = _selectedTheme.AccentedText;
-                userRepositoriesList.ForeColor = _selectedTheme.PrimaryText;
-                userRepositoriesList.HeaderColor = _selectedTheme.SecondaryHeadingText;
-                userRepositoriesList.HeaderBackColor = _selectedTheme.PrimaryDark;
-                userRepositoriesList.HoverColor = _selectedTheme.PrimaryLight;
-                userRepositoriesList.MainBackColor = _selectedTheme.Primary;
-                BackgroundImage = _selectedTheme.BackgroundImage;
+                BackColor = selectedTheme.Primary;
+                pnlLogo.BackColor = selectedTheme.PrimaryVeryDark;
+                flpnlStart.BackColor = selectedTheme.PrimaryLight;
+                flpnlContribute.BackColor = selectedTheme.PrimaryVeryLight;
+                lblContribute.ForeColor = selectedTheme.SecondaryHeadingText;
+                userRepositoriesList.BranchNameColor = selectedTheme.SecondaryText;
+                userRepositoriesList.FavouriteColor = selectedTheme.AccentedText;
+                userRepositoriesList.ForeColor = selectedTheme.PrimaryText;
+                userRepositoriesList.HeaderColor = selectedTheme.SecondaryHeadingText;
+                userRepositoriesList.HeaderBackColor = selectedTheme.PrimaryDark;
+                userRepositoriesList.HoverColor = selectedTheme.PrimaryLight;
+                userRepositoriesList.MainBackColor = selectedTheme.Primary;
 
                 foreach (var item in flpnlContribute.Controls.OfType<LinkLabel>().Union(flpnlStart.Controls.OfType<LinkLabel>()))
                 {
-                    item.LinkColor = _selectedTheme.PrimaryText;
+                    item.LinkColor = selectedTheme.PrimaryText;
                 }
+
+                Invalidate(true);
             }
 
             void InitDashboardLayout()
@@ -96,7 +97,6 @@ namespace GitUI.CommandsDialogs.BrowseDialog.DashboardControl
                 try
                 {
                     pnlLeft.SuspendLayout();
-                    bool light = ColorHelper.IsLightTheme();
 
                     AddLinks(flpnlContribute,
                         panel =>
@@ -104,9 +104,9 @@ namespace GitUI.CommandsDialogs.BrowseDialog.DashboardControl
                             panel.Controls.Add(lblContribute);
                             lblContribute.Font = new Font(AppSettings.Font.FontFamily, AppSettings.Font.SizeInPoints + 5.5f);
 
-                            CreateLink(panel, _develop.Text, light ? Images.Develop : Images.Develop_inv, GitHubItem_Click);
+                            CreateLink(panel, _develop.Text, Images.Develop.AdaptLightness(), GitHubItem_Click);
                             CreateLink(panel, _donate.Text, Images.DollarSign, DonateItem_Click);
-                            CreateLink(panel, _translate.Text, light ? Images.Translate : Images.Translate_inv, TranslateItem_Click);
+                            CreateLink(panel, _translate.Text, Images.Translate.AdaptLightness(), TranslateItem_Click);
                             var lastControl = CreateLink(panel, _issues.Text, Images.Bug, IssuesItem_Click);
                             return lastControl;
                         },
@@ -126,7 +126,7 @@ namespace GitUI.CommandsDialogs.BrowseDialog.DashboardControl
 
                             foreach (var gitHoster in PluginRegistry.GitHosters)
                             {
-                                lastControl = CreateLink(panel, string.Format(_cloneFork.Text, gitHoster.Description), Images.CloneRepoGitHub,
+                                lastControl = CreateLink(panel, string.Format(_cloneFork.Text, gitHoster.Name), Images.CloneRepoGitHub,
                                     (repoSender, eventArgs) => UICommands.StartCloneForkFromHoster(this, gitHoster, GitModuleChanged));
                             }
 
@@ -145,7 +145,7 @@ namespace GitUI.CommandsDialogs.BrowseDialog.DashboardControl
                     AutoScrollMinSize = new Size(0, pnlLogo.Height + flpnlStart.MinimumSize.Height + flpnlContribute.MinimumSize.Height);
                 }
 
-                void AddLinks(Panel panel, Func<Panel, Control> addLinks, Action<Panel, Control> onLayout)
+                static void AddLinks(Panel panel, Func<Panel, Control> addLinks, Action<Panel, Control> onLayout)
                 {
                     panel.SuspendLayout();
                     panel.Controls.Clear();
@@ -162,7 +162,7 @@ namespace GitUI.CommandsDialogs.BrowseDialog.DashboardControl
                 {
                     var padding24 = DpiUtil.Scale(24);
                     var padding3 = DpiUtil.Scale(3);
-                    var linkLabel = new LinkLabel
+                    LinkLabel linkLabel = new()
                     {
                         AutoSize = true,
                         AutoEllipsis = true,
@@ -176,13 +176,9 @@ namespace GitUI.CommandsDialogs.BrowseDialog.DashboardControl
                         Text = text,
                         TextAlign = ContentAlignment.MiddleLeft
                     };
-                    linkLabel.MouseHover += (s, e) => linkLabel.LinkColor = _selectedTheme.AccentedText;
-                    linkLabel.MouseLeave += (s, e) => linkLabel.LinkColor = _selectedTheme.PrimaryText;
-
-                    if (handler != null)
-                    {
-                        linkLabel.Click += handler;
-                    }
+                    linkLabel.MouseHover += (s, e) => linkLabel.LinkColor = selectedTheme.AccentedText;
+                    linkLabel.MouseLeave += (s, e) => linkLabel.LinkColor = selectedTheme.PrimaryText;
+                    linkLabel.Click += handler;
 
                     container.Controls.Add(linkLabel);
 
@@ -199,57 +195,35 @@ namespace GitUI.CommandsDialogs.BrowseDialog.DashboardControl
 
         private void dashboard_ParentChanged(object sender, EventArgs e)
         {
-            if (Parent == null)
+            if (Parent is null)
             {
                 Visible = false;
                 return;
             }
 
-            //
-            // create Show current branch menu item and add to Dashboard menu
-            //
-            var showCurrentBranchMenuItem = new ToolStripMenuItem(_showCurrentBranch.Text);
-            showCurrentBranchMenuItem.Click += showCurrentBranchMenuItem_Click;
-            showCurrentBranchMenuItem.Checked = AppSettings.DashboardShowCurrentBranch;
-
-            if (Parent.FindForm() is FormBrowse form)
-            {
-                var menuStrip = form.FindDescendantOfType<MenuStrip>(p => p.Name == "menuStrip1");
-                var dashboardMenu = (ToolStripMenuItem)menuStrip.Items.Cast<ToolStripItem>().SingleOrDefault(p => p.Name == "dashboardToolStripMenuItem");
-                dashboardMenu?.DropDownItems.Add(showCurrentBranchMenuItem);
-            }
-
             Visible = true;
-        }
-
-        private void showCurrentBranchMenuItem_Click(object sender, EventArgs e)
-        {
-            bool newValue = !AppSettings.DashboardShowCurrentBranch;
-            AppSettings.DashboardShowCurrentBranch = newValue;
-            ((ToolStripMenuItem)sender).Checked = newValue;
-            RefreshContent();
         }
 
         private static void TranslateItem_Click(object sender, EventArgs e)
         {
-            Process.Start("https://github.com/gitextensions/gitextensions/wiki/Translations");
+            OsShellUtil.OpenUrlInDefaultBrowser(@"https://github.com/gitextensions/gitextensions/wiki/Translations");
         }
 
         private static void GitHubItem_Click(object sender, EventArgs e)
         {
-            Process.Start(@"https://github.com/gitextensions/gitextensions");
+            OsShellUtil.OpenUrlInDefaultBrowser(@"https://github.com/gitextensions/gitextensions");
         }
 
         private static void IssuesItem_Click(object sender, EventArgs e)
         {
             UserEnvironmentInformation.CopyInformation();
-            Process.Start(@"https://github.com/gitextensions/gitextensions/issues");
+            OsShellUtil.OpenUrlInDefaultBrowser(@"https://github.com/gitextensions/gitextensions/issues");
         }
 
         private void openItem_Click(object sender, EventArgs e)
         {
-            GitModule module = FormOpenDirectory.OpenModule(this, currentModule: null);
-            if (module != null)
+            GitModule? module = FormOpenDirectory.OpenModule(this, currentModule: null);
+            if (module is not null)
             {
                 OnModuleChanged(this, new GitModuleEventArgs(module));
             }
@@ -267,7 +241,7 @@ namespace GitUI.CommandsDialogs.BrowseDialog.DashboardControl
 
         private static void DonateItem_Click(object sender, EventArgs e)
         {
-            Process.Start(FormDonate.DonationUrl);
+            OsShellUtil.OpenUrlInDefaultBrowser(FormDonate.DonationUrl);
         }
     }
 }

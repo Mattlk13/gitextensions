@@ -3,10 +3,11 @@ using System.Text;
 using System.Text.RegularExpressions;
 using System.Windows.Forms;
 using GitCommands;
+using GitExtUtils;
 using GitUIPluginInterfaces;
 using ResourceManager;
 
-namespace ProxySwitcher
+namespace GitExtensions.Plugins.ProxySwitcher
 {
     public partial class ProxySwitcherForm : GitExtensionsFormBase
     {
@@ -15,8 +16,8 @@ namespace ProxySwitcher
         private readonly IGitModule _gitCommands;
 
         #region Translation
-        private readonly TranslationString _pluginDescription = new TranslationString("Proxy Switcher");
-        private readonly TranslationString _pleaseSetProxy = new TranslationString("There is no proxy configured. Please set the proxy host in the plugin settings.");
+        private readonly TranslationString _pluginDescription = new("Proxy Switcher");
+        private readonly TranslationString _pleaseSetProxy = new("There is no proxy configured. Please set the proxy host in the plugin settings.");
         #endregion
 
         /// <summary>
@@ -27,6 +28,10 @@ namespace ProxySwitcher
         public ProxySwitcherForm()
         {
             InitializeComponent();
+
+            _plugin = null!;
+            _settings = null!;
+            _gitCommands = null!;
         }
 
         public ProxySwitcherForm(ProxySwitcherPlugin plugin, ISettingsSource settings, GitUIEventArgs gitUiCommands)
@@ -44,7 +49,7 @@ namespace ProxySwitcher
         {
             if (string.IsNullOrEmpty(_plugin.HttpProxy.ValueOrDefault(_settings)))
             {
-                MessageBox.Show(this, _pleaseSetProxy.Text, Text, MessageBoxButtons.OK);
+                MessageBox.Show(this, _pleaseSetProxy.Text, Text, MessageBoxButtons.OK, MessageBoxIcon.Error);
                 Close();
             }
             else
@@ -55,7 +60,7 @@ namespace ProxySwitcher
 
         private void RefreshProxy()
         {
-            var args = new GitArgumentBuilder("config")
+            GitArgumentBuilder args = new("config")
             {
                 "--get",
                 "http.proxy"
@@ -78,7 +83,7 @@ namespace ProxySwitcher
 
         private string BuildHttpProxy()
         {
-            var sb = new StringBuilder();
+            StringBuilder sb = new();
             sb.Append("\"");
             var username = _plugin.Username.ValueOrDefault(_settings);
             if (!string.IsNullOrEmpty(username))
@@ -110,7 +115,7 @@ namespace ProxySwitcher
         {
             var httpProxy = BuildHttpProxy();
 
-            var args = new GitArgumentBuilder("config")
+            GitArgumentBuilder args = new("config")
             {
                 { ApplyGlobally_CheckBox.Checked, "--global" },
                 "http.proxy",

@@ -1,0 +1,3 @@
+﻿using CommonTestUtils;
+
+[assembly: TestAppSettings]

@@ -1,11 +1,13 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Text;
 using GitCommands.Git.Extensions;
+using GitExtUtils;
 using GitUIPluginInterfaces;
-using JetBrains.Annotations;
+using Microsoft;
 
 namespace GitCommands
 {
@@ -20,25 +22,26 @@ namespace GitCommands
         /// </remarks>
         /// <param name="revision">The <see cref="GitRevision"/> to convert from.</param>
         /// <param name="children">The list of children to add to the returned object.</param>
-        [NotNull]
-        CommitData CreateFromRevision([NotNull] GitRevision revision, IReadOnlyList<ObjectId> children);
+        CommitData CreateFromRevision(GitRevision revision, IReadOnlyList<ObjectId>? children);
 
         /// <summary>
-        /// Gets <see cref="CommitData"/> for the specified <paramref name="sha1"/>.
+        /// Gets <see cref="CommitData"/> for the specified <paramref name="commitId"/>.
         /// </summary>
-        [ContractAnnotation("=>null,error:notnull")]
-        [ContractAnnotation("=>notnull,error:null")]
-        CommitData GetCommitData([NotNull] string sha1, out string error);
+        /// <param name="commitId">The sha or Git reference.</param>
+        /// <param name="error">error message for the Git command</param>
+        /// <param name="cache">Allow caching of the Git command, should only be used if commitId is a sha and Notes are not used.</param>
+        CommitData? GetCommitData(string commitId, out string? error, bool cache = false);
 
         /// <summary>
         /// Updates the <see cref="CommitData.Body"/> (commit message) property of <paramref name="commitData"/>.
         /// </summary>
-        void UpdateBody([NotNull] CommitData commitData, [CanBeNull] out string error);
+        void UpdateBody(CommitData commitData, out string? error);
     }
 
     public sealed class CommitDataManager : ICommitDataManager
     {
-        private const string CommitDataFormat = "%H%n%T%n%P%n%aN <%aE>%n%at%n%cN <%cE>%n%ct%n%e%n%B%nNotes:%n%-N";
+        private const string CommitDataFormat = "%H%n%T%n%P%n%aN <%aE>%n%at%n%cN <%cE>%n%ct%n%e%n%B";
+        private const string CommitDataWithNotesFormat = "%H%n%T%n%P%n%aN <%aE>%n%at%n%cN <%cE>%n%ct%n%e%n%B%nNotes:%n%-N";
         private const string BodyAndNotesFormat = "%H%n%e%n%B%nNotes:%n%-N";
 
         private readonly Func<IGitModule> _getModule;
@@ -49,9 +52,9 @@ namespace GitCommands
         }
 
         /// <inheritdoc />
-        public void UpdateBody(CommitData commitData, out string error)
+        public void UpdateBody(CommitData commitData, out string? error)
         {
-            if (!TryGetCommitLog(commitData.ObjectId.ToString(), BodyAndNotesFormat, out error, out var data))
+            if (!TryGetCommitLog(commitData.ObjectId.ToString(), BodyAndNotesFormat, out error, out var data, cache: false))
             {
                 return;
             }
@@ -71,7 +74,7 @@ namespace GitCommands
             // commit message
             // ...
 
-            var lines = data.Split('\n');
+            var lines = data.Split(Delimiters.LineFeed);
 
             var guid = lines[0];
             var commitEncoding = lines[1];
@@ -84,9 +87,9 @@ namespace GitCommands
         }
 
         /// <inheritdoc />
-        public CommitData GetCommitData(string sha1, out string error)
+        public CommitData? GetCommitData(string commitId, out string? error, bool cache = false)
         {
-            return TryGetCommitLog(sha1, CommitDataFormat, out error, out var info)
+            return TryGetCommitLog(commitId, cache ? CommitDataFormat : CommitDataWithNotesFormat, out error, out var info, cache)
                 ? CreateFromFormattedData(info)
                 : null;
         }
@@ -97,10 +100,9 @@ namespace GitCommands
         /// <param name="data">Data produced by a <c>git log</c> or <c>git show</c> command where <c>--format</c>
         /// was provided the string <see cref="CommitDataFormat"/>.</param>
         /// <returns>CommitData object populated with parsed info from git string.</returns>
-        [NotNull]
-        internal CommitData CreateFromFormattedData([NotNull] string data)
+        internal CommitData CreateFromFormattedData(string data)
         {
-            if (data == null)
+            if (data is null)
             {
                 throw new ArgumentNullException(nameof(data));
             }
@@ -132,7 +134,7 @@ namespace GitCommands
             // diff notes
             // ...
 
-            var lines = data.Split('\n');
+            var lines = data.Split(Delimiters.LineFeed);
 
             var guid = ObjectId.Parse(lines[0]);
 
@@ -140,7 +142,7 @@ namespace GitCommands
             var treeGuid = ObjectId.Parse(lines[1]);
 
             // TODO: we can use this to add more relationship info like gitk does if wanted
-            var parentGuids = lines[2].Split(' ').Where(id => id.IsNotNullOrWhitespace()).Select(id => ObjectId.Parse(id)).ToList();
+            var parentIds = lines[2].LazySplit(' ').Where(id => !string.IsNullOrWhiteSpace(id)).Select(id => ObjectId.Parse(id)).ToList();
             var author = module.ReEncodeStringFromLossless(lines[3]);
             var authorDate = DateTimeUtils.ParseUnixTime(lines[4]);
             var committer = module.ReEncodeStringFromLossless(lines[5]);
@@ -151,20 +153,28 @@ namespace GitCommands
             // commit message is not re-encoded by git when format is given
             var body = module.ReEncodeCommitMessage(message, commitEncoding);
 
-            return new CommitData(guid, treeGuid, parentGuids, author, authorDate, committer, commitDate, body);
+            Validates.NotNull(author);
+            Validates.NotNull(committer);
+
+            return new CommitData(guid, treeGuid, parentIds, author, authorDate, committer, commitDate, body);
         }
 
         /// <inheritdoc />
-        public CommitData CreateFromRevision(GitRevision revision, IReadOnlyList<ObjectId> children)
+        public CommitData CreateFromRevision(GitRevision revision, IReadOnlyList<ObjectId>? children)
         {
-            if (revision == null)
+            if (revision is null)
             {
                 throw new ArgumentNullException(nameof(revision));
             }
 
-            if (revision.ObjectId == null)
+            if (revision.ObjectId is null)
             {
                 throw new ArgumentException($"Cannot have a null {nameof(GitRevision.ObjectId)}.", nameof(revision));
+            }
+
+            if (revision.ParentIds is null)
+            {
+                throw new ArgumentException($"Cannot have null {nameof(GitRevision.ParentIds)}.", nameof(revision));
             }
 
             return new CommitData(revision.ObjectId, revision.TreeGuid, revision.ParentIds,
@@ -174,12 +184,11 @@ namespace GitCommands
             { ChildIds = children };
         }
 
-        [NotNull]
         private IGitModule GetModule()
         {
             var module = _getModule();
 
-            if (module == null)
+            if (module is null)
             {
                 throw new ArgumentException($"Require a valid instance of {nameof(IGitModule)}");
             }
@@ -187,9 +196,7 @@ namespace GitCommands
             return module;
         }
 
-        [ContractAnnotation("=>false,error:notnull,data:null")]
-        [ContractAnnotation("=>true,error:null,data:notnull")]
-        private bool TryGetCommitLog([NotNull] string commitId, [NotNull] string format, out string error, out string data)
+        private bool TryGetCommitLog(string commitId, string format, [NotNullWhen(returnValue: false)] out string? error, [NotNullWhen(returnValue: true)] out string? data, bool cache)
         {
             if (commitId.IsArtificial())
             {
@@ -198,28 +205,33 @@ namespace GitCommands
                 return false;
             }
 
-            var arguments = new GitArgumentBuilder("log")
+            GitArgumentBuilder arguments = new("log")
             {
                 "-1",
                 $"--pretty=\"format:{format}\"",
                 commitId
             };
 
-            // Do not cache this command, since notes can be added
-            data = GetModule().GitExecutable.GetOutput(arguments, outputEncoding: GitModule.LosslessEncoding);
+            // This command can be cached if commitId is a git sha and Notes are ignored
+            Debug.Assert(!cache || ObjectId.TryParse(commitId, out _), $"git-log cache should be used only for sha ({commitId})");
 
-            if (GitModule.IsGitErrorMessage(data))
+            ExecutionResult exec = GetModule().GitExecutable.Execute(arguments,
+                outputEncoding: GitModule.LosslessEncoding,
+                cache: cache ? GitModule.GitCommandCache : null);
+
+            if (!exec.ExitedSuccessfully)
             {
+                data = null;
                 error = "Cannot find commit " + commitId;
                 return false;
             }
 
+            data = exec.StandardOutput;
             error = null;
             return true;
         }
 
-        [NotNull]
-        private static string ProcessDiffNotes(int startIndex, [NotNull, ItemNotNull] string[] lines)
+        private static string ProcessDiffNotes(int startIndex, string[] lines)
         {
             int endIndex = lines.Length - 1;
             if (lines[endIndex] == "Notes:")
@@ -227,7 +239,7 @@ namespace GitCommands
                 endIndex--;
             }
 
-            var message = new StringBuilder();
+            StringBuilder message = new();
             bool notesStart = false;
 
             for (int i = startIndex; i <= endIndex; i++)

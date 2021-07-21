@@ -11,7 +11,7 @@ namespace AzureDevOpsIntegration.Settings
     /// </summary>
     public class ProjectUrlHelper
     {
-        private static readonly Dictionary<Regex, Func<Match, string>> RemoteToProjectUrlLookup = new Dictionary<Regex, Func<Match, string>>()
+        private static readonly Dictionary<Regex, Func<Match, string>> RemoteToProjectUrlLookup = new()
         {
             { // VS Team Services via HTTPS
                 new Regex(@"^(?<prot>(?:http|https))://(?<user>[^.@]+)(?:@[^.]*)?\.visualstudio\.com(?<port>:\d*)?(?:/DefaultCollection)?(?<project>(/[^/]+)?/[^/]+)/_(git|ssh)/(.+)$"),
@@ -39,7 +39,7 @@ namespace AzureDevOpsIntegration.Settings
             },
         };
 
-        private static readonly Dictionary<Regex, Func<Match, string>> ProjectToTokenManagementUrlLookup = new Dictionary<Regex, Func<Match, string>>()
+        private static readonly Dictionary<Regex, Func<Match, string>> ProjectToTokenManagementUrlLookup = new()
         {
             { // VS Team Services
                 new Regex(@"^(?<instanceurl>(?:http|https)://[^.@]+(?:@[^.]*)?\.visualstudio\.com(?::\d*)?)"),
@@ -55,7 +55,7 @@ namespace AzureDevOpsIntegration.Settings
             },
         };
 
-        private static readonly Regex BuildUrlInfoRegex = new Regex(@"^(?<projecturl>(?:http|https)://[^/]+(?::\d*)?(?:/[^/]+)+)/_build.*(?:&|\?)buildId=(?<buildid>\d+)");
+        private static readonly Regex BuildUrlInfoRegex = new(@"^(?<projecturl>(?:http|https)://[^/]+(?::\d*)?(?:/[^/]+)+)/_build.*(?:&|\?)buildId=(?<buildid>\d+)");
 
         /// <summary>
         /// Tries to transform a supplied string into a different one using a number of regular expressions to check against.
@@ -70,9 +70,9 @@ namespace AzureDevOpsIntegration.Settings
         /// <returns>
         /// A tuple that contains whether a matching pattern could be found and the string that resulted from the transformation.
         /// </returns>
-        private static (bool success, string result) TryTransformString(string value, Dictionary<Regex, Func<Match, string>> lookupDictionary)
+        private static (bool success, string? result) TryTransformString(string? value, Dictionary<Regex, Func<Match, string>> lookupDictionary)
         {
-            if (value == null)
+            if (value is null)
             {
                 return (false, null);
             }
@@ -101,9 +101,9 @@ namespace AzureDevOpsIntegration.Settings
         /// <returns>
         /// A tuple that contains whether a Azure DevOps / TFS project could be recognized from the given url and the resulting home page url of the project.
         /// </returns>
-        public static (bool success, string projectUrl) TryDetectProjectFromRemoteUrl(string remoteUrl)
+        public static (bool success, string? projectUrl) TryDetectProjectFromRemoteUrl(string? remoteUrl)
         {
-            if (remoteUrl == null && !BuildServerSettingsHelper.IsUrlValid(remoteUrl))
+            if (remoteUrl is null && !BuildServerSettingsHelper.IsUrlValid(remoteUrl))
             {
                 return (false, null);
             }
@@ -120,7 +120,7 @@ namespace AzureDevOpsIntegration.Settings
         /// <returns>
         /// A tuple that contains whether a Azure DevOps / TFS project could be recognized from the given list and the resulting home page url of the project.
         /// </returns>
-        public static (bool success, string projectUrl) TryDetectProjectFromRemoteUrls(IEnumerable<string> remoteUrls)
+        public static (bool success, string? projectUrl) TryDetectProjectFromRemoteUrls(IEnumerable<string?> remoteUrls)
         {
             return remoteUrls.Select(TryDetectProjectFromRemoteUrl).FirstOrDefault(r => r.success);
         }
@@ -130,7 +130,7 @@ namespace AzureDevOpsIntegration.Settings
         /// whether <paramref name="projectUrl"/> actually points to a Azure DevOps / TFS instance.
         /// </summary>
         /// <remarks>
-        /// TryGetTokenManagementUrlFromProject will happlily convert anything that somewhat looks like a project url
+        /// TryGetTokenManagementUrlFromProject will happily convert anything that somewhat looks like a project url
         /// in favor of better availability for on premise installations of TFS
         /// </remarks>
         /// <param name="projectUrl">
@@ -139,9 +139,9 @@ namespace AzureDevOpsIntegration.Settings
         /// <returns>
         /// A tuple that contains whether the token management url could be recognized from the given project url and the resulting url.
         /// </returns>
-        public static (bool success, string tokenManagementUrl) TryGetTokenManagementUrlFromProject(string projectUrl)
+        public static (bool success, string? tokenManagementUrl) TryGetTokenManagementUrlFromProject(string? projectUrl)
         {
-            if (projectUrl == null && !BuildServerSettingsHelper.IsUrlValid(projectUrl))
+            if (projectUrl is null && !BuildServerSettingsHelper.IsUrlValid(projectUrl))
             {
                 return (false, null);
             }
@@ -158,9 +158,9 @@ namespace AzureDevOpsIntegration.Settings
         /// <returns>
         /// A tuple that contains whether the project and build id could be detected from the given url, as well as both informations.
         /// </returns>
-        public static (bool success, string projectUrl, int buildId) TryParseBuildUrl(string buildUrl)
+        public static (bool success, string? projectUrl, int buildId) TryParseBuildUrl(string? buildUrl)
         {
-            if (buildUrl == null && !BuildServerSettingsHelper.IsUrlValid(buildUrl))
+            if (buildUrl is null && !BuildServerSettingsHelper.IsUrlValid(buildUrl))
             {
                 return (false, null, -1);
             }

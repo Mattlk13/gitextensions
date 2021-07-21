@@ -6,7 +6,7 @@ namespace GitCommands.Settings
 {
     public class GitExtSettingsCache : FileSettingsCache
     {
-        private readonly XmlSerializableDictionary<string, string> _encodedNameMap = new XmlSerializableDictionary<string, string>();
+        private readonly XmlSerializableDictionary<string, string> _encodedNameMap = new();
 
         public GitExtSettingsCache(string settingsFilePath, bool autoSave = true)
             : base(settingsFilePath, autoSave)
@@ -15,7 +15,7 @@ namespace GitCommands.Settings
 
         public static GitExtSettingsCache FromCache(string settingsFilePath)
         {
-            var createSettingsCache = new Lazy<GitExtSettingsCache>(
+            Lazy<GitExtSettingsCache> createSettingsCache = new(
                 () => new GitExtSettingsCache(settingsFilePath, autoSave: true));
 
             return FromCache(settingsFilePath, createSettingsCache);
@@ -40,39 +40,35 @@ namespace GitCommands.Settings
 
         protected override void WriteSettings(string fileName)
         {
-            using (var xtw = new XmlTextWriter(fileName, Encoding.UTF8) { Formatting = Formatting.Indented })
-            {
-                xtw.WriteStartDocument();
-                xtw.WriteStartElement("dictionary");
-                _encodedNameMap.WriteXml(xtw);
-                xtw.WriteEndElement();
-            }
+            using XmlTextWriter xtw = new(fileName, Encoding.UTF8) { Formatting = Formatting.Indented };
+            xtw.WriteStartDocument();
+            xtw.WriteStartElement("dictionary");
+            _encodedNameMap.WriteXml(xtw);
+            xtw.WriteEndElement();
         }
 
         protected override void ReadSettings(string fileName)
         {
-            var readerSettings = new XmlReaderSettings
+            XmlReaderSettings readerSettings = new()
             {
                 IgnoreWhitespace = true,
                 CheckCharacters = false
             };
 
-            using (var xr = XmlReader.Create(fileName, readerSettings))
+            using var xr = XmlReader.Create(fileName, readerSettings);
+            try
             {
-                try
-                {
-                    _encodedNameMap.ReadXml(xr);
-                }
-                catch (Exception e)
-                {
-                    throw new Exception($"Exception reading XML file \"{fileName}\": {e.Message}", e);
-                }
+                _encodedNameMap.ReadXml(xr);
+            }
+            catch (Exception e)
+            {
+                throw new Exception($"Exception reading XML file \"{fileName}\": {e.Message}", e);
             }
         }
 
-        protected override void SetValueImpl(string key, string value)
+        protected override void SetValueImpl(string key, string? value)
         {
-            if (value == null)
+            if (value is null)
             {
                 _encodedNameMap.Remove(key);
             }
